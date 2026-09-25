@@ -21,12 +21,12 @@
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { permalinkTarget, toPermalink, streamLinkTarget, streamWriterTarget, toStreamLink, listingLinkTarget, listingWriterTarget, toListingLink, calendarLinkTarget, calendarWriterTarget, toCalendarLink, corpusIndex } from './validate.mjs'
+import { permalinkTarget, toPermalink, streamLinkTarget, streamWriterTarget, toStreamLink, listingLinkTarget, listingWriterTarget, toListingLink, calendarLinkTarget, calendarWriterTarget, toCalendarLink, articleLinkTarget, toArticleLink, profileLinkTarget, profileWriterTarget, toProfileLink, corpusIndex } from './validate.mjs'
 import { fromNevent } from './nostr.mjs'
 import { tags, attributes } from './html.mjs'
 
 /**
- * Jumble is a source citation, not a page the paper should be replaced by.
+ * A citation is a source, not a page the paper should be replaced by.
  * `noopener` stops the opened tab from reaching `window.opener`.
  */
 export function openInNewTab (raw) {
@@ -47,14 +47,19 @@ export function openInNewTab (raw) {
   return tag
 }
 
+/**
+ * The event a citation names, in any form a writer or an older edition might
+ * use: the brainstorm.world writer form, the jumble.social and njump.me forms
+ * this skill used before, or an nevent on any of the three. All of them
+ * resolve to the same brainstorm.world address, so an old page still ships
+ * rather than having every citation unwrapped.
+ */
 function citedEventId (href) {
-  const jumble = permalinkTarget(href)
-  if (jumble) return jumble
-  const hex = /^https:\/\/jumble\.social\/notes\/([0-9a-f]{64})(?:[/?#].*)?$/i.exec(href)
+  const canonical = permalinkTarget(href)
+  if (canonical) return canonical
+  const hex = /^https:\/\/(?:brainstorm\.world\/e\/|jumble\.social\/notes\/|njump\.me\/)([0-9a-f]{64})(?:[/?#].*)?$/i.exec(href)
   if (hex) return hex[1].toLowerCase()
-  const njump = /^https:\/\/njump\.me\/([0-9a-f]{64})(?:[/?#].*)?$/i.exec(href)
-  if (njump) return njump[1].toLowerCase()
-  const nevent = /^https:\/\/(?:jumble\.social\/notes\/|njump\.me\/)(nevent1[0-9a-z]+)/i.exec(href)
+  const nevent = /^https:\/\/(?:brainstorm\.world\/e\/|jumble\.social\/notes\/|njump\.me\/)(nevent1[0-9a-z]+)/i.exec(href)
   if (nevent) {
     try { return fromNevent(nevent[1]) } catch { return null }
   }
@@ -123,20 +128,34 @@ export function resolve (html, corpus) {
 
   // --- links to the open web ----------------------------------------------
   // The paper prints addresses; it does not make them clickable — except
-  // source citations, verified zap.stream watch links, verified Shopstr
-  // listing links, and verified njump calendar links. A permalink back to an
-  // event we read is rewritten to jumble.social's nevent URL (the writer cites
-  // hex; this is the afterwards) — unless it is a calendar listing, which
-  // becomes an njump naddr, because jumble has no calendar view and an nevent
-  // freezes one revision of a replaceable event. Stream / classified /
-  // calendar writer forms are encoded to their host's naddr. Everything else
+  // source citations, profiles, verified zap.stream watch links, verified
+  // Shopstr listing links, and verified njump calendar links. A citation of an
+  // event we read is rewritten to brainstorm.world's nevent URL (the writer
+  // cites hex; this is the afterwards) — unless it is an article, which goes to
+  // brainstorm.world/a/ by address, or a calendar listing, which becomes an
+  // njump naddr; both are edited in place and an nevent freezes one revision.
+  // A profile writer form names a post and becomes its author's npub. Stream /
+  // classified / calendar writer forms are encoded to their host's naddr. Everything else
   // is unwrapped to its own text. Rebuilt back to front so each edit leaves
   // earlier offsets untouched.
   // From the shared index rather than three more passes over every desk — the
   // target helpers below already consult it, and a second set of maps built
   // here is both the same work twice and a chance for the two to disagree
   // about what counts as linkable.
-  const { streams, listings, calendars } = corpusIndex(corpus)
+  const { streams, listings, calendars, articles } = corpusIndex(corpus)
+  // Point the anchor at `canonical`, open it in a new tab, and log `kind`
+  // when the address actually changed.
+  const retarget = (anchor, url, canonical, kind) => {
+    let tag = anchor.raw
+    if (url !== canonical) {
+      tag = tag.replace(/(\bhref\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)/i, `$1"${canonical}"`)
+    }
+    tag = openInNewTab(tag)
+    if (tag !== anchor.raw) {
+      out = out.slice(0, anchor.start) + tag + out.slice(anchor.end)
+      if (url !== canonical) changes.push({ kind, detail: `${url} -> ${canonical}` })
+    }
+  }
   const anchors = tags(out, 'a').reverse()
   for (const anchor of anchors) {
     const url = attributes(anchor.raw).href || ''
@@ -197,14 +216,24 @@ export function resolve (html, corpus) {
       }
       continue
     }
+    const pubkey = profileWriterTarget(url, corpus) || profileLinkTarget(url, corpus)
+    if (pubkey) {
+      retarget(anchor, url, toProfileLink(pubkey), 'profile')
+      continue
+    }
+    const articleId = articleLinkTarget(url, corpus) || (id && articles.byId.has(id) ? id : null)
+    if (articleId && articles.byId.has(articleId)) {
+      retarget(anchor, url, toArticleLink(articles.byId.get(articleId)), 'article')
+      continue
+    }
     if (id && eventIds.has(id)) {
       const canonical = toPermalink(id)
       let tag = anchor.raw
       if (url !== canonical) {
         tag = tag.replace(/(\bhref\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)/i, `$1"${canonical}"`)
       }
-      // The paper stays put; Jumble is a citation, not a destination that
-      // replaces the edition. A writer who forgets target=_blank still gets it.
+      // The paper stays put; a citation is not a destination that replaces
+      // the edition. A writer who forgets target=_blank still gets it.
       tag = openInNewTab(tag)
       if (tag !== anchor.raw) {
         out = out.slice(0, anchor.start) + tag + out.slice(anchor.end)
@@ -235,7 +264,9 @@ function main () {
   const counts = changes.reduce((acc, c) => ({ ...acc, [c.kind]: (acc[c.kind] || 0) + 1 }), {})
   console.log('')
   console.log(`  Resolved ${counts.resolved || 0} art id(s).`)
-  if (counts.permalink) console.log(`  Encoded ${counts.permalink} permalink(s) to jumble.social.`)
+  if (counts.permalink) console.log(`  Encoded ${counts.permalink} citation(s) to brainstorm.world notes.`)
+  if (counts.article) console.log(`  Encoded ${counts.article} article citation(s) to brainstorm.world by address.`)
+  if (counts.profile) console.log(`  Linked ${counts.profile} name(s) to brainstorm.world profiles.`)
   if (counts.stream) console.log(`  Encoded ${counts.stream} stream watch link(s) to zap.stream.`)
   if (counts.listing) console.log(`  Encoded ${counts.listing} classified listing link(s) to Shopstr.`)
   if (counts.calendar) console.log(`  Encoded ${counts.calendar} calendar link(s) to njump.`)
@@ -244,7 +275,7 @@ function main () {
     console.log('  CHANGES WORTH READING - each of these is the page trying to do something')
     console.log('  the paper does not do. Look at them before you ship:')
     console.log('')
-    for (const change of changes.filter((c) => c.kind !== 'resolved' && c.kind !== 'permalink' && c.kind !== 'stream' && c.kind !== 'listing' && c.kind !== 'calendar')) {
+    for (const change of changes.filter((c) => c.kind !== 'resolved' && c.kind !== 'permalink' && c.kind !== 'article' && c.kind !== 'profile' && c.kind !== 'stream' && c.kind !== 'listing' && c.kind !== 'calendar')) {
       console.log(`  ${change.kind.toUpperCase()}: ${change.detail}`)
     }
   }

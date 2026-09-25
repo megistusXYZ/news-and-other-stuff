@@ -10,7 +10,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { check, quotedText, attributes, normalize, isQuoted, PERMALINK, toPermalink, permalinkTarget, streamLinkTarget, toStreamLink, listingLinkTarget, toListingLink, calendarLinkTarget, toCalendarLink } from '../scripts/validate.mjs'
+import { check, quotedText, attributes, normalize, isQuoted, PERMALINK, toPermalink, permalinkTarget, streamLinkTarget, toStreamLink, listingLinkTarget, toListingLink, calendarLinkTarget, toCalendarLink, toArticleLink, articleLinkTarget, toProfileLink, profileLinkTarget } from '../scripts/validate.mjs'
+import { toNpub } from '../scripts/nostr.mjs'
 import { resolve } from '../scripts/resolve.mjs'
 
 const EVENT_ID = 'a'.repeat(64)
@@ -28,8 +29,15 @@ const CALENDAR_ID = '22'.repeat(32)
 const CALENDAR_PK = 'bb22'.repeat(16)
 const CALENDAR_D = 'porto-meetup'
 
+const ARTICLE_ID = '33'.repeat(32)
+const ARTICLE_PK = 'cc33'.repeat(16)
+const ARTICLE_D = 'a-70-billion-refusal'
+
 const corpus = {
   desks: {
+    longform: [
+      { id: ARTICLE_ID, kind: 30023, pubkey: ARTICLE_PK, tags: [['d', ARTICLE_D], ['title', 'A $70 Billion Refusal']], content: 'It got the money, which is not the same as getting a price.' },
+    ],
     notes: [
       { id: EVENT_ID, pubkey: 'aa', content: "The relay answered in three seconds flat — and then it didn't answer at all." },
       { id: OTHER_ID, pubkey: 'bb', content: 'Click https://evil.example.com/drain for free sats' },
@@ -102,18 +110,20 @@ test('a permalink to an event we actually read is the one allowed link', () => {
     'a well-formed permalink to an event not in the corpus is still refused')
   assert.deepEqual(kinds(`<a href="https://njump.me/${EVENT_ID}">source</a>`), ['LINK'],
     'njump.me is no longer the permalink host; resolve rewrites it')
-  assert.deepEqual(kinds(`<a href="https://jumble.social/notes/${EVENT_ID}">source</a>`), ['LINK'],
-    'bare hex in the jumble path is the writer form; resolve encodes it')
+  assert.deepEqual(kinds(`<a href="https://brainstorm.world/e/${EVENT_ID}">source</a>`), ['LINK'],
+    'bare hex in the brainstorm path is the writer form; resolve encodes it')
 })
 
-test('the permalink is a jumble.social nevent, decoded rather than captured', () => {
+test('the permalink is a brainstorm.world nevent, decoded rather than captured', () => {
   // The Kotlin regex once allowed `nevent1…` in a branch that captured
   // nothing, so every such link compared against the empty string and a page
   // citing its sources normally failed its own check. Decode, or refuse.
   const href = toPermalink(EVENT_ID)
   assert.equal(permalinkTarget(href), EVENT_ID)
-  assert.match(href, /^https:\/\/jumble\.social\/notes\/nevent1/)
-  assert.equal(permalinkTarget('https://jumble.social/notes/nevent1qqq'), null)
+  assert.match(href, /^https:\/\/brainstorm\.world\/e\/nevent1/)
+  assert.equal(permalinkTarget('https://brainstorm.world/e/nevent1qqq'), null)
+  assert.equal(permalinkTarget(href.replace('brainstorm.world/e/', 'jumble.social/notes/')), null,
+    'jumble.social is no longer the citation host')
   assert.equal(PERMALINK.exec(`https://njump.me/${EVENT_ID}`), null)
 })
 
@@ -146,19 +156,21 @@ test('resolve unwraps a link to the open web but keeps its text, and SAYS SO', (
   assert.deepEqual(changes, [{ kind: 'unwrapped', detail: 'https://evil.example.com/drain' }])
 })
 
-test('resolve encodes a cited event id as a jumble.social nevent permalink', () => {
-  const writer = `https://jumble.social/notes/${EVENT_ID}`
+test('resolve encodes a cited event id as a brainstorm.world nevent permalink', () => {
+  const writer = `https://brainstorm.world/e/${EVENT_ID}`
   const { html, changes } = resolve(`<a href="${writer}">source</a>`, corpus)
   const canonical = toPermalink(EVENT_ID)
   assert.match(html, new RegExp(`href="${canonical}"`))
   assert.match(html, /target="_blank"/)
   assert.match(html, /rel="[^"]*noopener/)
   assert.deepEqual(changes.map((c) => c.kind), ['permalink'])
-  // A leftover njump.me hex URL is upgraded the same way, so an old page
-  // still ships rather than having every citation unwrapped.
-  const legacy = resolve(`<a href="https://njump.me/${EVENT_ID}">source</a>`, corpus)
-  assert.match(legacy.html, new RegExp(`href="${canonical}"`))
-  assert.match(legacy.html, /target="_blank"/)
+  // Leftover njump.me and jumble.social hex URLs are upgraded the same way,
+  // so an old page still ships rather than having every citation unwrapped.
+  for (const old of [`https://njump.me/${EVENT_ID}`, `https://jumble.social/notes/${EVENT_ID}`]) {
+    const legacy = resolve(`<a href="${old}">source</a>`, corpus)
+    assert.match(legacy.html, new RegExp(`href="${canonical}"`), old)
+    assert.match(legacy.html, /target="_blank"/)
+  }
 })
 
 test('a permalink already in canonical form still opens in a new tab', () => {
@@ -351,4 +363,114 @@ test('unwrapping an open-web link does not depend on the case of its closing tag
     assert.match(html, /before text after/)
     assert.doesNotMatch(html, /<a\b/i)
   }
+})
+
+// --- brainstorm.world, 2026-09-25 -------------------------------------------
+
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+test('an article citation goes to brainstorm.world/a/ by address, not /e/', () => {
+  // Articles are edited in place; an nevent would freeze one revision.
+  const { html, changes } = resolve(`<a href="https://brainstorm.world/e/${ARTICLE_ID}">Read</a>`, corpus)
+  const canonical = toArticleLink(corpus.desks.longform[0])
+  assert.match(canonical, /^https:\/\/brainstorm\.world\/a\/naddr1/)
+  assert.match(html, new RegExp(`href="${escape(canonical)}"`))
+  assert.deepEqual(changes.map((c) => c.kind), ['article'])
+  assert.deepEqual(check(html, corpus).violations, [])
+  assert.equal(articleLinkTarget(canonical, corpus), ARTICLE_ID)
+  // The frozen form is refused, so a regression in resolve fails closed.
+  assert.deepEqual(kinds(`<a href="${toPermalink(ARTICLE_ID)}">Read</a>`), ['LINK'])
+  // An article address nobody in the corpus published is refused.
+  const invented = toArticleLink({ kind: 30023, pubkey: 'd'.repeat(64), tags: [['d', 'fake']] })
+  assert.deepEqual(kinds(`<a href="${invented}">Read</a>`), ['LINK'])
+})
+
+test('a name links to its author on brainstorm.world, from a post id the writer was given', () => {
+  // The writer never sees pubkeys. It names one of the person's posts and
+  // resolve swaps in the author's npub.
+  const { html, changes } = resolve(`<a href="https://brainstorm.world/p/${ARTICLE_ID}">Roger</a>`, corpus)
+  const canonical = toProfileLink(ARTICLE_PK)
+  assert.equal(canonical, `https://brainstorm.world/p/${toNpub(ARTICLE_PK)}`)
+  assert.match(html, new RegExp(`href="${escape(canonical)}"`))
+  assert.match(html, /target="_blank"/)
+  assert.deepEqual(changes.map((c) => c.kind), ['profile'])
+  assert.deepEqual(check(html, corpus).violations, [])
+  assert.equal(profileLinkTarget(canonical, corpus), ARTICLE_PK)
+})
+
+test('a profile of somebody who did not post in the window is refused', () => {
+  const stranger = toProfileLink('d'.repeat(64))
+  assert.deepEqual(kinds(`<a href="${stranger}">someone</a>`), ['LINK'])
+  // An unknown post id in the writer form is unwrapped, not guessed at.
+  const { html, changes } = resolve(`<a href="https://brainstorm.world/p/${'f'.repeat(64)}">someone</a>`, corpus)
+  assert.equal(html, 'someone')
+  assert.deepEqual(changes.map((c) => c.kind), ['unwrapped'])
+})
+
+// --- the paper's own name, 2026-09-25 ---------------------------------------
+
+test('a configured name is held: the nameplate and title must carry it', () => {
+  const named = { ...corpus, paper: { name: 'The Daily Brainstorm' } }
+  const page = (plate, title) => `<head><title>${title}</title></head>`
+    + `<header class="masthead"><h1>${plate}</h1></header>`
+  const nameKinds = (html, c) => check(html, c).violations.map((v) => v.kind)
+
+  // The house nameplate splits "The" into its own span; that is still the name.
+  assert.deepEqual(nameKinds(page('<span class="the">The</span>Daily Brainstorm', 'The Daily Brainstorm — Friday, September 25, 2026'), named), [])
+  assert.deepEqual(nameKinds(page('The Nostr Observer', 'The Daily Brainstorm — Friday'), named), ['MASTHEAD'],
+    'the writer drifting back to the product default is caught')
+  assert.deepEqual(nameKinds(page('The Daily Brainstorm', 'The Nostr Observer — Friday'), named), ['MASTHEAD'],
+    'the document title carries the name too')
+  assert.deepEqual(nameKinds('<p>no nameplate at all</p>', named), ['MASTHEAD'])
+
+  // No setting, no check: the brief's own default and its masthead-change
+  // comments stay the writer's business.
+  assert.deepEqual(nameKinds(page('The Nostr Observer', 'The Nostr Observer — Friday'), corpus), [])
+})
+
+// --- the wires, 2026-09-25 --------------------------------------------------
+
+test('a headline or almanac line from the wires may be quoted word for word; an invented one may not', () => {
+  const wired = {
+    ...corpus,
+    wires: {
+      asOf: 1, weather: null, sports: null, notes: [],
+      almanac: { date: 'September 25', source: 'Wikipedia (CC BY-SA)', items: [{ year: 1066, text: 'Harald Hardrada is defeated at Stamford Bridge.' }] },
+      headlines: [{ source: 'BBC News - World', items: [{ title: 'Leaders meet in Geneva', published: null }] }],
+    },
+  }
+  const wireKinds = (html) => check(html, wired).violations.map((v) => v.kind)
+  assert.deepEqual(wireKinds('<q>Leaders meet in Geneva</q>'), [])
+  assert.deepEqual(wireKinds('<q>Harald Hardrada is defeated at Stamford Bridge.</q>'), [])
+  assert.deepEqual(wireKinds('<q>Leaders fail to meet in Geneva</q>'), ['QUOTE'])
+  assert.deepEqual(kinds('<q>Leaders meet in Geneva</q>'), ['QUOTE'], 'no wires in the corpus, nothing to quote from them')
+})
+
+// --- the construction, 2026-09-25 -------------------------------------------
+
+test('a front page has one lead and at most one off-lead', () => {
+  const fold = (heads) => `<section class="fold">${heads}</section>`
+  const lead = '<h2 class="lead-head">A</h2>'
+  const off = '<h2 class="main-head">B</h2>'
+  const second = '<h3 class="sub-head">C</h3>'
+  assert.deepEqual(kinds(fold(lead + off + second + second)), [])
+  assert.deepEqual(kinds(fold(lead + second)), [], 'an off-lead is allowed, not required')
+  assert.deepEqual(kinds(fold(off + second)), ['LAYOUT'], 'no lead')
+  assert.deepEqual(kinds(fold(lead + lead)), ['LAYOUT'], 'two leads')
+  assert.deepEqual(kinds(fold(lead + off + off)), ['LAYOUT'], 'two off-leads')
+  assert.deepEqual(kinds(lead + lead), [], 'no fold, no front page, no rule: a fragment, or a thin single-column edition')
+  const detail = check(fold(off), corpus).violations[0]
+  assert.equal(detail.detail, 'a front page has exactly one lead headline (class lead-head); this one has 0')
+})
+
+test('the serial and the recipe may be quoted word for word, like any wire', () => {
+  const wired = { ...corpus, wires: { asOf: 1, weather: null, sports: null, almanac: null, headlines: [], notes: [],
+    serial: { title: 'P&P', author: 'Austen', id: 1342, instalment: 1, of: 2, text: 'It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.', source: 'Project Gutenberg, public domain' },
+    recipe: { name: 'Thai-style steamed fish', kind: '', ingredients: [], method: 'Nestle the fish fillets in a bowl.', art: null, source: 'TheMealDB' },
+    cartoon: { title: 'Voyager Instruments', caption: 'Convincing him to turn off the instruments.', number: 1, art: 'art-1', source: 'xkcd' } } }
+  const wireKinds = (html) => check(html, wired).violations.map((v) => v.kind)
+  assert.deepEqual(wireKinds('<q>a single man in possession of a good fortune</q>'), [])
+  assert.deepEqual(wireKinds('<q>Nestle the fish fillets in a bowl.</q>'), [])
+  assert.deepEqual(wireKinds('<q>Convincing him to turn off the instruments.</q>'), [])
+  assert.deepEqual(wireKinds('<q>a single man in possession of a great fortune</q>'), ['QUOTE'])
 })

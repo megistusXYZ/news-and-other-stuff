@@ -152,7 +152,7 @@ export function toNpub (hex) {
 /**
  * Event id hex to `nevent1…` (NIP-19, id only).
  *
- * jumble.social's note URLs take an nevent, not bare hex. The writer still
+ * Citation URLs (brainstorm.world/e/) take an nevent, not bare hex. The writer still
  * cites hex; resolve.mjs is what encodes. Relays and author are omitted on
  * purpose: a permalink that names only the event cannot smuggle a relay
  * the corpus never spoke to.
@@ -161,6 +161,51 @@ export function toNevent (hex) {
   const id = String(hex || '').toLowerCase()
   if (!/^[0-9a-f]{64}$/.test(id)) throw new Error(`Not an event id: ${String(hex).slice(0, 16)}`)
   return encodeBech32('nevent', [0, 32, ...Buffer.from(id, 'hex')])
+}
+
+/** `npub1…` to lowercase pubkey hex. Throws if it is not an npub. */
+export function fromNpub (input) {
+  const value = String(input || '').trim()
+  const { hrp, bytes } = decodeBech32(value)
+  if (hrp !== 'npub') throw new Error(`Not an npub: ${value.slice(0, 24)}`)
+  if (bytes.length !== 32) throw new Error('That npub names a key of the wrong length.')
+  return Buffer.from(bytes).toString('hex')
+}
+
+// --- brainstorm.world ------------------------------------------------------
+//
+// Where a reader lands when they click through. Brainstorm renders notes at
+// /e/, articles at /a/ and people at /p/ (routes read from the live bundle and
+// NosFabrica/Brainstorm-UI `client/src/App.tsx`, 2026-09-25). Streams,
+// listings and calendars are NOT sent here: production renders every naddr at
+// /a/ as a markdown article, so those keep zap.stream, Shopstr and njump
+// until Brainstorm ships per-kind views.
+
+export const BRAINSTORM = 'https://brainstorm.world'
+
+/** Long-form (NIP-23) and wiki (NIP-54): the kinds Brainstorm's /a/ renders. */
+export const ARTICLE_KINDS = new Set([30023, 30818])
+
+/** A note, highlight, picture or any other regular event. */
+export function toBrainstormNote (eventId) {
+  return `${BRAINSTORM}/e/${toNevent(eventId)}`
+}
+
+/**
+ * An article, by address. An nevent would freeze one revision of an event
+ * whose author edits it in place — the calendar lesson, one kind over.
+ */
+export function toBrainstormArticle (event) {
+  const d = tagValue(event, 'd')
+  if (!d || !ARTICLE_KINDS.has(event.kind)) throw new Error('Not an article address')
+  return `${BRAINSTORM}/a/${toNaddr({ kind: event.kind, pubkey: event.pubkey, identifier: d })}`
+}
+
+/** A person. npub rather than nprofile: no relay hint the corpus never spoke to. */
+export function toBrainstormProfile (pubkey) {
+  const pk = String(pubkey || '').toLowerCase()
+  if (!/^[0-9a-f]{64}$/.test(pk)) throw new Error(`Not a pubkey: ${pk.slice(0, 16)}`)
+  return `${BRAINSTORM}/p/${toNpub(pk)}`
 }
 
 export const LIVE_KIND = 30311
@@ -247,7 +292,7 @@ export const CALENDAR_KINDS = new Set([31922, 31923])
 /**
  * Canonical njump page for a calendar listing.
  *
- * jumble.social has no calendar view, and an nevent freezes one revision of a
+ * brainstorm.world has no calendar view yet, and an nevent freezes one revision of a
  * replaceable event. njump with an naddr is the address that stays on the
  * listing as the organiser updates it.
  */

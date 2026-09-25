@@ -23,7 +23,7 @@
 import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { tags, attributes as attrsOf, textIn } from './html.mjs'
-import { toNevent, fromNevent, fromNaddr, toZapStreamUrl, LIVE_KIND, toShopstrUrl, CLASSIFIED_KIND, toNjumpCalendarUrl, CALENDAR_KINDS, tagValue } from './nostr.mjs'
+import { fromNevent, fromNaddr, fromNpub, toZapStreamUrl, LIVE_KIND, toShopstrUrl, CLASSIFIED_KIND, toNjumpCalendarUrl, CALENDAR_KINDS, tagValue, toBrainstormNote, toBrainstormArticle, toBrainstormProfile, ARTICLE_KINDS } from './nostr.mjs'
 
 function arg (name, fallback = null) {
   const at = process.argv.indexOf(name)
@@ -111,23 +111,24 @@ export function isQuoted (raw, haystack) {
 }
 
 /**
- * The one external shape a link may take, after resolve.mjs has run:
- * `https://jumble.social/notes/<nevent1…>` naming an event we read.
+ * A source citation, after resolve.mjs has run:
+ * `https://brainstorm.world/e/<nevent1…>` naming an event we read.
  *
- * The writer cites `https://jumble.social/notes/<64-hex>` (or, still, a
- * leftover njump.me hex URL). resolve.mjs encodes the nevent. This checker
- * DECODES rather than capturing a regex group: the Kotlin regex once allowed
- * `nevent1…` in a branch that captured nothing, so every such link compared
- * against the empty string and a page citing its sources the normal way
- * failed its own check. Decode, or do not accept the link.
+ * The writer cites `https://brainstorm.world/e/<64-hex>` (or, still, a
+ * leftover jumble.social or njump.me hex URL). resolve.mjs encodes the
+ * nevent. This checker DECODES rather than capturing a regex group: the
+ * Kotlin regex once allowed `nevent1…` in a branch that captured nothing, so
+ * every such link compared against the empty string and a page citing its
+ * sources the normal way failed its own check. Decode, or do not accept the
+ * link.
  */
-export const PERMALINK = /^https:\/\/jumble\.social\/notes\/(nevent1[0-9a-z]+)(?:[/?#].*)?$/i
+export const PERMALINK = /^https:\/\/brainstorm\.world\/e\/(nevent1[0-9a-z]+)(?:[/?#].*)?$/i
 
 export function toPermalink (eventId) {
-  return `https://jumble.social/notes/${toNevent(eventId)}`
+  return toBrainstormNote(eventId)
 }
 
-/** Event id hex if `href` is a jumble.social nevent permalink; otherwise null. */
+/** Event id hex if `href` is a brainstorm.world nevent permalink; otherwise null. */
 export function permalinkTarget (href) {
   const match = PERMALINK.exec(href)
   if (!match) return null
@@ -137,6 +138,19 @@ export function permalinkTarget (href) {
     return null
   }
 }
+
+/** Article citation, by address — resolve rewrites /e/ to this for 30023 / 30818. */
+export const ARTICLE_LINK = /^https:\/\/brainstorm\.world\/a\/(naddr1[0-9a-z]+)(?:[/?#].*)?$/i
+
+/**
+ * A person. The writer never sees a pubkey, only post ids and names, so the
+ * writer form names A POST: `https://brainstorm.world/p/<64-hex-event-id>`,
+ * and resolve swaps in its author's npub. Same shape as art ids — a profile
+ * link to somebody who did not post in the window is structurally impossible,
+ * not merely detectable.
+ */
+export const PROFILE_WRITER = /^https:\/\/brainstorm\.world\/p\/([0-9a-f]{64})(?:[/?#].*)?$/i
+export const PROFILE_LINK = /^https:\/\/brainstorm\.world\/p\/(npub1[0-9a-z]+)(?:[/?#].*)?$/i
 
 export const STREAM_WRITER = /^https:\/\/zap\.stream\/stream\/([0-9a-f]{64})(?:[/?#].*)?$/i
 export const STREAM_NADDR = /^https:\/\/zap\.stream\/(naddr1[0-9a-z]+)(?:[/?#].*)?$/i
@@ -185,6 +199,11 @@ function indexOf (corpus) {
     streams: of((e) => e.kind === LIVE_KIND && tagValue(e, 'd')),
     listings: of((e) => e.kind === CLASSIFIED_KIND && tagValue(e, 'd')),
     calendars: of((e) => CALENDAR_KINDS.has(e.kind) && tagValue(e, 'd')),
+    articles: of((e) => ARTICLE_KINDS.has(e.kind) && tagValue(e, 'd')),
+    // Everyone who wrote something the paper could cite. A profile link to
+    // anybody else is refused, however well formed.
+    authors: new Set(events.map((e) => lower(e.pubkey))),
+    byEventId: new Map(events.map((e) => [lower(e.id), e])),
   }
   INDEX.set(corpus, built)
   return built
@@ -315,6 +334,58 @@ export function toCalendarLink (event) {
   return toNjumpCalendarUrl(event)
 }
 
+/**
+ * Event id if `href` is a verified brainstorm.world article link for a
+ * long-form or wiki event we read; otherwise null. The naddr must decode to
+ * the same kind + pubkey + d-tag as an article in the corpus.
+ */
+export function articleLinkTarget (href, corpus) {
+  const naddr = ARTICLE_LINK.exec(href)
+  if (!naddr) return null
+  try {
+    const { kind, pubkey, identifier } = fromNaddr(naddr[1])
+    if (!ARTICLE_KINDS.has(kind)) return null
+    const event = indexOf(corpus).articles.byAddress.get(addressKey(kind, pubkey, identifier))
+    return event?.id || null
+  } catch {
+    return null
+  }
+}
+
+export function toArticleLink (event) {
+  return toBrainstormArticle(event)
+}
+
+/** Pubkey hex if `href` is a brainstorm.world profile of somebody in the corpus; otherwise null. */
+export function profileLinkTarget (href, corpus) {
+  const match = PROFILE_LINK.exec(href)
+  if (!match) return null
+  try {
+    const pubkey = fromNpub(match[1])
+    return indexOf(corpus).authors.has(pubkey) ? pubkey : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Writer form, for resolve.mjs only: the author of the named post, or — for a
+ * hand-edited page — a pubkey that is itself an author in the corpus.
+ */
+export function profileWriterTarget (href, corpus) {
+  const writer = PROFILE_WRITER.exec(href)
+  if (!writer) return null
+  const hex = writer[1].toLowerCase()
+  const index = indexOf(corpus)
+  const event = index.byEventId.get(hex)
+  if (event) return lower(event.pubkey)
+  return index.authors.has(hex) ? hex : null
+}
+
+export function toProfileLink (pubkey) {
+  return toBrainstormProfile(pubkey)
+}
+
 // Things there is no sanitizer to strip, so they are refused instead.
 //
 // Checked against PARSED TAGS, never against the raw document. The first
@@ -373,6 +444,48 @@ export function markupViolations (html) {
 }
 
 /**
+ * When the reader has named their paper (observer.config.json), the name is
+ * theirs to keep and not the writer's to drift from: the nameplate and the
+ * document title must carry it. Compared without spaces or case, because the
+ * house nameplate sets "The" in its own span and the stylesheet uppercases it.
+ */
+function mastheadViolations (html, paper) {
+  if (!paper?.name) return []
+  const squash = (text) => decodeEntities(text.replace(/<[^>]*>/g, '')).replace(/\s+/g, '').toLowerCase()
+  const want = squash(paper.name)
+  const out = []
+
+  const headers = tags(html, 'header').filter((t) => /\bmasthead\b/.test(attrsOf(t.raw).class || ''))
+  const inside = textIn(html, 'header').find((h) => headers.some((t) => t.start === h.start))
+  const plate = textIn(inside ? inside.raw : html, 'h1')[0]
+  if (!plate || squash(plate.raw) !== want) {
+    out.push({ kind: 'MASTHEAD', detail: `the nameplate must read "${paper.name}"`, excerpt: plate ? plate.raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) : '(no nameplate)' })
+  }
+  const title = textIn(html, 'title')[0]
+  if (title && !squash(title.raw).startsWith(want)) {
+    out.push({ kind: 'MASTHEAD', detail: `the <title> must begin "${paper.name}"`, excerpt: title.raw.slice(0, 80) })
+  }
+  return out
+}
+
+/**
+ * The construction. A front page — a page with a fold — has exactly one lead
+ * headline and at most one off-lead; everything else is a second. Two leads
+ * is a page with no judgement in it, and no lead is a page with no front. A
+ * fragment, or a thin single-column edition with no fold, is not held to it.
+ */
+function layoutViolations (html) {
+  const withClass = (name) => tags(html).filter((t) => new RegExp(`\\b${name}\\b`).test(attrsOf(t.raw).class || ''))
+  if (withClass('fold').length === 0) return []
+  const out = []
+  const leads = withClass('lead-head').length
+  const offLeads = withClass('main-head').length
+  if (leads !== 1) out.push({ kind: 'LAYOUT', detail: `a front page has exactly one lead headline (class lead-head); this one has ${leads}`, excerpt: '' })
+  if (offLeads > 1) out.push({ kind: 'LAYOUT', detail: `a front page has at most one off-lead (class main-head); this one has ${offLeads}`, excerpt: '' })
+  return out
+}
+
+/**
  * Everything the boundary has to say about one page. Pure: no files, no exit
  * codes, so a test can put an adversarial page through it directly.
  */
@@ -383,15 +496,28 @@ export function check (html, corpus) {
   // the digest the writer reads. Widening the haystack to include it would let
   // a quote verify against something the edition never had access to.
   const events = Object.values(corpus.desks).flat()
-  const haystack = events.map((e) => normalize(e.content || ''))
+  // The wires the reader asked for are quotable too — a headline, an almanac
+  // line — word for word, as they were fetched. Each is its own source, so
+  // elision can never stitch a headline to somebody's note.
+  const w = corpus.wires
+  const wireTexts = w
+    ? [...(w.headlines || []).flatMap((o) => o.items.map((i) => i.title)),
+        ...((w.almanac && w.almanac.items) || []).map((i) => i.text),
+        w.serial && w.serial.text, w.recipe && w.recipe.method, w.recipe && w.recipe.name,
+        w.cartoon && w.cartoon.caption, w.cartoon && w.cartoon.title, w.picture && w.picture.caption].filter(Boolean)
+    : []
+  const haystack = [...events.map((e) => e.content || ''), ...wireTexts].map(normalize)
   const eventIds = new Set(events.map((e) => e.id))
   const allowedImages = new Set((corpus.art || []).map((a) => a.url))
   const calendarIds = indexOf(corpus).calendars.byId
+  const articleIds = indexOf(corpus).articles.byId
 
   const violations = []
   const flag = (kind, detail, excerpt) => violations.push({ kind, detail, excerpt })
 
   violations.push(...markupViolations(html))
+  violations.push(...mastheadViolations(html, corpus.paper))
+  violations.push(...layoutViolations(html))
 
   const quotes = quotedText(html)
   for (const quote of quotes) {
@@ -409,7 +535,7 @@ export function check (html, corpus) {
   for (const href of attributes(html, 'a', 'href')) {
     if (!/^https?:/i.test(href)) continue
     const id = permalinkTarget(href)
-    // A jumble nevent naming a CALENDAR listing is refused, though the event is
+    // A citation nevent naming a CALENDAR listing is refused, though the event is
     // in the corpus and the citation is well formed. An nevent freezes ONE
     // revision of an event whose whole nature is to be replaced, so the reader
     // clicks through to a meetup whose time has since moved. `resolve.mjs`
@@ -417,7 +543,11 @@ export function check (html, corpus) {
     // regression in that step fail closed. `Validator.kt` has had this guard
     // since the calendar desk landed and this half did not, which is the
     // two-halves-disagreeing bug the permalink regex already taught us once.
-    if (id && eventIds.has(id) && !calendarIds.has(id)) continue
+    // Articles are refused at /e/ for the same reason: they are edited in
+    // place, and resolve.mjs sends them to /a/ by address.
+    if (id && eventIds.has(id) && !calendarIds.has(id) && !articleIds.has(id)) continue
+    if (articleLinkTarget(href, corpus)) continue
+    if (profileLinkTarget(href, corpus)) continue
     if (streamLinkTarget(href, corpus)) continue
     if (listingLinkTarget(href, corpus)) continue
     if (calendarLinkTarget(href, corpus)) continue
@@ -428,9 +558,9 @@ export function check (html, corpus) {
     // put that URL on the allowlist, and an injected instruction to link
     // every story to it then passed cleanly — a phishing link under the
     // reader's masthead. So the paper does not link to the open web at all,
-    // except verified zap.stream / Shopstr / njump-calendar links for events
-    // in the corpus.
-    flag('LINK', 'only source citations, verified zap.stream watch links, Shopstr listing links, and njump calendar links may be links', href.slice(0, 120))
+    // except brainstorm.world citations and profiles, and verified zap.stream /
+    // Shopstr / njump-calendar links, for events and people in the corpus.
+    flag('LINK', 'only brainstorm.world citations and profiles, verified zap.stream watch links, Shopstr listing links, and njump calendar links may be links', href.slice(0, 120))
   }
 
   return { violations, quotes, events: events.length, images: allowedImages.size }

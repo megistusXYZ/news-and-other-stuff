@@ -203,6 +203,7 @@ function cards () {
       const built = build(anchor)
       if (!built || document.body.classList.contains('lv-reading-open')) return
       current = anchor
+      warmReader(anchor.href)
       card.replaceChildren(...built)
       place(anchor)
       card.classList.add('lv-show')
@@ -377,6 +378,7 @@ function countOn (relays, id) {
 
 const BRAINSTORM = 'https://brainstorm.world'
 let openReader = () => {}
+let warmReader = () => {}
 
 function reader () {
   const scrim = el('div', 'lv-scrim')
@@ -417,19 +419,70 @@ function reader () {
   // frame instead of closing the panel; a new frame's first load adds nothing.
   let frame = null
   let sheet = null
+  let preview = null
+  let settle = 0
+  // Brainstorm boots its whole app in every frame and then asks the relays
+  // for the post, which lands some 400ms after the frame reports "loaded".
+  // So a frame is shown a beat after its load, or at once when it loaded
+  // while waiting; until then the reader has the paper's own copy.
+  const SETTLE_MS = 650
+  const reveal = (f) => {
+    clearTimeout(settle)
+    const wait = f.dataset.loadedAt ? Math.max(0, SETTLE_MS - (performance.now() - Number(f.dataset.loadedAt))) : SETTLE_MS
+    settle = setTimeout(() => { if (f === frame) body.classList.add('lv-loaded') }, wait)
+  }
+  // Up to two pages load unseen: the one the reader is hovering, and the
+  // next story. A waiting frame is shown by swapping visibility, never moved —
+  // moving an iframe reloads it. Its first load adds no history, so Back still
+  // closes the panel.
+  const waiting = new Map()
+  const makeFrame = (src) => {
+    const f = el('iframe', 'lv-panel-frame')
+    f.title = 'Brainstorm'
+    f.referrerPolicy = 'no-referrer'
+    f.setAttribute('allow', 'clipboard-write')
+    f.dataset.src = src
+    f.addEventListener('load', () => {
+      if (!f.dataset.loadedAt) f.dataset.loadedAt = String(performance.now())
+      if (f === frame) reveal(f)
+    })
+    f.src = src
+    body.append(f)
+    return f
+  }
+  const warm = (src) => {
+    if (!src || (frame && frame.dataset.src === src) || waiting.has(src)) return
+    if (waiting.size >= 2) {
+      const [oldest, f] = waiting.entries().next().value
+      f.remove()
+      waiting.delete(oldest)
+    }
+    const f = makeFrame(src)
+    f.classList.add('lv-waiting')
+    f.tabIndex = -1
+    f.setAttribute('aria-hidden', 'true')
+    waiting.set(src, f)
+  }
   const clear = () => {
+    clearTimeout(settle)
     if (frame) { frame.remove(); frame = null }
     if (sheet) { sheet.dispatchEvent(new Event('lv:unmount')); sheet.remove(); sheet = null }
+    if (preview) { preview.remove(); preview = null }
   }
-  const mountFrame = (src) => {
+  const mountFrame = (src, copy) => {
     clear()
-    frame = el('iframe', 'lv-panel-frame')
-    frame.title = 'Brainstorm'
-    frame.referrerPolicy = 'no-referrer'
-    frame.setAttribute('allow', 'clipboard-write')
-    frame.addEventListener('load', () => body.classList.add('lv-loaded'))
-    frame.src = src
-    body.append(frame)
+    if (copy) { preview = copy; body.append(preview) }
+    const f = waiting.get(src)
+    if (f) {
+      waiting.delete(src)
+      f.classList.remove('lv-waiting')
+      f.removeAttribute('aria-hidden')
+      f.removeAttribute('tabindex')
+      frame = f
+      if (f.dataset.loadedAt) reveal(f)
+    } else {
+      frame = makeFrame(src)
+    }
   }
   const mountSheet = (node) => {
     clear()
@@ -506,6 +559,32 @@ function reader () {
     a.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' })
     open(targetOf(a), a)
   }
+  const copyOf = (story, pk) => {
+    const ev = story && data.events[story]
+    const who = data.people[(ev && ev.pk) || pk]
+    if (!ev && !who) return null
+    const box = el('article', 'lv-panel-preview')
+    const head = el('div', 'lv-preview-head')
+    if (who && who.picture) {
+      const img = el('img', 'lv-preview-avatar')
+      img.alt = ''
+      img.referrerPolicy = 'no-referrer'
+      img.src = who.picture
+      img.onerror = () => img.remove()
+      head.append(img)
+    }
+    const line = el('div')
+    line.append(el('div', 'lv-preview-name', (who && who.name) || 'Someone on nostr'))
+    const meta = ev ? ago(ev.t) : (who && who.nip05) || ''
+    if (meta) line.append(el('div', 'lv-preview-meta', meta))
+    head.append(line)
+    box.append(head)
+    if (ev && ev.title) box.append(el('h2', 'lv-preview-title', ev.title))
+    const text = ev ? ev.text : who && who.about
+    if (text) box.append(el('p', 'lv-preview-text', text))
+    box.append(el('p', 'lv-preview-wait', 'From the paper’s copy · the live page is on its way'))
+    return box
+  }
   const headline = (id) => {
     const ev = data.events[id]
     if (!ev) return 'A post'
@@ -554,7 +633,9 @@ function reader () {
     } else {
       kicker.textContent = pk ? 'Profile on Brainstorm' : 'Reading on Brainstorm'
       setOut('Open full page to zap or follow', 'Full page', BRAINSTORM + target.path)
-      mountFrame(embed(target.path))
+      mountFrame(embed(target.path), copyOf(story, pk))
+      // The reader is likely to press › next: have that page loading already.
+      if (onStory && index < stories.length - 1) warm(embed(pathOf(storyAnchor(stories[index + 1]).href)))
     }
 
     // The new reader's note: Brainstorm pages only, a few times, until "Got it".
@@ -582,6 +663,8 @@ function reader () {
     if (source) source.classList.remove('lv-reading')
     source = null
     clear()
+    for (const f of waiting.values()) f.remove()
+    waiting.clear()
     if (opener && opener.focus) opener.focus()
   }
 
@@ -611,6 +694,12 @@ function reader () {
     show(target, anchor)
   }
   openReader = (url, anchor = null, options) => open({ type: 'page', path: pathOf(url) }, anchor, options)
+  // Hovering a Brainstorm link starts its page loading, unseen, so the click
+  // lands on a page that is already there.
+  warmReader = (url) => {
+    const path = pathOf(url)
+    if (path) warm(embed(path))
+  }
 
   const step = (by) => {
     if (index < 0 || !stories.length) return
@@ -1499,6 +1588,14 @@ function sectionBar () {
 // Started last, once every helper above exists.
 if (data) {
   document.documentElement.classList.add('lv')
+  // Open the line to Brainstorm while the reader is still on the front page.
+  for (const origin of [BRAINSTORM, 'https://api.brainstorm.world']) {
+    const link = document.createElement('link')
+    link.rel = 'preconnect'
+    link.href = origin
+    link.crossOrigin = ''
+    document.head.append(link)
+  }
   // A branded paper keeps to its brand's palette; the photograph does not
   // get a vote.
   if (!data.brand) guard(accent)

@@ -566,6 +566,24 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   the Almanac, in the brief too, which brings the four wire cells within
   71px of each other instead of 150.
 
+- **The panel feels instant (2026-09-25).** Measured: Brainstorm boots its
+  whole app in every frame (1.5 MB of script, from cache after the first
+  time — and the browser keeps a separate cache for a framed site, so the
+  paper's first open downloads it even for a daily brainstorm.world user),
+  then asks relays for the post, which lands ~400ms after the frame reports
+  "loaded". The panel used to drop its loading line at "loaded", so the
+  reader saw Brainstorm's empty chrome. Now: (1) the paper's own copy of the
+  post or person — author, time, title, text — shows in the panel at once
+  (measured 6ms) and the live page fades in 650ms after its load; (2) up to
+  two frames load unseen — the page the hover card points at, and the next
+  story in `sequence` — and are shown by swapping visibility, never moved
+  (moving an iframe reloads it); › measured 11ms, hover-then-click 13ms,
+  against 0.5–1s before; a waiting frame's first load adds no history, so
+  Back still closes the panel; closing frees every frame; (3) preconnect to
+  brainstorm.world and api.brainstorm.world on load. A `brainstorm:ready`
+  postMessage from Brainstorm (a cousin of team request #4) would let the
+  live page fade in the moment it has drawn instead of on a timer.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

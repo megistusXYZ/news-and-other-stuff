@@ -600,11 +600,27 @@ a.lv-panel-out:hover { color: var(--accent); }
 .lv-panel-body { position: relative; flex: 1; min-height: 0; }
 .lv-panel-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; transition: opacity .35s ease; background: transparent; }
 .lv-panel-body.lv-loaded .lv-panel-frame { opacity: 1; }
+/* A page loading unseen, for the hover or the next story. */
+.lv-panel-frame.lv-waiting, .lv-panel-body.lv-loaded .lv-panel-frame.lv-waiting { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* The paper's own copy, at once, until the live page has drawn. */
+.lv-panel-preview {
+  position: absolute; inset: 0; overflow: auto; padding: 22px 24px; background: var(--paper-2, #fff);
+  transition: opacity .3s ease; font-family: var(--body); color: var(--ink);
+}
+.lv-panel-body.lv-loaded .lv-panel-preview { opacity: 0; pointer-events: none; }
+.lv-preview-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.lv-preview-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.lv-preview-name { font-family: var(--brand, var(--serif)); font-weight: 700; font-size: 1rem; }
+.lv-preview-meta { font-family: var(--mono); font-size: .66rem; color: var(--ink-3); }
+.lv-preview-title { font-family: var(--serif); font-weight: 700; font-size: 1.6rem; line-height: 1.15; margin: 0 0 10px; }
+.lv-preview-text { font-size: 1rem; line-height: 1.6; color: var(--ink-2); white-space: pre-line; margin: 0; max-width: 62ch; }
+.lv-preview-wait { margin-top: 18px; font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
 .lv-panel-loading {
   position: absolute; inset: 0; display: grid; place-items: center;
   font-family: var(--mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
 }
-.lv-panel-body.lv-loaded .lv-panel-loading { display: none; }
+.lv-panel-body.lv-loaded .lv-panel-loading, .lv-panel-body:has(.lv-panel-preview) .lv-panel-loading { display: none; }
 
 .lv-panel-step[hidden] { display: none; }
 

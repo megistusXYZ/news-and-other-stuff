@@ -54,6 +54,8 @@ body { font-feature-settings: "kern", "liga", "onum"; }
   font-family: var(--serif); font-weight: 900; text-transform: none;
   letter-spacing: -0.018em; line-height: .95;
   font-size: clamp(2.3rem, 6.2vw, 5.1rem);
+  /* A name that wraps on a phone breaks evenly: "News and / Other Stuff". */
+  text-wrap: balance;
 }
 .masthead .the { display: inline; font-size: 1em; letter-spacing: 0; text-indent: 0; margin: 0 .2em 0 0; color: inherit; }
 .masthead .motto {

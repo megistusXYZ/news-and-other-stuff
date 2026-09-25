@@ -501,8 +501,10 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   the ear is a single line beneath the name and drops the window. The
   paper was renamed twice the same day, from "Across the Network": first
   to "Word of Mouth", then — the reader wanting a news source's feel and
-  no talk of trust — to "The Morning Herald", and finally, the reader's
-  pick, **The Daily Dispatch**, "The day’s news, front to back." Mottos say what is in the paper, not how it is
+  no talk of trust — to "The Morning Herald", then the reader's pick "The
+  Daily Dispatch" ("The day’s news, front to back."), and at last **News
+  and Other Stuff**, "The observer for your network." The nameplate is set
+  `text-wrap: balance`, so on a phone it breaks "News and / Other Stuff". Mottos say what is in the paper, not how it is
   ranked; the ranking is the colophon's job.
 
 - **The section bar slides at every width; no scroll bars are drawn

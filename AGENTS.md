@@ -599,6 +599,18 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   after 04:30 UTC" into 11:30 p.m. CDT the night before — the headline's
   "Before Breakfast" is Gigi's breakfast, in Europe, and was left as set.
 
+- **A stamp beside the nameplate (2026-09-25).** `observer.config.json`
+  `"stamp": "ostrich"` names `reference/stamps/ostrich.webp` (a name, never a
+  path; an unknown stamp is refused like an unknown brand). The reader's
+  engraved ostrich was cropped to the bird, set as the paper's ink
+  (#0A0E18) on transparency with its tones kept, its cut neck faded into
+  the page over the bottom third, and shrunk from 1.4 MB to 21 KB at
+  194×240. `dress.mjs` inlines it as `--lv-stamp` in `<style
+  id="living-stamp">` and marks `<html data-stamp>`; both undress away. On a
+  desk it leads the ear (84×104, left of the date, its neck on the heavy
+  rule); on a phone it sits at the end of the nameplate (56×70). Inverted
+  to chalk on a dark page. Checked at 1519, 1080, 768 and 375.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

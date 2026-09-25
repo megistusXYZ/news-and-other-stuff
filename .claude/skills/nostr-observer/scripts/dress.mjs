@@ -181,10 +181,21 @@ export function hashedFive (five, words) {
   }
 }
 
+/** Every stamp under `reference/stamps/`: a small webp, as base64. */
+function loadStamps (dir = join(REFERENCE, 'stamps')) {
+  const stamps = {}
+  if (!existsSync(dir)) return stamps
+  for (const file of readdirSync(dir).filter((f) => /^[a-z0-9-]+\.webp$/.test(f))) {
+    stamps[file.replace(/\.webp$/, '')] = readFileSync(join(dir, file)).toString('base64')
+  }
+  return stamps
+}
+
 /** Everything dress() injects, read from `reference/`. */
 export function loadAssets () {
   return {
     brands: loadBrands(),
+    stamps: loadStamps(),
     fiveWords: loadFiveWords(),
     fonts: fontFaces(),
     css: readFileSync(join(REFERENCE, 'living.css'), 'utf8'),
@@ -265,6 +276,12 @@ export function dress (html, corpus, assets) {
   const brandName = corpus.paper?.brand || null
   const brand = brandName ? assets.brands?.[brandName] : null
   if (brandName && !brand) throw new Error(`Unknown brand "${brandName}". Brands live in reference/brands/.`)
+  // The paper's stamp, beside its nameplate: our own picture, inlined as a
+  // CSS variable the stylesheet places. Base64 only, so it cannot close a tag.
+  const stampName = corpus.paper?.stamp || null
+  const stamp = stampName ? assets.stamps?.[stampName] : null
+  if (stampName && !stamp) throw new Error(`Unknown stamp "${stampName}". Stamps live in reference/stamps/.`)
+  if (stamp && !/^[A-Za-z0-9+/]+=*$/.test(stamp)) throw new Error(`The ${stampName} stamp must be base64.`)
   if (brand) {
     assertInlinable(`${brandName} css`, brand.css)
     assertInlinable(`${brandName} mark`, brand.mark)
@@ -446,6 +463,7 @@ export function dress (html, corpus, assets) {
 
   const head = `<style id="living-fonts">\n${assets.fonts}\n</style>\n<style id="living-css">\n${assets.css}</style>\n`
     + (brand ? `<style id="brand-css">\n${brand.css}</style>\n` : '')
+    + (stamp ? `<style id="living-stamp">:root{--lv-stamp:url("data:image/webp;base64,${stamp}")}</style>\n` : '')
   // The printer's colophon, for a branded paper only: who made it and how to
   // get your own. The brand's own markup, with the reader's paper name in it.
   const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
@@ -461,6 +479,7 @@ export function dress (html, corpus, assets) {
   if (!/<\/head>/i.test(out) || !/<\/body>/i.test(out)) throw new Error('The edition needs a <head> and a <body> to dress.')
   out = out.replace(/<\/head>/i, `${head}</head>`)
   if (brand) out = out.replace(/<html\b/i, `<html data-brand="${brandName}"`)
+  if (stamp) out = out.replace(/<html\b/i, `<html data-stamp="${stampName}"`)
   out = indexRow(out)
 
   // The colophon is the last thing on the sheet, inside its margins; with no

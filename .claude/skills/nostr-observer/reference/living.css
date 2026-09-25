@@ -80,6 +80,34 @@ html, body, .lv-sections, .lv-panel, .lv-drawer, .tablewrap { scrollbar-width: n
 html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollbar,
 .lv-panel ::-webkit-scrollbar, .lv-drawer::-webkit-scrollbar, .tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
+/* --- the paper's stamp -------------------------------------------------------- */
+/* An engraved vignette beside the nameplate, the way papers once set a cut in
+ * the ear: inked in the paper's own colour, its neck fading into the heavy
+ * rule. On a desk it leads the ear, left of the date; on a phone it sits at
+ * the end of the nameplate. dress.mjs sets --lv-stamp and data-stamp. */
+[data-stamp] .sheet > .folio { padding-left: 124px; }
+[data-stamp] .sheet > .folio::after {
+  content: ""; position: absolute; left: 24px; bottom: 0; width: 84px; height: 104px;
+  background: var(--lv-stamp) center bottom / contain no-repeat; opacity: .9; pointer-events: none;
+}
+@media (max-width: 720px) {
+  [data-stamp] .sheet > .folio { padding-left: 0; }
+  [data-stamp] .sheet > .folio::after { content: none; }
+  [data-stamp] .sheet > .masthead { padding-right: 64px; }
+  [data-stamp] .sheet > .masthead::after {
+    content: ""; position: absolute; right: 0; bottom: 0; width: 56px; height: 70px;
+    background: var(--lv-stamp) center bottom / contain no-repeat; opacity: .9; pointer-events: none;
+  }
+}
+/* On a dark page the ink turns to chalk. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-stamp] .sheet > .folio::after,
+  :root:not([data-theme="light"]) [data-stamp] .sheet > .masthead::after { filter: invert(1); }
+}
+:root[data-theme="dark"][data-stamp] .sheet > .folio::after,
+:root[data-theme="dark"][data-stamp] .sheet > .masthead::after { filter: invert(1); }
+@media print { [data-stamp] .sheet > .folio::after, [data-stamp] .sheet > .masthead::after { opacity: 1; } }
+
 /* --- inside today: the section bar ------------------------------------------ */
 /* A newspaper front's section bar: the sections in small bold caps, a
  * hairline between each, the live count at the right. One row on a desk. */

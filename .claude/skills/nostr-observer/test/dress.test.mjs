@@ -422,3 +422,24 @@ test('the living copy carries the reader\'s clock for its own times; none known,
   assert.deepEqual(islandOf(dress(page, { ...corpus, wires: { weather: { timezone: 'Europe/London', unit: '°C' } } }, assets).html).clock, { timezone: 'Europe/London', hour12: false })
   assert.equal(islandOf(dress(page, corpus, assets).html).clock, null)
 })
+
+// --- the stamp beside the nameplate, 2026-09-25 ---------------------------------------
+
+test('a paper with a stamp carries it as its own inlined picture, and still undresses to the checked edition', () => {
+  const stamped = { ...assets, stamps: { ostrich: 'UklGRg==' } }
+  const withStamp = { ...corpus, paper: { stamp: 'ostrich' } }
+  const { html } = dress(page, withStamp, stamped)
+  assert.match(html, /<html data-stamp="ostrich">/)
+  assert.match(html, /<style id="living-stamp">:root\{--lv-stamp:url\("data:image\/webp;base64,UklGRg=="\)\}<\/style>\n/)
+  const undressed = html
+    .replace(/<style id="living-fonts">[\s\S]*?<\/style>\n<style id="living-css">[\s\S]*?<\/style>\n/, '')
+    .replace(/<style id="living-stamp">[\s\S]*?<\/style>\n/, '')
+    .replace(' data-stamp="ostrich"', '')
+    .replace(/<script type="application\/json" id="observer-data">[\s\S]*?<\/script>\n<script type="module" id="living-js">[\s\S]*?<\/script>\n/, '')
+    .replace(/ ?data-(ev|t|pk)="[^"]*"/g, '')
+    .replace(/<a +/g, '<a ')
+  assert.equal(undressed, page)
+  assert.throws(() => dress(page, { ...corpus, paper: { stamp: 'pelican' } }, stamped), /Unknown stamp "pelican"/)
+  assert.doesNotMatch(dress(page, corpus, stamped).html, /data-stamp|living-stamp/, 'no stamp configured, none applied')
+  assert.match(loadAssets().stamps.ostrich, /^[A-Za-z0-9+/]+=*$/, 'the bundled ostrich is base64 webp')
+})

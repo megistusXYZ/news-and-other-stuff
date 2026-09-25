@@ -392,3 +392,15 @@ test('with the reader\'s time zone known, every time in the digest is theirs, la
   const none = digest(base)
   assert.match(none, /^Window: 2026-09-24 04:09Z to 2026-09-25 04:09Z/m, 'no wires, no zone: UTC as before')
 })
+
+test('a paper can carry a stamp beside its nameplate, named like its brand', async () => {
+  const { readPaper } = await import('../scripts/corpus.mjs')
+  const { writeFileSync, mkdtempSync } = await import('node:fs')
+  const { join } = await import('node:path')
+  const { tmpdir } = await import('node:os')
+  const file = join(mkdtempSync(join(tmpdir(), 'paper-')), 'observer.config.json')
+  writeFileSync(file, JSON.stringify({ name: 'News and Other Stuff', stamp: 'ostrich' }))
+  assert.equal(readPaper(file).stamp, 'ostrich')
+  writeFileSync(file, JSON.stringify({ name: 'News and Other Stuff', stamp: '../../etc/passwd' }))
+  assert.equal(readPaper(file).stamp, null, 'a stamp is a name, never a path')
+})

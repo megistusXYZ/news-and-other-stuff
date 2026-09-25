@@ -588,6 +588,8 @@ export function readPaper (path = 'observer.config.json') {
   const raw = JSON.parse(readFileSync(path, 'utf8'))
   const clean = (value, max) => (typeof value === 'string' && value.trim() && !/[<>]/.test(value) ? value.trim().slice(0, max) : null)
   const paper = { name: clean(raw.name, 60), motto: clean(raw.motto, 80), brand: clean(raw.brand, 24) }
+  // A stamp beside the nameplate, by name: one of reference/stamps/<name>.webp.
+  paper.stamp = typeof raw.stamp === 'string' && /^[a-z0-9-]{1,32}$/.test(raw.stamp) ? raw.stamp : null
   // The wires: what the reader wants from outside Nostr. A place for the
   // weather, a few teams, a few https feeds, and whether to run the almanac.
   const list = (value, max, keep) => (Array.isArray(value) ? value : []).map((v) => keep(v)).filter(Boolean).slice(0, max)

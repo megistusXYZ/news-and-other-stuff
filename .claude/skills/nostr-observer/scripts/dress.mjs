@@ -480,6 +480,22 @@ export function dress (html, corpus, assets) {
   out = out.replace(/<\/head>/i, `${head}</head>`)
   if (brand) out = out.replace(/<html\b/i, `<html data-brand="${brandName}"`)
   if (stamp) out = out.replace(/<html\b/i, `<html data-stamp="${stampName}"`)
+  // The stamp stands as a crest in the nameplate, the way The Times sets its
+  // arms between "The" and "Times": after the middle word of the name, held
+  // to that word so a name that wraps breaks after the crest, not before it.
+  // Only a plain-text nameplate is touched.
+  if (stamp) {
+    const masthead = tags(out, 'header').find((t) => /\bmasthead\b/.test(attributes(t.raw).class || ''))
+    const plate = masthead ? /<h1>([^<]+)<\/h1>/.exec(out.slice(masthead.end)) : null
+    if (plate) {
+      const words = plate[1].trim().split(/\s+/)
+      const k = Math.ceil(words.length / 2)
+      const crest = `<span class="lv-crest-hold">${words[k - 1]}<span class="lv-crest" aria-hidden="true"></span></span>`
+      const set = [...words.slice(0, k - 1), crest, ...words.slice(k)].join(' ')
+      const at = masthead.end + plate.index
+      out = out.slice(0, at) + `<h1>${set}</h1>` + out.slice(at + plate[0].length)
+    }
+  }
   out = indexRow(out)
 
   // The colophon is the last thing on the sheet, inside its margins; with no

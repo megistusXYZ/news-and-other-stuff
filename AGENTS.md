@@ -614,7 +614,15 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   the engraved head, centred on the three date lines and 14px before them,
   so it is one of the ear's parts, not a picture beside it; on a phone the
   same seal (40px) ends the nameplate. On a dark page the roundel keeps a
-  pale ground so the ink still reads. Checked at 1519, 820 and 375.
+  pale ground so the ink still reads. Checked at 1519, 820 and 375. The
+  seal was refused too (the ring, the placement), then a crest set in the
+  nameplate between the halves of the name, like The Times's arms
+  (`dress.mjs` wraps the middle word and a `.lv-crest` span, undressed
+  away) — refused as well. The conclusion: the picture, not the place. A
+  front-on portrait with a glossy eye reads as a smudge at 40–70px wherever
+  it goes. The stamp is off in the reader's config until a mark drawn for
+  the job arrives (a profile head in line engraving, made to be small); the
+  crest machinery stays.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

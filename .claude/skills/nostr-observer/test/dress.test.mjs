@@ -443,3 +443,24 @@ test('a paper with a stamp carries it as its own inlined picture, and still undr
   assert.doesNotMatch(dress(page, corpus, stamped).html, /data-stamp|living-stamp/, 'no stamp configured, none applied')
   assert.match(loadAssets().stamps.ostrich, /^[A-Za-z0-9+/]+=*$/, 'the bundled ostrich is base64 webp')
 })
+
+test('the stamp stands as a crest in the nameplate, between the halves of the name, and undresses away', () => {
+  const stamped = { ...assets, stamps: { ostrich: 'UklGRg==' } }
+  const named = page.replace('<title>t</title>', '<title>News and Other Stuff</title>').replace('<body>', '<body><header class="masthead"><h1>News and Other Stuff</h1><p class="motto">m</p></header>')
+  const paper = { name: 'News and Other Stuff', stamp: 'ostrich' }
+  const { html } = dress(named, { ...corpus, paper }, stamped)
+  assert.match(html, /<h1>News <span class="lv-crest-hold">and<span class="lv-crest" aria-hidden="true"><\/span><\/span> Other Stuff<\/h1>/,
+    'after the middle word, and held to it so a wrapped name breaks after the crest')
+  const three = dress(named.replaceAll('News and Other Stuff', 'The Daily Dispatch'), { ...corpus, paper: { ...paper, name: 'The Daily Dispatch' } }, stamped).html
+  assert.match(three, /<h1>The <span class="lv-crest-hold">Daily<span class="lv-crest" aria-hidden="true"><\/span><\/span> Dispatch<\/h1>/)
+  const undressed = html
+    .replace(/<style id="living-fonts">[\s\S]*?<\/style>\n<style id="living-css">[\s\S]*?<\/style>\n/, '')
+    .replace(/<style id="living-stamp">[\s\S]*?<\/style>\n/, '')
+    .replace(' data-stamp="ostrich"', '')
+    .replace(/<span class="lv-crest-hold">([^<]*)<span class="lv-crest" aria-hidden="true"><\/span><\/span>/, '$1')
+    .replace(/<nav class="lv-index"[\s\S]*?<\/nav>/, '')
+    .replace(/<script type="application\/json" id="observer-data">[\s\S]*?<\/script>\n<script type="module" id="living-js">[\s\S]*?<\/script>\n/, '')
+    .replace(/ ?data-(ev|t|pk)="[^"]*"/g, '')
+    .replace(/<a +/g, '<a ')
+  assert.equal(undressed, named)
+})

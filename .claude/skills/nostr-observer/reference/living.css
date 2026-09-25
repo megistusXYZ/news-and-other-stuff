@@ -80,35 +80,22 @@ html, body, .lv-sections, .lv-panel, .lv-drawer, .tablewrap { scrollbar-width: n
 html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollbar,
 .lv-panel ::-webkit-scrollbar, .lv-drawer::-webkit-scrollbar, .tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
-/* --- the paper's stamp -------------------------------------------------------- */
-/* A seal in the ear, the way old papers pressed one beside the date: the
- * engraved head in a small double-ruled roundel, the same height as the three
- * date lines and set tight against them, so it reads as part of the ear and
- * not a picture beside it. On a phone the same seal ends the nameplate.
- * dress.mjs sets --lv-stamp and data-stamp. */
-[data-stamp] .sheet > .folio { padding-left: 88px; }
-[data-stamp] .sheet > .folio::after,
-[data-stamp] .sheet > .masthead::after {
-  content: ""; position: absolute; width: 46px; height: 46px; border-radius: 50%; pointer-events: none;
-  background: var(--lv-stamp) 50% 3px / 40px auto no-repeat;
-  box-shadow: 0 0 0 1px var(--ink), 0 0 0 3px var(--paper), 0 0 0 4px var(--ink);
+/* --- the paper's crest --------------------------------------------------------- */
+/* The stamp stands in the nameplate like The Times's arms between "The" and
+ * "Times": the engraved head at the height of the capitals, its cut neck
+ * fading onto the baseline, inked in the paper's colour. Sized in em, so it
+ * keeps its place in the name at every width; held to the word before it,
+ * so a name that wraps on a phone breaks after the crest. dress.mjs sets
+ * --lv-stamp and the span. */
+.lv-crest-hold { white-space: nowrap; }
+.lv-crest {
+  display: inline-block; width: .84em; height: 1.04em; margin: 0 .04em 0 .16em; vertical-align: -.1em;
+  background: var(--lv-stamp) 50% 0 / contain no-repeat;
 }
-/* Centred on the 60px date stack, 14px before it. */
-[data-stamp] .sheet > .folio::after { left: 28px; bottom: 23px; }
-[data-stamp] .sheet > .masthead::after { content: none; }
-@media (max-width: 720px) {
-  [data-stamp] .sheet > .folio { padding-left: 0; }
-  [data-stamp] .sheet > .folio::after { content: none; }
-  [data-stamp] .sheet > .masthead { padding-right: 58px; }
-  [data-stamp] .sheet > .masthead::after { content: ""; right: 4px; bottom: 14px; width: 40px; height: 40px; background-size: 35px auto; }
-}
-/* On a dark page the seal keeps a pale ground, so the ink still reads. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) [data-stamp] .sheet > .folio::after,
-  :root:not([data-theme="light"]) [data-stamp] .sheet > .masthead::after { background-color: #E9EAE6; }
+  :root:not([data-theme="light"]) .lv-crest { filter: invert(1); }
 }
-:root[data-theme="dark"][data-stamp] .sheet > .folio::after,
-:root[data-theme="dark"][data-stamp] .sheet > .masthead::after { background-color: #E9EAE6; }
+:root[data-theme="dark"] .lv-crest { filter: invert(1); }
 
 /* --- inside today: the section bar ------------------------------------------ */
 /* A newspaper front's section bar: the sections in small bold caps, a
@@ -602,11 +589,15 @@ body.lv-reading-open .lv-scrim { opacity: 1; pointer-events: auto; }
   position: fixed; z-index: 61; top: 0; right: 0; bottom: 0; width: min(62vw, 1000px); min-width: 520px;
   display: flex; flex-direction: column; background: var(--paper-2, #fff);
   border-left: 1px solid var(--rule); box-shadow: -24px 0 60px -30px rgba(10, 14, 24, .45);
-  transform: translateX(104%); transition: transform .28s cubic-bezier(.2, .7, .2, 1);
+  transform: translateX(104%); transition: transform .28s cubic-bezier(.2, .7, .2, 1), visibility 0s linear .28s;
+  /* Closed is gone, not just off-screen: it cannot be tabbed into, and it
+   * does not sweep across the page when a turned phone crosses the
+   * breakpoint and its hiding place moves from the side to below. */
+  visibility: hidden;
   outline: none;
 }
 .lv-panel::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--accent); }
-body.lv-reading-open .lv-panel { transform: none; }
+body.lv-reading-open .lv-panel { transform: none; visibility: visible; transition: transform .28s cubic-bezier(.2, .7, .2, 1), visibility 0s; }
 /* Wide enough for Brainstorm's own page: most of a desk, nearly all of a
  * tablet; a phone keeps the full-width sheet below. */
 @media (min-width: 721px) and (max-width: 1000px) { .lv-panel { width: 88vw; min-width: 0; } }

@@ -69,6 +69,43 @@ reading someone else's front page is a legitimate thing to want.
 
 ---
 
+## Step 1b — The reader's own pages, asked once
+
+A paper also carries the weather, the scores, an almanac and the wider world.
+Those come from open wire services on the reader's own machine, set by
+`observer.config.json` in their working directory. **Ask once**: if that file
+has no `wiresAsked` key, ask these together, then write the answers into the
+file (keep every key already there) with `"wiresAsked": true`, and never ask
+again:
+
+> Would you like a few pages from outside Nostr, like a real paper carries?
+> - **Weather**: which city? (sent only to Open-Meteo, from this machine)
+> - **Sports**: any teams to follow? (up to five; add the sport in brackets
+>   when a name is shared, e.g. `Northwestern Wildcats (American Football)`)
+> - **Almanac**: "on this day" from Wikipedia? (yes/no)
+> - **Wider world**: any news feeds? e.g. BBC World
+>   `https://feeds.bbci.co.uk/news/world/rss.xml`, The Guardian
+>   `https://www.theguardian.com/world/rss`, NPR `https://feeds.npr.org/1001/rss.xml`
+> - **Culture**: pop-culture feeds, kept apart from the news? e.g. Variety
+>   `https://variety.com/feed/`, Rolling Stone `https://www.rollingstone.com/feed/`,
+>   Pitchfork `https://pitchfork.com/rss/news/`, BBC Entertainment
+>   `https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml` — written as
+>   `{ "url": "…", "section": "Culture" }` — and Wikipedia's most-read pages
+>   of the day (`culture: true`)?
+> - **The back page**: a daily cartoon (xkcd), a sudoku, a recipe of the day,
+>   a serial — one instalment a day of a public-domain novel (Project
+>   Gutenberg; e.g. 1342 is Pride and Prejudice, 1661 Sherlock Holmes)?
+> - **Readings**: markets (bitcoin, fees, the ECB's currency table), the world
+>   at a glance (earthquakes, your next public holiday), the picture of the
+>   day (Wikimedia), air quality and the moon with the weather?
+
+The keys are `place`, `teams`, `feeds` (https only), `almanac`, `cartoon`,
+`puzzle`, `recipe`, `serial` (a Gutenberg number), `picture`, `markets`,
+`world`, `sky`, `culture`, and `units` (`us` or `metric`). "No thanks" is an answer: write
+`"wiresAsked": true` alone. Step 3 fetches whatever is set.
+
+---
+
 ## Step 2 — Check the lens before spending anything
 
 ```bash
@@ -105,6 +142,13 @@ pre-flight is the cheap moment to learn there is nowhere to put it.
 ```bash
 node <skill>/scripts/corpus.mjs <npub> --out editions/corpus.json > editions/digest.md
 ```
+
+If the reader's folder has an `observer.config.json` — `{ "name": "…",
+"motto": "…", "brand": "brainstorm" }` — the corpus carries it: the digest
+opens with a **Masthead** block naming the paper, the validator refuses a
+nameplate or `<title>` that does not carry that name, and Step 8 dresses the
+living copy in the brand from `reference/brands/<brand>/`. Without the file,
+nothing changes.
 
 Then read `editions/digest.md`. It gives you fourteen desks, the art shortlist, and the
 **Instrument** — the same window read with no lens at all, and how much of it
@@ -174,11 +218,17 @@ and some viewers block remote images outright — so a missing picture is normal
 not exceptional. With `alt` it degrades to a sentence; without it, to an empty
 box. Same rule as the caption: say what the post says the picture is.
 
-**Cite a source as `https://jumble.social/notes/<64-hex-event-id>`.** Step 5
-encodes that as an `nevent1` URL and opens it in a new tab, so the paper stays
-put. Do not write `njump.me`, and do not compose an `nevent1` yourself — a regex
-that accepted `nevent1` without decoding it once shipped a page whose every
-citation failed the boundary.
+**Cite a source as `https://brainstorm.world/e/<64-hex-event-id>`.** Step 5
+encodes that as an `nevent1` URL (or, for a long-form article, its address at
+`brainstorm.world/a/`) and opens it in a new tab, so the paper stays put. Do
+not write `njump.me` or `jumble.social`, and do not compose an `nevent1` or
+`naddr1` yourself — a regex that accepted `nevent1` without decoding it once
+shipped a page whose every citation failed the boundary.
+
+**Link a person's name as `https://brainstorm.world/p/<64-hex-event-id>`,**
+using the id of any of their posts in the digest. Step 5 swaps in their
+profile. You are never given a pubkey and never need one. Link a name the
+first time it appears in a story, not every mention.
 
 **Link live streams in the Broadcasting column** using the `watch:` URL the
 digest printed (`https://zap.stream/stream/<64-hex-event-id>`). Step 5 encodes
@@ -205,8 +255,9 @@ node <skill>/scripts/resolve.mjs editions/observer-<date>-<code>.html --corpus e
 
 This is the "afterwards" the editorial brief refers to. It swaps every
 `art-N` for its real URL, removes any `<figure>` whose id is not on the
-shortlist, encodes source citations, stream watch links, and classified
-listing links, and unwraps every other link to the open web into plain text.
+shortlist, encodes source citations and name links for brainstorm.world, stream watch
+links, and classified listing links, and unwraps every other link to the open
+web into plain text.
 
 **Read what it reports.** It prints every change that was not a plain id
 resolution. A dropped figure or an unwrapped link is the visible edge of
@@ -233,7 +284,7 @@ even when it is inconvenient.
 |---|---|
 | **QUOTE** | Anything in `<q>` or `<blockquote>` must appear verbatim in a source event. Elision with `…` is allowed; the fragments must appear in order in **one** event. Paraphrase is not checked, because paraphrase is journalism — so paraphrase freely, and quote only what was said. |
 | **IMAGE** | After Step 5 every `<img src>` must be a shortlist URL. That happens by itself if you wrote ids; it fails if you wrote a URL yourself. |
-| **LINK** | After Step 5, permitted links are: `https://jumble.social/notes/<nevent1…>` for a source event in the corpus, `https://zap.stream/<naddr1…>` for a live stream from Live now, and `https://shopstr.store/listing/<naddr1…>` for a classified from Classifieds. Write citations as `https://jumble.social/notes/<64-hex-event-id>`, stream watch links as `https://zap.stream/stream/<64-hex-event-id>`, and listing links as `https://shopstr.store/listing/<64-hex-event-id>` from the digest; resolve encodes all three. Do not compose an `nevent1` or `naddr1` yourself. Everything else — including a URL that appeared in the corpus — is refused. |
+| **LINK** | After Step 5, permitted links are: `https://brainstorm.world/e/<nevent1…>` for a source event in the corpus (`/a/<naddr1…>` for an article), `https://brainstorm.world/p/<npub1…>` for somebody who posted in the corpus, `https://zap.stream/<naddr1…>` for a live stream from Live now, `https://shopstr.store/listing/<naddr1…>` for a classified from Classifieds, and `https://njump.me/<naddr1…>` for a calendar entry. Write citations as `https://brainstorm.world/e/<64-hex-event-id>`, names as `https://brainstorm.world/p/<64-hex-event-id>`, and stream, listing and calendar links in the writer forms the digest printed; resolve encodes them all. Do not compose an `nevent1`, `naddr1` or `npub1` yourself. Everything else — including a URL that appeared in the corpus — is refused. |
 | **MARKUP** | No `<script>`, no `<iframe>`, no `on…=` handlers, no `javascript:`, no forms. The paper collects nothing and runs nothing. |
 
 The link rule is the one that looks too strict. It is not: an early version
@@ -277,6 +328,30 @@ Then deliver, in this order:
 
 ---
 
+## Step 8 — Dress the living copy
+
+```bash
+node <skill>/scripts/dress.mjs editions/observer-<date>-<code>.html --corpus editions/corpus.json
+```
+
+That writes `editions/observer-<date>-<code>.living.html`: the same validated
+edition, set in the house typefaces with justified columns, with a small
+halftone portrait beside the paragraph that quotes each story's main voice,
+live timestamps on each story, hover cards for every citation and name, an
+"Inside today" index, the day's accent colour and a one-time reveal. Stations
+in Broadcasting play in the paper's own panel, and classifieds open as a
+listing sheet there. Tell the reader its
+path; it is for reading on their own machine, in a browser.
+
+**It refuses a page that has not passed Step 6,** and it is the only place
+script enters the paper: `reference/living.js`, byte for byte, and — only on a
+paper with a playable station — the vendored hls.js, run when the reader
+presses play. You never write script, never edit
+`living.js` to suit a day's page, and never dress a page by hand. The edition
+itself is untouched; the living copy sits beside it like the artifact copy.
+
+---
+
 ## What this does not do
 
 It does not put a paper on the public web. That is the sibling skill
@@ -306,7 +381,7 @@ full Observer.
 10. **The validator is not negotiable.** Clean, or it does not ship.
 11. **The paper is always light.** Newsprint. Inline `house.css` as given, including `color-scheme: light`. Do not add a `prefers-color-scheme: dark` block. A dark OS is not a reason to reprint the page in night mode.
 12. **The artifact gets the embedded copy; the reader gets the hotlinked
-    file.** The artifact viewer blocks every remote image host, so publishing
+    file and its living copy.** The artifact viewer blocks every remote image host, so publishing
     the edition itself as the artifact ships empty boxes. Run `embed.mjs`
     first, publish the `.artifact.html` it writes, and report anything it
     could not embed.

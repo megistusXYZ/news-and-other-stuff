@@ -1,0 +1,645 @@
+/* The living layer — added by scripts/dress.mjs AFTER validate.mjs has passed
+ * the edition. Not generated, not read by the writer.
+ *
+ * Everything here is an override on top of house.css, so a page that loses
+ * this block is exactly the validated edition. The paper stays light (SKILL.md
+ * rule 11); the accent is the only colour that moves, and it moves once. */
+
+/* A registered colour transitions; an unregistered custom property snaps. */
+@property --accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #57277F;
+}
+
+:root {
+  color-scheme: light;
+  --serif: "Playfair Display", "Times New Roman", Times, serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --util: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+  transition: --accent 1.2s ease;
+}
+
+body { font-feature-settings: "kern", "liga", "onum"; }
+
+/* Mono runs wide; the house letter-spacing was tuned for Helvetica. */
+.kicker, .byline, .folio, .dateline, .motto, .box-head, th, figcaption .credit {
+  letter-spacing: .08em;
+}
+.kicker { font-weight: 500; }
+
+/* --- masthead: the name, and nothing beside it -------------------------- */
+/* A front page has one thing at the top. Heavy serif, a plain rule above, the
+ * motto in italic beneath; no boxes, no pictures, nothing that moves. */
+
+/* The nameplate is set flush left, the way the FT and the Guardian set
+ * theirs, with an ear on the right carrying the day and the edition: the
+ * date first and darkest, then the number, then the window. One heavy rule
+ * runs under both; the section bar's own rule a hair beneath makes it a
+ * thick-and-thin. The edition's markup is untouched — the folio the writer
+ * typed above the header is placed in the ear by the grid. */
+.sheet { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.sheet > * { grid-column: 1 / -1; min-width: 0; }
+.sheet > .masthead, .sheet > .folio { grid-row: 1; border-top: 1px solid var(--ink); border-bottom: 3px solid var(--ink); }
+.sheet > .masthead { grid-column: 1; text-align: left; padding: 16px 0 14px; position: relative; }
+.sheet > .folio {
+  grid-column: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end;
+  gap: 5px; padding: 16px 0 16px 28px; text-align: right; position: relative;
+}
+.sheet > .folio > * { text-align: right; }
+.sheet > .folio > :nth-child(2) { order: -1; font-weight: 600; color: var(--ink); letter-spacing: .1em; }
+.masthead h1 {
+  font-family: var(--serif); font-weight: 900; text-transform: none;
+  letter-spacing: -0.018em; line-height: .95;
+  font-size: clamp(2.3rem, 6.2vw, 5.1rem);
+}
+.masthead .the { display: inline; font-size: 1em; letter-spacing: 0; text-indent: 0; margin: 0 .2em 0 0; color: inherit; }
+.masthead .motto {
+  margin-top: 9px; font-family: var(--body); font-style: normal; font-weight: 400; font-size: 1.06rem;
+  letter-spacing: .005em; text-transform: none; color: var(--ink-2);
+}
+.sheet > .masthead + * , .sheet > .lv-index { margin-top: 3px; }
+@media (max-width: 720px) {
+  .sheet > .masthead { grid-column: 1 / -1; border-bottom: 0; padding: 12px 0 10px; }
+  .sheet > .folio {
+    grid-column: 1 / -1; grid-row: 2; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
+    gap: 2px 12px; padding: 7px 0; border-top: 1px solid var(--rule);
+  }
+  .sheet > .folio > :nth-child(3) { display: none; }
+  .masthead .motto { font-size: .98rem; }
+}
+
+/* --- no scroll bars ----------------------------------------------------------- */
+/* The reader asked for none, on the page or inside it. Everything still
+ * scrolls — wheel, trackpad, touch, keyboard; only the bars are not drawn. */
+html, body, .lv-sections, .lv-panel, .lv-drawer, .tablewrap { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollbar,
+.lv-panel ::-webkit-scrollbar, .lv-drawer::-webkit-scrollbar, .tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+/* --- inside today: the section bar ------------------------------------------ */
+/* A newspaper front's section bar: the sections in small bold caps, a
+ * hairline between each, the live count at the right. One row on a desk. */
+
+.lv-index {
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 0; padding: 0;
+  border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink);
+  font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+  min-width: 0; overflow: hidden;
+}
+.lv-index a {
+  border: 0; color: var(--ink); font-weight: 600; padding: 9px 16px; white-space: nowrap;
+  border-left: 1px solid var(--rule);
+}
+/* One row at every width: the sections slide sideways rather than wrap or
+ * clip. A soft fade marks the side that has more; living.js sets
+ * lv-more-left / lv-more-right as the row scrolls, and turns a mouse wheel
+ * over the bar into a sideways slide. */
+.lv-index .lv-sections {
+  display: flex; flex-wrap: nowrap; flex: 1 1 auto; min-width: 0;
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity;
+}
+.lv-index .lv-sections a { flex: none; scroll-snap-align: start; }
+.lv-index .lv-sections a:first-child { padding-left: 0; border-left: 0; }
+.lv-index .lv-sections.lv-more-right { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
+.lv-index .lv-sections.lv-more-left { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); }
+.lv-index .lv-sections.lv-more-left.lv-more-right { -webkit-mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
+.lv-index a:hover { color: var(--accent); }
+.lv-since-slot { margin-left: auto; padding-left: 16px; border-left: 1px solid var(--rule); flex: none; }
+.lv-since-slot:empty { display: none; }
+.lv-since-slot .lv-since-button { width: auto; padding: 9px 0; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.lv-index + .lv-drawer { border-bottom: 1px solid var(--rule); padding: 10px 0 14px; }
+
+/* Narrower, the live count takes its own line under the row. */
+@media (max-width: 900px) {
+  .lv-index { flex-wrap: wrap; }
+  .lv-index .lv-sections { flex-basis: 100%; }
+  .lv-index a { padding: 7px 12px; }
+  .lv-since-slot { width: 100%; margin: 0; padding: 0; border-left: 0; border-top: 1px solid var(--rule); }
+}
+/* On a phone the bar also stays at the top of the screen, because a paper
+ * this long needs its sections within reach from anywhere in it. */
+@media (max-width: 720px) {
+  .lv-index {
+    position: sticky; top: 0; z-index: 20; background: var(--paper);
+    margin: 0 -15px; padding: 0 15px; font-size: .62rem;
+  }
+  .lv-index a { padding: 11px 12px; border-left: 0; border-bottom: 2px solid transparent; }
+  .lv-index .lv-sections a:first-child { padding-left: 0; }
+  .lv-since-slot .lv-since-button { padding: 7px 0; }
+  [id^="lv-section-"] { scroll-margin-top: 48px; }
+}
+
+/* --- the byline's date -------------------------------------------------------- */
+
+.byline .lv-ago { margin-left: .7em; font-size: .62rem; letter-spacing: .04em; text-transform: none; color: var(--ink-3); }
+.byline .lv-ago::before { width: .36em; height: .36em; opacity: .6; }
+
+/* --- the construction --------------------------------------------------------- */
+/* Positions a front page fills from the top: lead, off-lead, rail, then the
+ * second front, the picture spread, the agate, the tinted wire band. */
+
+.fold .span-3 .small-head { font-size: 1.06rem; }
+.fold .span-3 .story + .story { margin-top: 16px; padding-top: 16px; }
+
+.band.seconds { padding: 18px 0 22px; border-bottom: 1px solid var(--ink); }
+.band.seconds .cell { gap: 7px; }
+.band.seconds .sub-head { font-size: 1.16rem; line-height: 1.12; }
+.band.seconds .cell > p:not(.kicker):not(.byline) { font-size: .88rem; line-height: 1.5; }
+
+.spread { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px 18px; }
+.spread > figure { grid-column: span 3; }
+.spread > figure:first-child { grid-column: span 6; grid-row: span 2; }
+.spread > figure:first-child figcaption { font-size: .92rem; }
+.spread figure .note { margin: 0; }
+
+.agate { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 3px double var(--ink); padding-top: 14px; }
+.agate .cell { padding: 0 14px; border-left: 1px solid var(--rule-soft); }
+.agate .cell:first-child { padding-left: 0; border-left: 0; }
+.agate .cell:last-child { padding-right: 0; }
+.agate .box-head { font-size: .62rem; }
+.agate .wire-item { padding: 8px 0; }
+.agate .wire-item p, .agate .note { font-size: .78rem; line-height: 1.42; }
+.agate th, .agate td { font-size: .76rem; padding: 5px 8px 5px 0; }
+.agate .lv-row-note { font-size: .74rem; }
+
+.band.tinted { background: var(--paper-2); margin: 0 -22px; padding: 22px 22px 26px; border-bottom: 0; }
+.band.tinted .band-head { border-bottom-color: var(--rule); }
+.band.tinted .credits { margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--rule); font-family: var(--mono); font-style: normal; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+
+.box.weather { gap: 6px; }
+.weather-now { display: flex; align-items: baseline; gap: 10px; font-size: .86rem; line-height: 1.35; color: var(--ink-2); }
+.weather-big { font-family: var(--serif); font-weight: 900; font-size: 2.1rem; line-height: 1; color: var(--ink); letter-spacing: -0.02em; }
+.box.weather th, .box.weather td { font-size: .76rem; padding: 4px 8px 4px 0; }
+.box.weather .note { font-size: .7rem; }
+
+@media (max-width: 1000px) {
+  .agate { grid-template-columns: repeat(3, 1fr); row-gap: 14px; }
+  .spread > figure, .spread > figure:first-child { grid-column: span 6; grid-row: auto; }
+}
+@media (max-width: 720px) {
+  .agate { display: flex; flex-direction: column; }
+  .agate .cell { padding: 14px 0; border-left: 0; border-top: 1px solid var(--rule-soft); }
+  .agate .cell:first-child { border-top: 0; padding-top: 0; }
+  .spread { display: flex; flex-direction: column; }
+  .band.tinted { margin: 0 -15px; padding: 18px 15px 22px; }
+}
+
+/* --- pictures: newspaper ratios, so no picture can swallow the fold -------- */
+
+figure img { aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 35%; }
+.fold .span-6 figure:first-of-type img,
+.fold .span-8 figure:first-of-type img,
+.fold .span-12 figure:first-of-type img { aspect-ratio: 3 / 2; }
+
+/* --- the pull quote -------------------------------------------------------- */
+
+blockquote {
+  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--ink);
+  padding: 12px 0 12px; font-style: italic; font-size: 1.3rem; line-height: 1.25;
+}
+blockquote::before {
+  content: "\201C"; display: block; height: .45em; margin-bottom: 4px;
+  font-family: var(--serif); font-style: normal; font-weight: 900; font-size: 2.6em; line-height: 1;
+  color: var(--accent);
+}
+
+/* --- newsprint setting ------------------------------------------------------ */
+/* Columns are justified and hyphenated, the way type is set for a newspaper. */
+
+.story p:not(.kicker):not(.byline):not(.dek):not(.note),
+.band .cell > p:not(.kicker) {
+  text-align: justify; hyphens: auto; -webkit-hyphens: auto;
+}
+
+/* --- cameos: a face set into the paragraph that quotes it ------------------ */
+
+.lv-cameo {
+  float: right; width: 58px; margin: 4px 0 4px 12px; border: 0;
+  display: flex; flex-direction: column; gap: 3px; text-align: center; background: none;
+}
+.lv-cameo img {
+  width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 30%;
+  filter: grayscale(1) contrast(1.12) brightness(1.02);
+  border: 1px solid var(--rule); background: var(--paper-2);
+}
+.lv-cameo-name {
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); line-height: 1.25; overflow-wrap: anywhere;
+}
+a.lv-cameo:hover img { filter: grayscale(.2) contrast(1.05); }
+a.lv-cameo:hover .lv-cameo-name { color: var(--accent); }
+.fold .span-3 .lv-cameo { width: 50px; }
+
+/* --- the wireless and the classifieds -------------------------------------- */
+/* Set as a paper of 1905 set its wireless programme and its small ads: a
+ * postage-stamp halftone, the name in small caps, and one ruled line. */
+
+.wire-item p.lv-row { display: grid; grid-template-columns: 38px 1fr; gap: 10px; align-items: start; text-align: left; }
+.wire-item p.lv-row:not(:has(.lv-thumb)) { grid-template-columns: 1fr; }
+.lv-thumb {
+  width: 38px; height: 38px; object-fit: cover; object-position: 50% 40%;
+  filter: grayscale(1) contrast(1.15); border: 1px solid var(--rule); background: var(--paper-2);
+}
+.lv-row-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lv-row-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.lv-row-head a {
+  font-variant: small-caps; font-weight: 600; letter-spacing: .03em; color: var(--ink); line-height: 1.25; min-width: 0;
+}
+.lv-leaders { flex: 1; min-width: 12px; border-bottom: 1.5px dotted var(--ink-3); transform: translateY(-3px); opacity: .7; }
+.lv-price { font-family: var(--serif); font-weight: 700; font-size: .92rem; color: var(--ink); white-space: nowrap; }
+.lv-onair { font-family: var(--mono); font-size: .6rem; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; color: var(--ink-3); }
+.lv-onair-live { color: var(--accent); }
+.lv-row-note { font-style: italic; font-size: .8rem; line-height: 1.4; color: var(--ink-2);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.wire-item:has(a[data-stream]):hover .lv-thumb, .wire-item:has(a[data-listing]):hover .lv-thumb { filter: grayscale(.2); }
+
+/* --- sheets: the paper's own pages inside the panel ------------------------ */
+
+.lv-sheet {
+  position: absolute; inset: 0; overflow: auto; padding: 22px 26px 40px;
+  display: flex; flex-direction: column; gap: 10px; background: var(--paper);
+  font-family: var(--body); color: var(--ink);
+}
+.lv-sheet-cover, .lv-sheet-gallery { margin: 0 0 6px; display: flex; flex-direction: column; gap: 8px; }
+.lv-sheet-img {
+  width: 100%; max-height: 300px; object-fit: cover; border: 1px solid var(--rule);
+  filter: grayscale(1) contrast(1.12); transition: filter .6s ease;
+}
+.lv-sheet-img.lv-in-colour, .lv-playing .lv-sheet-img { filter: none; }
+.lv-sheet-thumbs { display: flex; gap: 6px; flex-wrap: wrap; }
+.lv-sheet-thumb { width: 48px; height: 48px; padding: 0; border: 1px solid var(--rule); background: none; cursor: pointer; }
+.lv-sheet-thumb img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
+.lv-sheet-thumb:hover img { filter: none; }
+.lv-sheet-title { font-family: var(--serif); font-weight: 900; font-size: 1.9rem; line-height: 1.05; letter-spacing: -0.01em; }
+.lv-sheet-price { font-family: var(--serif); font-weight: 700; font-size: 1.35rem; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 4px 0; align-self: flex-start; }
+.lv-sheet-meta, .lv-sheet-tags { font-family: var(--mono); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.lv-sheet-text { font-size: .95rem; line-height: 1.55; color: var(--ink-2); }
+.lv-sheet-long { white-space: pre-line; text-align: justify; hyphens: auto; }
+.lv-sheet .lv-onair { font-size: .7rem; }
+
+.lv-buy { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 6px 0 4px; }
+a.lv-buy-main {
+  border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  font: 600 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; padding: 11px 16px;
+}
+a.lv-buy-main:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+a.lv-buy-alt { border: 0; border-bottom: 1px solid var(--rule); font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+a.lv-buy-alt:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+.lv-player { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.lv-video { width: 100%; max-height: 320px; background: var(--ink); }
+.lv-tune {
+  align-self: flex-start; font: 600 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  padding: 10px 16px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); cursor: pointer;
+}
+.lv-tune:not(:disabled):hover { background: var(--ink); color: var(--paper); }
+.lv-tune:disabled { opacity: .55; cursor: default; }
+.lv-player-note { font-family: var(--mono); font-size: .62rem; color: var(--ink-3); letter-spacing: .04em; }
+
+/* --- the tabloid: a red-top turned newsprint ------------------------------------ */
+
+.band.tabloid { padding: 0 0 24px; border-bottom: 3px double var(--ink); }
+.tabloid-bar { background: var(--ink); color: var(--paper); padding: 10px 16px 9px; display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
+.tabloid-bar h2 { font-family: var(--brand, var(--util)); font-weight: 800; font-size: 1.5rem; letter-spacing: .06em; text-transform: uppercase; color: inherit; line-height: 1; }
+.tabloid-bar .strap { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--reverse-ink-2, #A79DB0); margin: 0; }
+.band.tabloid .cols2 { margin-top: 16px; }
+.tabloid-list { margin: 0; padding: 0 0 0 1.6em; counter-reset: t; list-style: none; }
+.tabloid-list li { counter-increment: t; position: relative; padding: 8px 0; border-bottom: 1px dotted var(--rule); font-size: .9rem; line-height: 1.4; }
+.tabloid-list li::before { content: counter(t); position: absolute; left: -1.6em; top: 7px; font-family: var(--brand, var(--util)); font-weight: 800; font-size: 1.1rem; color: var(--ink); }
+.tabloid-list b { font-family: var(--brand, var(--util)); font-weight: 800; letter-spacing: -0.01em; }
+.tabloid-list .traffic { font-family: var(--mono); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-left: .5em; white-space: nowrap; }
+.tabloid-list .why { display: block; font-style: italic; color: var(--ink-2); font-size: .84rem; }
+
+/* --- the back page ------------------------------------------------------------ */
+
+.band.back .back-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; }
+.band.back .span-8 { grid-column: span 8; }
+.band.back .span-4 { grid-column: span 4; }
+.band.back figure img { aspect-ratio: auto; object-fit: contain; max-height: 420px; background: #fff; }
+.band.back .back-head { font-family: var(--mono); font-size: .64rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--ink); padding-bottom: 5px; margin-bottom: 10px; }
+.band.back .recipe { display: flex; flex-direction: column; }
+.band.back .recipe-head { display: grid; grid-template-columns: 5fr 7fr; gap: 18px; align-items: start; margin-bottom: 12px; }
+.band.back .recipe-head figure img { aspect-ratio: 4 / 3; object-fit: cover; }
+.band.back .recipe-head ul { margin: 8px 0 0; padding-left: 1.05em; columns: 2; column-gap: 14px; font-size: .84rem; line-height: 1.45; }
+.band.back .recipe-head .note { margin-top: 2px; }
+.band.back .recipe-method { columns: 3; column-gap: 24px; column-rule: 1px solid var(--rule-soft); font-size: .84rem; line-height: 1.48; border-top: 1px solid var(--rule); padding-top: 10px; }
+.band.back .recipe-method p { margin: 0 0 .5em; break-inside: avoid; }
+
+/* The sudoku, played: one plate. The grid takes the column's full width; the
+ * toolbar and the keypad align to its edges and are set in its own type. */
+pre.sudoku { font-family: var(--mono); font-size: 1.05rem; line-height: 1.35; letter-spacing: .5em; margin: 0; color: var(--ink); }
+.lv-sudoku { display: flex; flex-direction: column; gap: 0; }
+table.sudoku { border-collapse: collapse; width: 100%; aspect-ratio: 1; table-layout: fixed; font-variant-numeric: tabular-nums; user-select: none; }
+table.sudoku td { border: 1px solid var(--rule); text-align: center; padding: 0; font-family: var(--serif); font-size: 1.2rem; font-weight: 700; color: var(--ink); width: 11.11%; position: relative; outline: none; }
+table.sudoku tr:nth-child(3n) td { border-bottom: 2px solid var(--ink); }
+table.sudoku tr:first-child td { border-top: 2px solid var(--ink); }
+table.sudoku td:nth-child(3n) { border-right: 2px solid var(--ink); }
+table.sudoku td:first-child { border-left: 2px solid var(--ink); }
+table.sudoku td.lv-cell { cursor: pointer; font-weight: 400; color: var(--accent); }
+table.sudoku td.lv-peer { background: var(--paper-2); }
+table.sudoku td.lv-same { background: var(--accent-soft); }
+table.sudoku td.lv-selected { box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
+table.sudoku td.lv-conflict { color: var(--spot); }
+table.sudoku td.lv-wrong { background: color-mix(in srgb, var(--spot) 18%, transparent); color: var(--spot); }
+table.sudoku td.lv-revealed { color: var(--ink-3); }
+.lv-notes { display: grid; grid-template-columns: repeat(3, 1fr); position: absolute; inset: 1px; font-family: var(--mono); font-size: .5rem; font-weight: 400; line-height: 1; color: var(--ink-3); }
+.lv-notes span { display: grid; place-items: center; }
+
+.lv-sudoku-bar { display: flex; align-items: center; gap: 0; margin-top: 10px; padding: 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.lv-sudoku-timer { font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; color: var(--ink-2); margin-right: auto; padding: 8px 0; font-variant-numeric: tabular-nums; }
+.lv-sudoku-bar .lv-key { border: 0; border-left: 1px solid var(--rule); border-radius: 0; background: none; padding: 8px 12px; font: 600 .62rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.lv-sudoku-bar .lv-key:last-child { padding-right: 0; }
+.lv-sudoku-bar .lv-key:hover { color: var(--accent); }
+.lv-sudoku-bar .lv-key.lv-on { color: var(--accent); }
+
+.lv-keypad { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0; margin-top: 8px; border: 1px solid var(--ink); }
+.lv-keypad .lv-key { aspect-ratio: 1; border: 0; border-left: 1px solid var(--rule); border-radius: 0; background: var(--paper-2, #fff); padding: 0; font-family: var(--serif); font-weight: 700; font-size: 1.1rem; color: var(--ink); }
+.lv-keypad .lv-key:first-child { border-left: 0; }
+.lv-keypad .lv-key:last-child { font-family: var(--mono); font-size: .8rem; color: var(--ink-3); }
+.lv-keypad .lv-key:hover { background: var(--accent-soft); color: var(--accent); }
+.lv-sudoku-word { font-family: var(--mono); font-size: .64rem; letter-spacing: .06em; color: var(--ink-2); margin: 8px 0 0; min-height: 1em; }
+.lv-solved table.sudoku td.lv-cell { color: var(--ink); }
+.puzzle > .note { margin-top: 6px; }
+
+/* Five: the word of the day, as one plate like the sudoku's. */
+.five { outline: none; }
+.lv-five-board { display: flex; flex-direction: column; gap: 6px; }
+.lv-five-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.lv-tile { aspect-ratio: 1; display: grid; place-items: center; border: 1px solid var(--rule); font-family: var(--serif); font-weight: 700; font-size: 1.6rem; text-transform: uppercase; color: var(--ink); background: var(--paper-2, #fff); transition: background-color .25s ease, border-color .25s ease; }
+.lv-tile.lv-typed { border-color: var(--ink); }
+.lv-tile.lv-hit { background: #4a8f4e; border-color: #4a8f4e; color: #fff; }
+.lv-tile.lv-near { background: #c9a227; border-color: #c9a227; color: #fff; }
+.lv-tile.lv-miss { background: var(--ink-3); border-color: var(--ink-3); color: #fff; }
+.lv-shake { animation: lv-shake .4s ease; }
+@keyframes lv-shake { 25% { transform: translateX(-4px) } 50% { transform: translateX(4px) } 75% { transform: translateX(-3px) } }
+.lv-five-message { font-family: var(--mono); font-size: .64rem; letter-spacing: .06em; color: var(--ink-2); margin: 8px 0 0; min-height: 1em; }
+.lv-keyboard { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.lv-keyboard-row { display: flex; gap: 4px; }
+.lv-keyboard-row:nth-child(2) { padding: 0 5%; }
+.lv-keyboard .lv-key { flex: 1; aspect-ratio: 1 / 1.15; padding: 0; border: 1px solid var(--rule); border-radius: 0; background: var(--paper-2, #fff); font-family: var(--serif); font-weight: 700; font-size: 1rem; text-transform: uppercase; color: var(--ink); }
+.lv-keyboard .lv-key-wide { flex: 1.6; font-family: var(--mono); font-weight: 600; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; aspect-ratio: auto; }
+.lv-keyboard .lv-key:hover { border-color: var(--ink); }
+.lv-keyboard .lv-key.lv-hit { background: #4a8f4e; border-color: #4a8f4e; color: #fff; }
+.lv-keyboard .lv-key.lv-near { background: #c9a227; border-color: #c9a227; color: #fff; }
+.lv-keyboard .lv-key.lv-miss { background: var(--ink-3); border-color: var(--ink-3); color: #fff; }
+.lv-five-foot { display: flex; align-items: center; gap: 0; margin-top: 10px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.lv-five-stats { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-right: auto; padding: 8px 0; }
+.lv-five-foot .lv-key { border: 0; border-left: 1px solid var(--rule); border-radius: 0; background: none; padding: 8px 0 8px 12px; font: 600 .62rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.lv-five-foot .lv-key:hover { color: var(--accent); }
+.lv-five-foot .lv-key[hidden] { display: none; }
+.lv-five-foot .lv-key:disabled { opacity: .45; cursor: default; }
+.lv-five-message a { border-bottom: 1px solid var(--rule); color: var(--ink); cursor: pointer; }
+.lv-five-message a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.five > .note { margin-top: 6px; }
+
+.serial { grid-column: 1 / -1; border-top: 1px solid var(--ink); padding-top: 14px; }
+.serial .kicker { margin-bottom: 8px; }
+.serial .serial-text { columns: 3; column-gap: 26px; column-rule: 1px solid var(--rule-soft); }
+.serial .serial-text p { font-size: .9rem; line-height: 1.52; text-align: justify; hyphens: auto; margin: 0 0 .7em; break-inside: avoid; }
+.serial .serial-text p:first-child::first-letter { float: left; font-family: var(--serif); font-weight: 700; font-size: 2.6em; line-height: .8; padding: .04em .08em 0 0; }
+
+@media (max-width: 1000px) {
+  .band.back .span-8, .band.back .span-4 { grid-column: span 12; }
+  .band.back .recipe-method { columns: 1; }
+  .band.back .recipe-head { grid-template-columns: 1fr; }
+  .serial .serial-text { columns: 2; }
+}
+@media (max-width: 720px) {
+  .band.back .back-grid { display: flex; flex-direction: column; }
+  .serial .serial-text { columns: 1; }
+  .band.tabloid .cols2 { display: flex; flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) { .lv-shake { animation: none; } .lv-tile { transition: none; } }
+
+/* --- the page on a tablet and a phone --------------------------------------- */
+/* On a phone the front is one column and reads in newspaper order: the lead,
+ * then the off-lead, then the rail — never the rail first because it happens
+ * to be typed first. On a tablet the lead takes the full width and the two
+ * rails sit side by side beneath it, instead of the third column falling
+ * under the first and leaving half the screen empty. */
+@media (max-width: 720px) {
+  .fold > .col.span-6 { order: -2; }
+  .fold > .col:last-child { order: -1; border-bottom: 1px solid var(--rule); }
+  .fold > .col.span-6 { padding-top: 0; }
+}
+@media (min-width: 721px) and (max-width: 1000px) {
+  .fold > .col.span-6 { grid-column: 1 / -1; order: -1; padding: 0 0 22px; border-left: 0; border-bottom: 1px solid var(--rule); }
+  .fold > .col.span-3 { padding-top: 22px; }
+  .fold > .col.span-3:first-child { padding-left: 0; border-left: 0; }
+  .fold > .col.span-3:last-child { padding-right: 0; border-left: 1px solid var(--rule); }
+  /* The back page: the two plates share a row instead of each running the
+   * width of the screen with 80px cells. */
+  .band.back .span-4 { grid-column: span 6; }
+}
+
+/* Fingers, not pointers: every key on the plates is at least 44px tall. */
+@media (pointer: coarse) {
+  .lv-keypad .lv-key { aspect-ratio: auto; min-height: 44px; }
+  .lv-sudoku-bar .lv-key, .lv-five-foot .lv-key { min-height: 44px; }
+  .lv-keyboard .lv-key { min-height: 44px; aspect-ratio: auto; min-width: 0; }
+  .lv-index a { padding-top: 13px; padding-bottom: 13px; }
+}
+/* No pointer to hover with: the card never shows, so it never sits off the
+ * edge of a phone screen widening the page. A tap opens the reader panel. */
+@media (hover: none) {
+  .lv-card { display: none !important; }
+}
+
+/* Readings in the weather box and the agate. */
+.box.weather .sky { font-family: var(--mono); font-size: .62rem; letter-spacing: .06em; color: var(--ink-3); }
+
+@media (max-width: 1000px) {
+  .band.back .span-6, .band.back .span-3 { grid-column: span 6; }
+  .serial .serial-text { columns: 2; }
+}
+@media (max-width: 720px) {
+  .band.back .back-grid { display: flex; flex-direction: column; }
+  .serial .serial-text { columns: 1; }
+}
+
+/* --- links: quiet until touched ------------------------------------------- */
+
+a[data-ev], a[data-pk] {
+  border-bottom: 1px solid var(--rule);
+  transition: color .2s ease, border-color .2s ease, background-color .2s ease;
+}
+a[data-ev]:hover, a[data-pk]:hover, a[data-ev]:focus-visible, a[data-pk]:focus-visible {
+  color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-soft);
+}
+.story p.first::first-letter, .kicker { transition: color 1.2s ease; }
+
+/* --- live timestamps ------------------------------------------------------ */
+
+.lv-ago {
+  font-family: var(--mono); font-size: .66rem; font-weight: 400;
+  letter-spacing: .04em; text-transform: none; color: var(--ink-3);
+  margin-left: .6em; white-space: nowrap;
+}
+.lv-ago::before {
+  content: ""; display: inline-block; width: .42em; height: .42em; border-radius: 50%;
+  background: var(--accent); margin-right: .45em; vertical-align: .12em; opacity: .75;
+}
+
+/* --- the one-time reveal -------------------------------------------------- */
+
+.lv-pre { opacity: 0; transform: translateY(10px); }
+.lv-in {
+  opacity: 1; transform: none;
+  transition: opacity .8s ease var(--lv-delay, 0ms), transform .9s cubic-bezier(.2, .7, .2, 1) var(--lv-delay, 0ms);
+}
+
+/* --- hover cards ---------------------------------------------------------- */
+
+.lv-card {
+  position: fixed; z-index: 50; width: min(320px, calc(100vw - 24px));
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--ink); border-top: 3px solid var(--accent);
+  box-shadow: 0 10px 30px -12px rgba(22, 18, 27, .35);
+  padding: 12px 14px 11px; font-family: var(--body);
+  opacity: 0; transform: translateY(4px); pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+}
+.lv-card.lv-show { opacity: 1; transform: none; pointer-events: auto; }
+.lv-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.lv-card-avatar {
+  width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none;
+  border: 1px solid var(--rule); background: var(--paper-2);
+}
+.lv-card-monogram {
+  width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent);
+  font-family: var(--serif); font-weight: 700; font-size: 1rem;
+}
+.lv-card-name { font-family: var(--serif); font-weight: 700; font-size: 1rem; line-height: 1.15; }
+.lv-card-meta { font-family: var(--mono); font-size: .66rem; color: var(--ink-3); letter-spacing: .03em; }
+.lv-card-title { font-family: var(--serif); font-weight: 700; font-size: .98rem; margin-bottom: 4px; }
+.lv-card-text {
+  font-size: .86rem; line-height: 1.45; color: var(--ink-2);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.lv-card-foot {
+  margin-top: 9px; padding-top: 7px; border-top: 1px dotted var(--rule);
+  display: flex; justify-content: space-between; gap: 10px;
+  font-family: var(--mono); font-size: .66rem; color: var(--ink-3);
+}
+.lv-card-counts:empty { display: none; }
+.lv-card-go { color: var(--accent); }
+
+/* --- hover card actions --------------------------------------------------- */
+
+.lv-card-counts { margin-top: 8px; font-family: var(--mono); font-size: .66rem; color: var(--ink-3); }
+.lv-card-foot { align-items: center; }
+.lv-card-read {
+  font: 600 .7rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--paper); background: var(--ink); border: 0; border-radius: 999px;
+  padding: 6px 12px; cursor: pointer;
+}
+.lv-card-read:hover { background: var(--accent); }
+a.lv-card-go { border: 0; color: var(--accent); font-size: .68rem; }
+a.lv-card-go:hover { text-decoration: underline; background: none; }
+
+/* --- the reader panel ------------------------------------------------------ */
+
+.sheet { transition: transform .45s cubic-bezier(.2, .7, .2, 1), filter .45s ease, opacity .45s ease; transform-origin: 30% 20%; }
+body.lv-reading-open { overflow: hidden; }
+body.lv-reading-open .sheet { transform: scale(.985) translateX(-1.5%); filter: saturate(.7); opacity: .55; }
+
+.lv-scrim {
+  position: fixed; inset: 0; z-index: 60; background: rgba(10, 14, 24, .18);
+  opacity: 0; pointer-events: none; transition: opacity .3s ease;
+}
+body.lv-reading-open .lv-scrim { opacity: 1; pointer-events: auto; }
+
+.lv-panel {
+  position: fixed; z-index: 61; top: 0; right: 0; bottom: 0; width: min(46vw, 760px); min-width: 420px;
+  display: flex; flex-direction: column; background: var(--paper-2, #fff);
+  border-left: 1px solid var(--rule); box-shadow: -24px 0 60px -30px rgba(10, 14, 24, .45);
+  transform: translateX(104%); transition: transform .28s cubic-bezier(.2, .7, .2, 1);
+  outline: none;
+}
+.lv-panel::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--accent); }
+body.lv-reading-open .lv-panel { transform: none; }
+
+.lv-panel-head {
+  display: flex; align-items: center; gap: 8px; padding: 12px 12px 10px 16px;
+  border-bottom: 1px solid var(--rule); font-family: var(--mono); font-size: .68rem;
+}
+.lv-panel-where { display: flex; flex-direction: column; gap: 2px; margin-right: auto; min-width: 0; }
+.lv-panel-kicker { font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+.lv-panel-pos { color: var(--ink-3); letter-spacing: .04em; }
+.lv-panel-step, .lv-panel-close {
+  width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--rule); background: transparent;
+  font: 400 1.1rem/1 var(--body); color: var(--ink); cursor: pointer; display: grid; place-items: center;
+}
+.lv-panel-step:disabled { opacity: .35; cursor: default; }
+.lv-panel-step:not(:disabled):hover, .lv-panel-close:hover { border-color: var(--accent); color: var(--accent); }
+.lv-panel-close { font-size: 1.25rem; }
+a.lv-panel-out { border: 0; color: var(--ink-2); padding: 0 6px; white-space: nowrap; }
+a.lv-panel-out:hover { color: var(--accent); }
+
+.lv-panel-body { position: relative; flex: 1; min-height: 0; }
+.lv-panel-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; transition: opacity .35s ease; background: transparent; }
+.lv-panel-body.lv-loaded .lv-panel-frame { opacity: 1; }
+.lv-panel-loading {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+}
+.lv-panel-body.lv-loaded .lv-panel-loading { display: none; }
+
+/* The story you came from keeps a thin bar at its edge. */
+.lv-reading { box-shadow: inset 3px 0 0 var(--accent); transition: box-shadow .3s ease; }
+.col > .lv-reading, .cell.lv-reading { padding-left: 12px; }
+
+@media (max-width: 720px) {
+  .lv-panel {
+    top: 6vh; left: 0; width: 100%; min-width: 0; border-left: 0; border-radius: 16px 16px 0 0; overflow: hidden;
+    transform: translateY(104%);
+  }
+  a.lv-panel-out { display: none; }
+  body.lv-reading-open .sheet { transform: scale(.97); }
+}
+
+/* --- since this edition ---------------------------------------------------- */
+
+.lv-since { border-bottom: 1px solid var(--rule); font-family: var(--mono); font-size: .7rem; }
+.lv-since-button {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 0; border: 0; background: none;
+  font: inherit; letter-spacing: .06em; color: var(--ink-3); text-align: left; cursor: pointer;
+}
+.lv-since-button:disabled { cursor: default; }
+.lv-since-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rule); flex: none; }
+.lv-has-new .lv-since-dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.lv-has-new .lv-since-button { color: var(--ink); }
+.lv-has-new .lv-since-label::after { content: "  ↓"; color: var(--accent); }
+.lv-has-new .lv-since-button[aria-expanded="true"] .lv-since-label::after { content: "  ↑"; }
+
+.lv-drawer[hidden] { display: none; }
+.lv-drawer { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; padding: 4px 0 14px; }
+.lv-drawer-item, .lv-drawer-all {
+  text-align: left; font: inherit; cursor: pointer; border: 1px solid var(--rule); background: var(--paper-2, #fff);
+  border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; color: var(--ink);
+  transition: border-color .2s ease, transform .2s ease;
+}
+.lv-drawer-item:hover, .lv-drawer-all:hover { border-color: var(--accent); transform: translateY(-2px); }
+.lv-drawer-meta { display: flex; justify-content: space-between; gap: 8px; }
+.lv-drawer-name { font-family: var(--serif); font-weight: 700; font-size: .86rem; }
+.lv-drawer-ago { color: var(--ink-3); }
+.lv-drawer-text { font-family: var(--body); font-size: .82rem; line-height: 1.4; color: var(--ink-2);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+.lv-drawer-all { justify-content: center; font-weight: 600; letter-spacing: .06em; color: var(--accent); background: var(--accent-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { transition: none; }
+  .lv-pre { opacity: 1; transform: none; }
+  .lv-in, .lv-card, a[data-ev], a[data-pk],
+  .sheet, .lv-scrim, .lv-panel, .lv-panel-frame, .lv-drawer-item, .lv-drawer-all { transition: none; }
+}
+
+@media print {
+  .lv-pre { opacity: 1 !important; transform: none !important; }
+  .lv-card, .lv-panel, .lv-scrim, .lv-since { display: none !important; }
+}

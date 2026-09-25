@@ -1,0 +1,138 @@
+/* The Brainstorm brand, for a paper whose observer.config.json says
+ * "brand": "brainstorm". Added by scripts/dress.mjs after living.css.
+ *
+ * Tokens are Brainstorm's own, from NosFabrica/Brainstorm-UI
+ * (docs/design-system.md, client/src/index.css, tailwind.config.ts), read
+ * 2026-09-25. Its rules, kept here:
+ *   - colour communicates, it does not decorate: purple and cyan mark trust,
+ *     interaction and focus; everything else is Ink, Balanced White and slate;
+ *   - ONE gradient, Aurora Purple -> Aurora Cyan, never reversed, and never
+ *     under body text;
+ *   - Figtree for the brand, IBM Plex Mono for labels and metadata.
+ * The newspaper serifs (Playfair headlines, Source Serif body) are ours — the
+ * brand has no serif — and they are what keep this a paper and not an app. */
+
+:root[data-brand="brainstorm"] {
+  --bs-purple: #7237FF;
+  --bs-purple-hover: #612FD9;
+  --bs-cyan: #13D2E5;
+  --bs-teal: #287E89;        /* cyan's approved darker shade: small cyan text on white fails contrast */
+  --bs-deep: #2B174F;
+  --bs-aurora: linear-gradient(90deg, #7237FF, #13D2E5);
+  --brand: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --paper: #F2F3F0;          /* Balanced White */
+  --paper-2: #FFFFFF;        /* cards are white on the Balanced White ground */
+  --ink: #0A0E18;            /* Brainstorm Ink */
+  --ink-2: #2B3442;
+  --ink-3: #555D69;
+  --rule: #D6D9DB;
+  --rule-soft: #E8EAE7;
+  --accent: #7237FF;
+  --spot: #7237FF;
+  --reverse-bg: #0A0E18;
+  --reverse-ink: #F2F3F0;
+  --reverse-ink-2: #9AA1AC;
+  --reverse-spot: #13D2E5;
+  --accent-soft: rgba(114, 55, 255, .09);
+}
+
+/* --- nameplate: a newspaper's, with the brand in the ear ---------------- */
+/* The one gradient, as a hairline under the top rule — never under text. */
+[data-brand="brainstorm"] .masthead::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 2px; background: var(--bs-aurora);
+}
+/* The ear continues the hairline, so it runs the full width of the header. */
+[data-brand="brainstorm"] .sheet > .folio::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 2px; background: var(--bs-aurora);
+}
+
+/* --- labels: Brainstorm's section kicker, mono caps in cyan -------------- */
+
+[data-brand="brainstorm"] .kicker {
+  font-family: var(--mono); font-weight: 600; letter-spacing: .2em; color: var(--bs-teal);
+}
+[data-brand="brainstorm"] .band-head { border-bottom: 0; position: relative; }
+/* The kicker's fading line, from section-header.tsx: cyan at 25% into nothing. */
+[data-brand="brainstorm"] .band-head::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+  background: linear-gradient(90deg, rgba(19, 210, 229, .55), rgba(19, 210, 229, 0));
+}
+[data-brand="brainstorm"] .band-head h2 { font-family: var(--brand); font-weight: 800; letter-spacing: .08em; }
+[data-brand="brainstorm"] .lv-ago::before { background: var(--bs-cyan); opacity: 1; }
+
+/* --- cards: rounded, white, a hairline and the softest shadow ------------ */
+
+[data-brand="brainstorm"] .box {
+  background: #fff; border: 1px solid var(--rule); border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(10, 14, 24, .05);
+}
+[data-brand="brainstorm"] .box-head { border-bottom-color: var(--rule); color: var(--ink-2); }
+[data-brand="brainstorm"] .lv-card {
+  background: #fff; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 12px 32px -14px rgba(10, 14, 24, .28), 0 0 15px rgba(19, 210, 229, .12);
+  border-top: 1px solid var(--rule); padding-top: 15px;
+}
+[data-brand="brainstorm"] .lv-card::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--bs-aurora);
+}
+[data-brand="brainstorm"] .lv-card-name { font-family: var(--brand); font-weight: 800; letter-spacing: -0.01em; }
+[data-brand="brainstorm"] .lv-card-monogram { background: var(--bs-aurora); color: #fff; }
+[data-brand="brainstorm"] figure img { border-radius: 6px; border-color: var(--rule); }
+
+/* --- links and focus: purple, the interaction colour --------------------- */
+
+[data-brand="brainstorm"] a:focus-visible { outline: 2px solid rgba(19, 210, 229, .55); outline-offset: 2px; }
+[data-brand="brainstorm"] a[data-ev]:hover,
+[data-brand="brainstorm"] a[data-pk]:hover { color: var(--bs-purple-hover); border-bottom-color: var(--bs-purple); }
+
+/* --- reading through Brainstorm ------------------------------------------- */
+
+[data-brand="brainstorm"] .lv-panel::before { background: var(--bs-aurora); }
+[data-brand="brainstorm"] .lv-panel-kicker { color: var(--bs-teal); }
+[data-brand="brainstorm"] .lv-card-read:hover { background: var(--bs-purple); }
+[data-brand="brainstorm"] .lv-has-new .lv-since-dot { background: var(--bs-cyan); box-shadow: 0 0 0 3px rgba(19, 210, 229, .22); }
+[data-brand="brainstorm"] .lv-drawer-all { background: rgba(114, 55, 255, .06); }
+[data-brand="brainstorm"] .lv-drawer-name { font-family: var(--brand); font-weight: 800; letter-spacing: -0.01em; }
+
+/* --- the printer's colophon ---------------------------------------------- */
+/* Set like the paper's own small print: centred, in the body type, between
+ * hairlines. The brand appears once, as a small mark; the invitation is one
+ * sentence and an underlined address, not a button. */
+
+.lv-colophon {
+  margin-top: 36px; padding: 16px 0 6px; border-top: 3px double var(--ink);
+  display: grid; grid-template-columns: 1fr 1fr; column-gap: 0;
+  text-align: left; font-family: var(--body); color: var(--ink-2);
+}
+.lv-colophon p { margin: 0; font-size: .84rem; line-height: 1.55; max-width: 60ch; }
+.lv-colophon > p:first-child { padding-right: 22px; }
+.lv-colophon > p:nth-child(2) { padding-left: 22px; border-left: 1px solid var(--rule); }
+.lv-colophon-mark { display: inline-block; width: 12px; line-height: 0; vertical-align: -1px; margin-right: 4px; }
+.lv-colophon-mark svg { width: 100%; height: auto; display: block; }
+.lv-colophon b { color: var(--ink); font-weight: 600; }
+.lv-colophon-caps { font-variant: small-caps; letter-spacing: .06em; color: var(--ink); }
+.lv-colophon a { border-bottom: 1px solid var(--rule); color: var(--ink); }
+.lv-colophon a:hover { color: var(--bs-purple); border-bottom-color: var(--bs-purple); }
+.lv-colophon-small {
+  grid-column: 1 / -1; margin-top: 14px !important; padding-top: 8px; border-top: 1px solid var(--rule); max-width: none !important;
+  font-family: var(--mono) !important; font-size: .6rem !important; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+@media (max-width: 720px) {
+  .lv-colophon { grid-template-columns: 1fr; row-gap: 10px; }
+  .lv-colophon > p:first-child { padding-right: 0; }
+  .lv-colophon > p:nth-child(2) { padding-left: 0; border-left: 0; }
+}
+
+[data-brand="brainstorm"] .lv-onair-live { color: var(--bs-teal); }
+[data-brand="brainstorm"] .band.tinted { background: #fff; }
+[data-brand="brainstorm"] .lv-index a:hover { color: var(--bs-purple); }
+[data-brand="brainstorm"] .tabloid-bar h2 { font-family: var(--brand); }
+[data-brand="brainstorm"] .lv-tile.lv-hit, [data-brand="brainstorm"] .lv-keyboard .lv-key.lv-hit { background: var(--bs-purple); border-color: var(--bs-purple); }
+[data-brand="brainstorm"] .lv-tile.lv-near, [data-brand="brainstorm"] .lv-keyboard .lv-key.lv-near { background: var(--bs-teal); border-color: var(--bs-teal); }
+[data-brand="brainstorm"] a.lv-buy-main:hover { background: var(--bs-purple); border-color: var(--bs-purple); }
+[data-brand="brainstorm"] .lv-tune:not(:disabled):hover { background: var(--bs-purple); border-color: var(--bs-purple); color: #fff; }
+
+@media (max-width: 520px) {
+  [data-brand="brainstorm"] .masthead { column-gap: .45rem; }
+}

@@ -102,10 +102,17 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollba
 .sheet > .masthead:has(> .lv-cut) {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 18px; align-items: end;
 }
+/* Printed in a faded, warm ink — an old engraving on aged newsprint, not a
+ * black photograph — so it keeps its place beside the name without pulling
+ * the eye from it. The stamp is the shape (a mask); the colour is ours. */
 .masthead > .lv-cut {
   grid-column: 2; grid-row: 1 / span 2; align-self: end;
   height: var(--lv-cut-h, 104px); aspect-ratio: 298 / 280;
-  background: var(--lv-stamp) left bottom / contain no-repeat;
+  --lv-cut-ink: #7A6F61;
+  background: var(--lv-cut-ink);
+  -webkit-mask: var(--lv-stamp) left bottom / contain no-repeat;
+  mask: var(--lv-stamp) left bottom / contain no-repeat;
+  opacity: .72;
   transform: scaleX(-1);
 }
 .masthead:has(> .lv-cut) > h1, .masthead:has(> .lv-cut) > .motto { grid-column: 1; }
@@ -115,9 +122,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollba
   .masthead:has(> .lv-cut) > .motto { grid-column: 1 / -1; }
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .lv-cut { filter: invert(1); }
+  :root:not([data-theme="light"]) .lv-cut { --lv-cut-ink: #C9BFAF; }
 }
-:root[data-theme="dark"] .lv-cut { filter: invert(1); }
+:root[data-theme="dark"] .lv-cut { --lv-cut-ink: #C9BFAF; }
 
 /* --- inside today: the section bar ------------------------------------------ */
 /* A newspaper front's section bar: the sections in small bold caps, a

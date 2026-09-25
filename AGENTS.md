@@ -645,7 +645,11 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   on that line: the folio is its own ruled strip under the header, date
   left, number and window right; the phone drops the window. The brand's
   gradient hairline stays on the header, and on the strip only when the
-  strip exists. Checked at 1519, 1020, 768 and 375.
+  strip exists. Checked at 1519, 1020, 768 and 375. The reader then asked for
+  the cut faded, old-timey and less distracting: it is printed in a warm,
+  faded ink (#7A6F61 at .72) through the stamp as a mask, not the stamp's
+  own black — an old engraving on aged newsprint. Dark mode swaps the ink
+  for #C9BFAF rather than inverting.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

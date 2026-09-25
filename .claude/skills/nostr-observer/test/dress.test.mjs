@@ -345,3 +345,29 @@ test('the lead picture loads first; every picture after it waits until it is nea
   const twice = dress(marked, art, assets).html.match(/<img\b[^>]*>/g)[1]
   assert.equal((twice.match(/loading=/g) || []).length, 1)
 })
+
+// --- the card's preview of an article, 2026-09-25 -------------------------------
+
+import { toBrainstormArticle } from '../scripts/nostr.mjs'
+
+test('an article\'s card reads as prose: no markdown, and the title is not said twice', () => {
+  const ARTICLE_ID = 'c'.repeat(64)
+  const article = {
+    id: ARTICLE_ID, kind: 30023, pubkey: AUTHOR, created_at: 1790302000,
+    tags: [['d', 'refusal'], ['title', 'A $70 Billion Refusal']],
+    content: '# A $70 Billion Refusal\n\nOn **Wednesday** the [US Treasury](https://home.treasury.gov) sold '
+      + '![chart](https://example.com/chart.png)$70 billion of *five-year* notes.\n\n## The auction\n\n'
+      + '- cleared at `5.033%`\n- against 4.393% in August\n\n> Not the same as getting a price.',
+  }
+  const withArticle = { ...corpus, desks: { ...corpus.desks, articles: [article] } }
+  const cited = page.replace('</p></article>',
+    ` <a href="${toBrainstormArticle(article)}" target="_blank" rel="noopener">Read</a></p></article>`)
+  const { html } = dress(cited, withArticle, assets)
+  const data = JSON.parse(/<script type="application\/json" id="observer-data">([\s\S]*?)<\/script>/.exec(html)[1])
+  const card = data.events[ARTICLE_ID]
+  assert.equal(card.title, 'A $70 Billion Refusal')
+  assert.equal(card.text, 'On Wednesday the US Treasury sold $70 billion of five-year notes. '
+    + 'The auction cleared at 5.033% against 4.393% in August Not the same as getting a price.')
+  // A note keeps its own asterisks: only articles are read as markdown.
+  assert.match(data.events[NOTE_ID].text, /^A song is not scarce\./)
+})

@@ -27,7 +27,7 @@ import { join } from 'node:path'
 import { check, permalinkTarget, articleLinkTarget, profileLinkTarget, streamLinkTarget, listingLinkTarget, toStreamLink, toListingLink, decodeEntities } from './validate.mjs'
 import { tags, attributes, textIn } from './html.mjs'
 import { filterFor } from './corpus.mjs'
-import { toNpub, BRAINSTORM } from './nostr.mjs'
+import { toNpub, BRAINSTORM, ARTICLE_KINDS } from './nostr.mjs'
 
 const REFERENCE = fileURLToPath(new URL('../reference/', import.meta.url))
 
@@ -222,6 +222,31 @@ function excerpt (text) {
 const title = (event) => (event.tags || []).find((t) => t[0] === 'title')?.[1] || null
 
 /**
+ * Long-form is markdown; a card reads it as prose. The heading that repeats
+ * the article's title goes (the card already shows the title), and so do the
+ * marks: headings, quotes, list bullets, rules, images, emphasis and code
+ * ticks. A link keeps its words and loses its address.
+ */
+function prose (markdown, heading) {
+  const squash = (text) => String(text).toLowerCase().replace(/[^a-z0-9]+/g, '')
+  const lines = String(markdown || '').split('\n')
+  const first = lines.findIndex((line) => line.trim())
+  if (first > -1 && heading && squash(lines[first].replace(/^\s*#+/, '')) === squash(heading)) lines.splice(first, 1)
+  return lines
+    .map((line) => line
+      .replace(/^\s{0,3}#{1,6}\s+/, '')
+      .replace(/^\s{0,3}>\s?/, '')
+      .replace(/^\s*(?:[-*+]|\d+[.)])\s+/, '')
+      .replace(/^\s*(?:[-*_]\s*){3,}$/, ''))
+    .join('\n')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/(\*\*|__)(.+?)\1/g, '$2')
+    .replace(/(^|[^\w*])[*_](\S(?:.*?\S)?)[*_](?=[^\w*]|$)/gm, '$1$2')
+    .replace(/`([^`]+)`/g, '$1')
+}
+
+/**
  * Dress a page. Pure: no files, so a test can hand it any page, any corpus
  * and any assets. Throws on a page that has not passed validate.
  */
@@ -357,7 +382,7 @@ export function dress (html, corpus, assets) {
   }
   const eventsOut = {}
   for (const [id, e] of cited) {
-    eventsOut[id] = { id, pk: e.pubkey, kind: e.kind, t: e.created_at, title: title(e), text: excerpt(e.content) }
+    eventsOut[id] = { id, pk: e.pubkey, kind: e.kind, t: e.created_at, title: title(e), text: excerpt(ARTICLE_KINDS.has(e.kind) ? prose(e.content, title(e)) : e.content) }
   }
   const peopleOut = {}
   for (const pk of people) {

@@ -39,6 +39,29 @@ function el (tag, className, text) {
   return node
 }
 
+// The reader's clock: their place's zone and, for a US paper, 12 hours —
+// "11:09 p.m. CDT". Without one, UTC.
+function clockParts (seconds, options) {
+  const c = (data && data.clock) || null
+  try {
+    return Object.fromEntries(new Intl.DateTimeFormat(c && !c.hour12 ? 'en-GB' : 'en-US', {
+      timeZone: c ? c.timezone : 'UTC', hour: 'numeric', minute: '2-digit', hour12: Boolean(c && c.hour12), timeZoneName: 'short', ...options,
+    }).formatToParts(new Date(seconds * 1000)).map((x) => [x.type, x.value]))
+  } catch { return null }
+}
+function clockTime (seconds) {
+  const p = clockParts(seconds)
+  if (!p) return new Date(seconds * 1000).toISOString().slice(11, 16) + ' UTC'
+  const twelve = data && data.clock && data.clock.hour12
+  const time = twelve ? `${p.hour}:${p.minute} ${/p/i.test(p.dayPeriod) ? 'p.m.' : 'a.m.'}` : `${p.hour.padStart(2, '0')}:${p.minute}`
+  return `${time} ${p.timeZoneName}`
+}
+function clockFull (seconds) {
+  const p = clockParts(seconds, { weekday: 'long', month: 'long', day: 'numeric' })
+  if (!p) return new Date(seconds * 1000).toUTCString()
+  return `${p.weekday}, ${p.month} ${p.day}, ${clockTime(seconds)}`
+}
+
 function ago (seconds) {
   const s = Math.max(0, Math.floor(Date.now() / 1000 - seconds))
   if (s < 90) return 'just now'
@@ -139,7 +162,7 @@ function timestamps () {
     const newest = Math.max(...times)
     const stamp = el('time', 'lv-ago')
     stamp.dateTime = new Date(newest * 1000).toISOString()
-    stamp.title = new Date(newest * 1000).toUTCString()
+    stamp.title = clockFull(newest)
     host.append(stamp)
     stamps.push([stamp, newest])
   }
@@ -1002,7 +1025,7 @@ function sinceStrip () {
   const anchor = slot || document.querySelector('.masthead')
   if (!anchor) return
 
-  const closed = new Date(data.until * 1000).toISOString().slice(11, 16) + ' UTC'
+  const closed = clockTime(data.until)
   const strip = slot || el('div', 'lv-since')
   const button = el('button', 'lv-since-button')
   button.type = 'button'

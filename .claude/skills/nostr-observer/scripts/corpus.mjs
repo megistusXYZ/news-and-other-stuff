@@ -221,6 +221,29 @@ function when (ts) {
 }
 
 /**
+ * The reader's clock: their place's time zone (the weather's, from
+ * Open-Meteo) and, for a US paper, 12 hours — "2026-09-24 11:09 p.m. CDT".
+ * The writer prints these as handed over; it never converts a zone itself.
+ * Without a time zone, UTC as before.
+ */
+function clockOf (weather) {
+  if (!weather || !weather.timezone) return when
+  const us = weather.unit === '°F'
+  const locale = us ? 'en-US' : 'en-GB'
+  let format
+  try {
+    format = new Intl.DateTimeFormat(locale, { timeZone: weather.timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit', hour12: us, timeZoneName: 'short' })
+  } catch {
+    return when
+  }
+  return (ts) => {
+    const part = Object.fromEntries(format.formatToParts(new Date(ts * 1000)).map((x) => [x.type, x.value]))
+    const time = us ? `${part.hour}:${part.minute} ${/p/i.test(part.dayPeriod) ? 'p.m.' : 'a.m.'}` : `${part.hour.padStart(2, '0')}:${part.minute}`
+    return `${part.year}-${part.month}-${part.day} ${time} ${part.timeZoneName}`
+  }
+}
+
+/**
  * How much of each desk's text reaches the digest.
  *
  * The digest is the reader's context and the reader's plan usage, and it is
@@ -296,7 +319,7 @@ export function fit (desks, budget = DEFAULT_DIGEST_BUDGET) {
  * page, and it stays true only if these are set apart and credited.
  */
 function printWires (p, wires) {
-  const stamp = new Date(wires.asOf * 1000).toISOString().slice(0, 16).replace('T', ' ') + 'Z'
+  const stamp = clockOf(wires.weather)(wires.asOf)
   p('## From the Wires')
   p('')
   p("These are NOT from the reader's web of trust. They are wire services the reader")
@@ -458,6 +481,8 @@ function kickoff (next, weather) {
 }
 
 export function digest (corpus, budget = DEFAULT_DIGEST_BUDGET) {
+  // Every time below is in the reader's zone when the weather named one.
+  const when = clockOf(corpus.wires && corpus.wires.weather)
   const { kept, trimmed } = fit(corpus.desks, budget)
   const lines = []
   const p = (s = '') => lines.push(s)

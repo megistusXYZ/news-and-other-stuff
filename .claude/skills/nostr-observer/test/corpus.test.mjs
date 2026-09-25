@@ -371,3 +371,24 @@ test('a kick-off is printed in the reader\'s time zone: 12-hour for a US paper, 
   const gb = digest({ ...base, wires: { asOf: 1790309349, weather: london, sports, almanac: null, headlines: [], notes: [] } })
   assert.match(gb, /next Northwestern Wildcats v Visitors, Saturday 26 September, 17:00 BST, Neyland Stadium\./)
 })
+
+// --- the digest's clock is the reader's, 2026-09-25 ---------------------------------
+
+test('with the reader\'s time zone known, every time in the digest is theirs, labelled; without it, UTC as before', async () => {
+  const { digest } = await import('../scripts/corpus.mjs')
+  const note = { id: 'e'.repeat(64), kind: 1, pubkey: 'f'.repeat(64), created_at: 1790262780, tags: [], content: 'hello' }
+  const base = { code: 'ABC123', since: 1790222949, until: 1790309349, desks: { notes: [note] }, control: [], profiles: {}, art: [] }
+  const chicago = { place: 'Chicago', unit: '°F', timezone: 'America/Chicago', source: 'x', now: { temp: 1, words: 'x' }, today: { date: '2026-09-25', high: 1, low: 1, rain: 0, words: 'x', sunrise: '07:21', sunset: '19:23' }, ahead: [] }
+  const wires = { asOf: 1790342880, weather: chicago, sports: null, almanac: null, headlines: [], notes: [] }
+
+  const us = digest({ ...base, wires })
+  assert.match(us, /^Window: 2026-09-23 11:09 p\.m\. CDT to 2026-09-24 11:09 p\.m\. CDT \(24 hours, fixed\)\.$/m)
+  assert.match(us, /· 2026-09-24 10:13 a\.m\. CDT$/m, 'a post\'s time')
+  assert.match(us, /fetched 2026-09-25 8:28 a\.m\. CDT/)
+
+  const gb = digest({ ...base, wires: { ...wires, weather: { ...chicago, unit: '°C', timezone: 'Europe/London' } } })
+  assert.match(gb, /^Window: 2026-09-24 05:09 BST to 2026-09-25 05:09 BST/m)
+
+  const none = digest(base)
+  assert.match(none, /^Window: 2026-09-24 04:09Z to 2026-09-25 04:09Z/m, 'no wires, no zone: UTC as before')
+})

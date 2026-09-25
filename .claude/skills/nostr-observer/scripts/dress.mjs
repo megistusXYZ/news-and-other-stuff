@@ -435,6 +435,11 @@ export function dress (html, corpus, assets) {
     until: corpus.until,
     relays: COUNT_RELAYS,
     sequence,
+    // The reader's clock, for the page's own times ("since 11:09 p.m. CDT"):
+    // their place's zone from the weather, 12 hours for a US paper.
+    clock: corpus.wires && corpus.wires.weather && /^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)*$/.test(String(corpus.wires.weather.timezone || ''))
+      ? { timezone: corpus.wires.weather.timezone, hour12: corpus.wires.weather.unit === '°F' }
+      : null,
     events: eventsOut,
     people: peopleOut,
   }

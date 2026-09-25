@@ -586,6 +586,19 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   postMessage from Brainstorm (a cousin of team request #4) would let the
   live page fade in the moment it has drawn instead of on a timer.
 
+- **The paper keeps the reader's clock (2026-09-25).** With the weather's
+  time zone known, the digest prints every time in it, labelled — the
+  window, each post, the wires' fetch: "2026-09-24 11:09 p.m. CDT" for a US
+  paper (12 hours), "2026-09-25 05:09 BST" elsewhere; UTC only when no zone
+  is known. The brief already said reader-local times arrive converted and
+  are printed as handed over; it now says so for bylines and prose too, and
+  the Conditions stamp carries the folio's label. The living copy carries
+  `clock: { timezone, hour12 }` for its own times ("since 11:09 p.m. CDT",
+  the timestamps' tooltips). Diary entries keep the organiser's own zone,
+  as the brief has always said. Converting 13C931 turned "In the half hour
+  after 04:30 UTC" into 11:30 p.m. CDT the night before — the headline's
+  "Before Breakfast" is Gigi's breakfast, in Europe, and was left as set.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

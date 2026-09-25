@@ -413,3 +413,12 @@ test('a Diary entry opens in the panel like any post: marked by its event, and i
   assert.match(html, new RegExp(`<a data-ev="${meetup.id}" data-t="1790304000" data-pk="${AUTHOR}" href="https://brainstorm\\.world/a/naddr1`))
   assert.deepEqual(islandOf(html).sequence, [NOTE_ID, meetup.id])
 })
+
+// --- the page's live clock is the reader's, 2026-09-25 -------------------------------
+
+test('the living copy carries the reader\'s clock for its own times; none known, none carried', () => {
+  const weather = { timezone: 'America/Chicago', unit: '°F' }
+  assert.deepEqual(islandOf(dress(page, { ...corpus, wires: { weather } }, assets).html).clock, { timezone: 'America/Chicago', hour12: true })
+  assert.deepEqual(islandOf(dress(page, { ...corpus, wires: { weather: { timezone: 'Europe/London', unit: '°C' } } }, assets).html).clock, { timezone: 'Europe/London', hour12: false })
+  assert.equal(islandOf(dress(page, corpus, assets).html).clock, null)
+})

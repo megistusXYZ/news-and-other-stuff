@@ -148,8 +148,9 @@ to write.
   zone (or its absence) comes from the next rule, not from this example.
 - **Print the closing time with the zone the digest labelled.** A window ending
   in `Z`, or marked UTC, becomes `24h to HH:MM UTC`. Reader-local times come
-  already converted — print them as handed over (`24h to HH:MM`) and do not
-  invent a zone. Never convert between zones yourself: the page has no script,
+  already converted and labelled — `2026-09-24 11:09 p.m. CDT` becomes
+  `24h to 11:09 p.m. CDT` — print them as handed over, label and all, and do
+  not invent a zone. The same goes for bylines and any time in the prose. Never convert between zones yourself: the page has no script,
   and a wrong offset dates the paper for the wrong day.
 - **No prices, no tickers, no block heights on the folio.** A number that
   moves is a story or a table row. It is not part of the paper's name.
@@ -165,7 +166,7 @@ fine — that is what "a table row" above means — but they are **readings from
 window, not live figures**. Without a stamp they look like a ticker.
 
 - Stamp the box with the same closing time and zone as the folio: `As of HH:MM`
-  (add `UTC` only when the folio carried it), and say they are not live.
+  with the zone the folio carried (`UTC`, `CDT`, …), and say they are not live.
 - Attribute the source when the digest names one (Clark Moody, a chart bot).
 - Do not park corpus-size or Instrument overlap stats under that stamp — those
   belong with The Instrument, not under a market table.

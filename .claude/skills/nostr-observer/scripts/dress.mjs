@@ -380,6 +380,11 @@ export function dress (html, corpus, assets) {
       link: tagsOf(e, 'r').find(https) || null,
     }
   }
+  // The reading order the panel's arrows step through: every cited post and
+  // article once, as the page first meets it. People, stations and listings
+  // are opened from their own links, not stepped to.
+  const sequence = [...new Set(tags(out, 'a').map((a) => attributes(a.raw)['data-ev']).filter(Boolean))]
+
   const eventsOut = {}
   for (const [id, e] of cited) {
     eventsOut[id] = { id, pk: e.pubkey, kind: e.kind, t: e.created_at, title: title(e), text: excerpt(ARTICLE_KINDS.has(e.kind) ? prose(e.content, title(e)) : e.content) }
@@ -392,6 +397,9 @@ export function dress (html, corpus, assets) {
       nip05: p.nip05 || null,
       picture: /^https:\/\/[^\s"'<>]{1,500}$/.test(String(p.picture || '')) ? p.picture : null,
       about: p.about ? excerpt(p.about).slice(0, 280) : null,
+      // Their stories in this paper, in reading order: a profile in the
+      // panel lists them under "In today's paper".
+      stories: sequence.filter((id) => byId.get(id)?.pubkey === pk),
     }
   }
 
@@ -426,6 +434,7 @@ export function dress (html, corpus, assets) {
     start: corpus.since,
     until: corpus.until,
     relays: COUNT_RELAYS,
+    sequence,
     events: eventsOut,
     people: peopleOut,
   }

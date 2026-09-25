@@ -523,6 +523,27 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   follow ↗", or at once by modifier-click, since the link is a real link.
   The arrows mean what they say: → stays in the paper, ↗ leaves it.
 
+- **The panel steps through stories; people get "In today's paper"
+  (2026-09-25).** ‹ › walked every link — names, cameos, stations,
+  listings — so "3 of 61" landed on profiles between stories. `dress.mjs`
+  now bakes `sequence`: each cited post and article once, in the order the
+  page first meets it (26 in the 13C931 edition), and each person carries
+  `stories`, theirs in that order; both tested in `dress.test.mjs`. The
+  arrows walk `sequence` only and hide on a profile, a station or a
+  listing; a profile shows "In today's paper" with the person's stories to
+  step into. NEW READERS get one note at the panel's foot — "You're reading
+  Brainstorm inside your paper. To zap, follow or reply, open the full page
+  ↗" — on their first three Brainstorm pages or until "Got it". On a phone
+  it is the only way out to the full page, since the header's link is
+  hidden there. RETURNING READERS: an opened story is remembered per
+  edition on their device (`lv-read-<path>`), marked ✓ where the paper
+  links it, and counted ("3 of 26 stories · 5 read"). SIGNED-IN state is
+  NOT shown: the panel is a cross-origin frame with partitioned storage, so
+  the paper cannot know it and a signed-in reader appears signed out inside
+  it. That waits on Brainstorm's postMessage and requestStorageAccess
+  (team request #4, #5); until then zap, follow and reply go through the
+  full page.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

@@ -371,3 +371,29 @@ test('an article\'s card reads as prose: no markdown, and the title is not said 
   // A note keeps its own asterisks: only articles are read as markdown.
   assert.match(data.events[NOTE_ID].text, /^A song is not scarce\./)
 })
+
+// --- the panel steps through stories, not people, 2026-09-25 --------------------
+
+const STORY_ARTICLE = {
+  id: '9'.repeat(64), kind: 30023, pubkey: REPLIER, created_at: 1790303000,
+  tags: [['d', 'years'], ['title', 'The Years Behind It']], content: 'A long read.',
+}
+const storyCorpus = { ...wireCorpus, desks: { ...wireCorpus.desks, articles: [STORY_ARTICLE] } }
+// A name, a post, a station, a listing, another name, a reply, an article, and
+// the first post cited a second time — in that order on the page.
+const storyPage = wirePage.replace('Antminer S19</a>: 850 €.</p>',
+  'Antminer S19</a>: 850 €.</p>'
+  + `<p><a href="${toProfileLink(REPLIER)}">Max</a> answered. <a href="${toPermalink(REPLY_ID)}">Read</a> `
+  + `<a href="${toBrainstormArticle(STORY_ARTICLE)}">Read</a> <a href="${toPermalink(NOTE_ID)}">Read</a></p>`)
+
+test('the reading order is the stories, each once, as the page first meets them — no people, stations or listings', () => {
+  const { html } = dress(storyPage, storyCorpus, assets)
+  assert.deepEqual(islandOf(html).sequence, [NOTE_ID, REPLY_ID, STORY_ARTICLE.id])
+})
+
+test('each person carries their stories on this page, in reading order, for "In today\'s paper"', () => {
+  const { people } = islandOf(dress(storyPage, storyCorpus, assets).html)
+  assert.deepEqual(people[AUTHOR].stories, [NOTE_ID])
+  assert.deepEqual(people[REPLIER].stories, [REPLY_ID, STORY_ARTICLE.id])
+  assert.deepEqual(people[SELLER].stories, [], 'a seller named only on a listing has no stories here')
+})

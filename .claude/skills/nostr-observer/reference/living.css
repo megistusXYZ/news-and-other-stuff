@@ -589,6 +589,40 @@ a.lv-panel-out:hover { color: var(--accent); }
 }
 .lv-panel-body.lv-loaded .lv-panel-loading { display: none; }
 
+.lv-panel-step[hidden] { display: none; }
+
+/* On a profile: the person's stories in this paper, a quiet row under the head. */
+.lv-panel-today[hidden] { display: none; }
+.lv-panel-today {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 9px 16px 10px;
+  border-bottom: 1px solid var(--rule); font-family: var(--mono); font-size: .66rem;
+}
+.lv-panel-today-label { letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+.lv-panel-today-story {
+  border: 0; background: none; padding: 0; cursor: pointer; text-align: left;
+  font-family: var(--serif); font-size: .9rem; font-weight: 700; color: var(--ink);
+  border-bottom: 1px solid var(--rule);
+}
+.lv-panel-today-story:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.lv-panel-today-story.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-weight: 400; font-size: .7em; color: var(--ink-3); }
+
+/* The new reader's note, at the foot of the panel. */
+.lv-panel-note[hidden] { display: none; }
+.lv-panel-note {
+  display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-top: 1px solid var(--rule);
+  font-family: var(--body); font-size: .84rem; line-height: 1.4; color: var(--ink-2); background: var(--paper);
+}
+.lv-panel-note-text { flex: 1; min-width: 0; }
+a.lv-panel-note-out { color: var(--accent); border-bottom: 1px solid var(--accent-soft); white-space: nowrap; }
+.lv-panel-note-ok {
+  flex: none; border: 1px solid var(--rule); border-radius: 999px; background: none; cursor: pointer;
+  padding: 5px 12px; font: 600 .62rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2);
+}
+.lv-panel-note-ok:hover { border-color: var(--accent); color: var(--accent); }
+
+/* A story this reader has opened, marked where the paper links it. */
+a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72em; color: var(--ink-3); }
+
 /* The story you came from keeps a thin bar at its edge. */
 .lv-reading { box-shadow: inset 3px 0 0 var(--accent); transition: box-shadow .3s ease; }
 .col > .lv-reading, .cell.lv-reading { padding-left: 12px; }

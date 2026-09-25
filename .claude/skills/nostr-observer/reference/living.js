@@ -429,13 +429,41 @@ function reader () {
     body.append(sheet)
     body.classList.add('lv-loaded')
   }
-  panel.append(head, body)
+  // On a profile: the person's stories in this paper, to step into.
+  const today = el('nav', 'lv-panel-today')
+  today.setAttribute('aria-label', 'In today\'s paper')
+  today.hidden = true
+  // For a new reader, once: what the panel is, and where zap and follow live.
+  // Shown on the first few Brainstorm pages until dismissed, then never again.
+  const note = el('div', 'lv-panel-note')
+  note.hidden = true
+  const noteText = el('span', 'lv-panel-note-text', 'You’re reading Brainstorm inside your paper. To zap, follow or reply, ')
+  const noteOut = el('a', 'lv-panel-note-out', 'open the full page ↗')
+  noteOut.target = '_blank'; noteOut.rel = 'noopener noreferrer'
+  noteText.append(noteOut)
+  const noteOk = el('button', 'lv-panel-note-ok', 'Got it')
+  noteOk.type = 'button'
+  note.append(noteText, noteOk)
+  const NOTE_KEY = 'lv-panel-note'
+  noteOk.addEventListener('click', () => { store.set(NOTE_KEY, { done: true }); note.hidden = true })
+  panel.append(head, today, body, note)
   document.body.append(scrim, panel)
 
-  // Everything the arrows walk, in reading order: citations and names on
-  // Brainstorm, stations in the wireless, listings in the classifieds.
+  // What this reader has opened in this edition, kept on their device.
+  const READ_KEY = `lv-read-${location.pathname}`
+  const read = new Set(store.get(READ_KEY) || [])
+  const markRead = (id) => { for (const a of $$(`a[data-ev="${id}"]`)) a.classList.add('lv-was-read') }
+  read.forEach(markRead)
+
+  // Everything the panel can open: citations and names on Brainstorm,
+  // stations in the wireless, listings in the classifieds.
   const links = () => $$('a[data-ev], a[data-pk], a[data-stream], a[data-listing]')
     .filter((a) => a.dataset.stream || a.dataset.listing || a.href.startsWith(BRAINSTORM + '/'))
+  // What the arrows walk: the paper's stories, each once, in reading order
+  // (dress.mjs works it out). People, stations and listings are opened from
+  // their own links and are not stepped to.
+  const stories = (data.sequence || []).filter((id) => document.querySelector(`a[data-ev="${id}"]`))
+  const storyAnchor = (id) => document.querySelector(`a[data-ev="${id}"]`)
   let index = -1
   let source = null
   let opener = null
@@ -453,13 +481,56 @@ function reader () {
     : a.dataset.listing ? { type: 'listing', id: a.dataset.listing }
       : { type: 'page', path: pathOf(a.href) }
   const keyOf = (t) => (t.type === 'page' ? t.path : `${t.type}:${t.id}`)
+  const storyOf = (target, anchor) => {
+    if (target.type !== 'page') return null
+    if (anchor && anchor.dataset.ev) return anchor.dataset.ev
+    return stories.find((id) => pathOf(storyAnchor(id).href) === target.path) || null
+  }
+  const personOf = (target, anchor) => {
+    if (target.type !== 'page' || !/^\/p\//.test(target.path)) return null
+    if (anchor && anchor.dataset.pk && !anchor.dataset.ev) return anchor.dataset.pk
+    const named = links().find((a) => a.dataset.pk && !a.dataset.ev && pathOf(a.href) === target.path)
+    return named ? named.dataset.pk : null
+  }
+  const openStory = (id) => {
+    const a = storyAnchor(id)
+    if (!a) return
+    a.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' })
+    open(targetOf(a), a)
+  }
+  const headline = (id) => {
+    const ev = data.events[id]
+    if (!ev) return 'A post'
+    if (ev.title) return ev.title
+    const words = String(ev.text || '').trim()
+    return words.length > 60 ? words.slice(0, 59).trimEnd() + '…' : (words || 'A post')
+  }
 
   function show (target, anchor) {
-    const all = links()
-    index = anchor ? all.indexOf(anchor) : -1
-    panel.querySelector('.lv-panel-pos').textContent = index >= 0 ? `${index + 1} of ${all.length}` : ''
-    prev.disabled = index === 0
-    next.disabled = index >= all.length - 1
+    const story = storyOf(target, anchor)
+    index = story ? stories.indexOf(story) : -1
+    if (story && !read.has(story)) { read.add(story); store.set(READ_KEY, [...read]); markRead(story) }
+    const onStory = index >= 0
+    prev.hidden = next.hidden = !onStory
+    prev.disabled = index <= 0
+    next.disabled = index >= stories.length - 1
+    panel.querySelector('.lv-panel-pos').textContent = onStory
+      ? `${index + 1} of ${stories.length} stories · ${read.size} read` : ''
+
+    // A profile lists the person's stories in this paper.
+    const pk = personOf(target, anchor)
+    const theirs = pk && data.people[pk] ? (data.people[pk].stories || []).filter(storyAnchor) : []
+    today.replaceChildren()
+    today.hidden = !theirs.length
+    if (theirs.length) {
+      today.append(el('span', 'lv-panel-today-label', 'In today’s paper'))
+      for (const id of theirs) {
+        const b = el('button', 'lv-panel-today-story' + (read.has(id) ? ' lv-was-read' : ''), headline(id))
+        b.type = 'button'
+        b.addEventListener('click', () => openStory(id))
+        today.append(b)
+      }
+    }
     body.classList.remove('lv-loaded')
 
     if (target.type === 'stream') {
@@ -475,10 +546,19 @@ function reader () {
       out.href = ad.url
       mountSheet(classified(target.id))
     } else {
-      kicker.textContent = 'Reading on Brainstorm'
+      kicker.textContent = pk ? 'Profile on Brainstorm' : 'Reading on Brainstorm'
       out.textContent = 'Open full page to zap or follow ↗'
       out.href = BRAINSTORM + target.path
       mountFrame(embed(target.path))
+    }
+
+    // The new reader's note: Brainstorm pages only, a few times, until "Got it".
+    const seen = store.get(NOTE_KEY) || { shown: 0 }
+    const showNote = target.type === 'page' && !seen.done && (seen.shown || 0) < 3
+    note.hidden = !showNote
+    if (showNote) {
+      noteOut.href = BRAINSTORM + target.path
+      if (!document.body.classList.contains('lv-reading-open')) store.set(NOTE_KEY, { shown: (seen.shown || 0) + 1 })
     }
 
     if (source) source.classList.remove('lv-reading')
@@ -528,12 +608,9 @@ function reader () {
   openReader = (url, anchor = null, options) => open({ type: 'page', path: pathOf(url) }, anchor, options)
 
   const step = (by) => {
-    const all = links()
-    if (!all.length) return
-    const to = index < 0 ? (by > 0 ? 0 : all.length - 1) : Math.min(all.length - 1, Math.max(0, index + by))
-    if (to === index) return
-    all[to].scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' })
-    open(targetOf(all[to]), all[to])
+    if (index < 0 || !stories.length) return
+    const to = Math.min(stories.length - 1, Math.max(0, index + by))
+    if (to !== index) openStory(stories[to])
   }
 
   const dismiss = () => {
@@ -568,7 +645,8 @@ function reader () {
     else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); step(-1) }
     else if (e.key === 'Tab') {
       // Keep focus in the panel while it is open.
-      const stops = [prev, next, out, close, ...(frame ? [frame] : $$('button, a, video', sheet || body))].filter((n) => n && !n.disabled)
+      const stops = [prev, next, out, close, ...$$('button', today), ...(frame ? [frame] : $$('button, a, video', sheet || body)), noteOut, noteOk]
+        .filter((n) => n && !n.disabled && !n.hidden && !n.closest('[hidden]'))
       const at = stops.indexOf(document.activeElement)
       if (e.shiftKey && at <= 0) { e.preventDefault(); stops[stops.length - 1].focus() }
       else if (!e.shiftKey && at === stops.length - 1) { e.preventDefault(); stops[0].focus() }

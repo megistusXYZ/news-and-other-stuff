@@ -404,3 +404,15 @@ test('a paper can carry a stamp beside its nameplate, named like its brand', asy
   writeFileSync(file, JSON.stringify({ name: 'News and Other Stuff', stamp: '../../etc/passwd' }))
   assert.equal(readPaper(file).stamp, null, 'a stamp is a name, never a path')
 })
+
+test('a paper can name a second stamp for its dark edition, a name like the first', async () => {
+  const { readPaper } = await import('../scripts/corpus.mjs')
+  const { writeFileSync, mkdtempSync } = await import('node:fs')
+  const { join } = await import('node:path')
+  const { tmpdir } = await import('node:os')
+  const file = join(mkdtempSync(join(tmpdir(), 'paper-')), 'observer.config.json')
+  writeFileSync(file, JSON.stringify({ name: 'N', stamp: 'ostrich-portrait', stampDark: 'ostrich-profile' }))
+  assert.equal(readPaper(file).stampDark, 'ostrich-profile')
+  writeFileSync(file, JSON.stringify({ name: 'N', stamp: 'ostrich-portrait', stampDark: '/tmp/x.webp' }))
+  assert.equal(readPaper(file).stampDark, null, 'a name, never a path')
+})

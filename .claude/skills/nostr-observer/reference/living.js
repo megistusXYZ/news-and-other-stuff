@@ -559,6 +559,9 @@ function reader () {
   const embed = (path) => {
     const u = new URL(path, BRAINSTORM)
     u.searchParams.set('embed', '1')
+    // Brainstorm keeps its theme in its own storage today; this asks for the
+    // reader's edition the day it honours ?theme= (team request #7).
+    u.searchParams.set('theme', themeNow())
     return u.href
   }
   const targetOf = (a) => a.dataset.stream ? { type: 'stream', id: a.dataset.stream }
@@ -1581,6 +1584,43 @@ function five () {
   })()
 }
 
+// --- light and dark editions ------------------------------------------------------
+
+// The paper follows the reader's device until they choose; the ostrich is the
+// switch, and the choice is kept on this device. The edition is printed light
+// (data-theme="light"); this runs first so a dark reader's page turns before
+// they have read a line of it.
+const THEME_KEY = 'lv-theme'
+const themeNow = () => (document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light')
+function theme () {
+  const root = document.documentElement
+  const system = matchMedia('(prefers-color-scheme: dark)')
+  const chosen = store.get(THEME_KEY)
+  const apply = (mode) => root.setAttribute('data-theme', mode)
+  apply(chosen === 'dark' || chosen === 'light' ? chosen : system.matches ? 'dark' : 'light')
+  if (!chosen) system.addEventListener('change', (e) => { if (!store.get(THEME_KEY)) apply(e.matches ? 'dark' : 'light'); label() })
+
+  const mark = document.querySelector('.sheet > .masthead .lv-cut')
+  if (!mark) return
+  mark.setAttribute('role', 'button')
+  mark.removeAttribute('aria-hidden')
+  mark.tabIndex = 0
+  const label = () => {
+    const next = themeNow() === 'dark' ? 'light' : 'dark'
+    mark.setAttribute('aria-label', `Switch to the ${next} edition`)
+    mark.title = `Switch to the ${next} edition`
+  }
+  const flip = () => {
+    const next = themeNow() === 'dark' ? 'light' : 'dark'
+    apply(next)
+    store.set(THEME_KEY, next)
+    label()
+  }
+  label()
+  mark.addEventListener('click', flip)
+  mark.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip() } })
+}
+
 // --- the cut before the nameplate ------------------------------------------------
 
 // The engraved head is as tall as the lines it stands beside: the name and
@@ -1643,6 +1683,7 @@ function sectionBar () {
 // Started last, once every helper above exists.
 if (data) {
   document.documentElement.classList.add('lv')
+  guard(theme)
   // Open the line to Brainstorm while the reader is still on the front page.
   for (const origin of [BRAINSTORM, 'https://api.brainstorm.world']) {
     const link = document.createElement('link')

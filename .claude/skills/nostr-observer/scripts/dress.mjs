@@ -299,6 +299,14 @@ export function dress (html, corpus, assets) {
   // Its own proportions, so the cut is drawn at its true shape.
   const stampSize = stamp ? webpSize(stamp) : null
   const stampRatio = stampSize ? `;--lv-stamp-ratio:${stampSize.w} / ${stampSize.h}` : ''
+  // The dark edition's stamp, when the paper names one: shown when the
+  // reader switches to dark, in its own shape.
+  const darkName = stamp ? corpus.paper?.stampDark || null : null
+  const dark = darkName ? assets.stamps?.[darkName] : null
+  if (darkName && !dark) throw new Error(`Unknown stamp "${darkName}". Stamps live in reference/stamps/.`)
+  if (dark && !/^[A-Za-z0-9+/]+=*$/.test(dark)) throw new Error(`The ${darkName} stamp must be base64.`)
+  const darkSize = dark ? webpSize(dark) : null
+  const darkStamp = dark ? `;--lv-stamp-dark:url("data:image/webp;base64,${dark}")${darkSize ? `;--lv-stamp-dark-ratio:${darkSize.w} / ${darkSize.h}` : ''}` : ''
   if (brand) {
     assertInlinable(`${brandName} css`, brand.css)
     assertInlinable(`${brandName} mark`, brand.mark)
@@ -480,7 +488,7 @@ export function dress (html, corpus, assets) {
 
   const head = `<style id="living-fonts">\n${assets.fonts}\n</style>\n<style id="living-css">\n${assets.css}</style>\n`
     + (brand ? `<style id="brand-css">\n${brand.css}</style>\n` : '')
-    + (stamp ? `<style id="living-stamp">:root{--lv-stamp:url("data:image/webp;base64,${stamp}")${stampRatio}}</style>\n` : '')
+    + (stamp ? `<style id="living-stamp">:root{--lv-stamp:url("data:image/webp;base64,${stamp}")${stampRatio}${darkStamp}}</style>\n` : '')
   // The printer's colophon, for a branded paper only: who made it and how to
   // get your own. The brand's own markup, with the reader's paper name in it.
   const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))

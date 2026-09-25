@@ -111,10 +111,25 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollba
   .masthead > .lv-cut { grid-row: 1; height: var(--lv-cut-h, 64px); }
   .masthead:has(> .lv-cut) > .motto { grid-column: 1 / -1; }
 }
+/* The cut is the paper's light switch: a quiet lift on hover, a ring for the
+ * keyboard, and nothing else to announce it. */
+.masthead > .lv-cut[role="button"] { cursor: pointer; transition: opacity .2s ease, translate .2s ease; }
+.masthead > .lv-cut[role="button"]:hover { opacity: 1; translate: 0 -2px; }
+.masthead > .lv-cut[role="button"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 4px; }
+/* The dark edition prints the other engraving, in chalk, at its own shape. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .lv-cut { --lv-cut-ink: #C9BFAF; }
+  :root:not([data-theme="light"]) .lv-cut {
+    --lv-cut-ink: #D8CFC0;
+    -webkit-mask-image: var(--lv-stamp-dark, var(--lv-stamp)); mask-image: var(--lv-stamp-dark, var(--lv-stamp));
+    aspect-ratio: var(--lv-stamp-dark-ratio, var(--lv-stamp-ratio, 1));
+  }
 }
-:root[data-theme="dark"] .lv-cut { --lv-cut-ink: #C9BFAF; }
+:root[data-theme="dark"] .lv-cut {
+  --lv-cut-ink: #D8CFC0;
+  -webkit-mask-image: var(--lv-stamp-dark, var(--lv-stamp)); mask-image: var(--lv-stamp-dark, var(--lv-stamp));
+  aspect-ratio: var(--lv-stamp-dark-ratio, var(--lv-stamp-ratio, 1));
+}
+@media (prefers-reduced-motion: reduce) { .masthead > .lv-cut[role="button"] { transition: none; } .masthead > .lv-cut[role="button"]:hover { translate: none; } }
 
 /* --- inside today: the section bar ------------------------------------------ */
 /* A newspaper front's section bar: the sections in small bold caps, a

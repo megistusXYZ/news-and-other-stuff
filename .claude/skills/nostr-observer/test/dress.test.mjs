@@ -468,3 +468,23 @@ test('the stamp is set as a cut before the nameplate, the name untouched, and un
     .replace(/<a +/g, '<a ')
   assert.equal(undressed, named)
 })
+
+// --- a dark edition, 2026-09-25 -------------------------------------------------------
+
+test('a paper with a dark stamp carries both pictures and both shapes, refuses an unknown one, and undresses away', () => {
+  const real = loadAssets()
+  const paper = { stamp: 'ostrich-portrait', stampDark: 'ostrich-profile' }
+  const { html } = dress(page, { ...corpus, paper }, real)
+  const style = /<style id="living-stamp">([\s\S]*?)<\/style>/.exec(html)[1]
+  assert.match(style, /--lv-stamp:url\("data:image\/webp;base64,[A-Za-z0-9+/]+=*"\);--lv-stamp-ratio:223 \/ 280/)
+  assert.match(style, /--lv-stamp-dark:url\("data:image\/webp;base64,[A-Za-z0-9+/]+=*"\);--lv-stamp-dark-ratio:298 \/ 280/)
+  assert.throws(() => dress(page, { ...corpus, paper: { ...paper, stampDark: 'pelican' } }, real), /Unknown stamp "pelican"/)
+  const undressed = html
+    .replace(/<style id="living-fonts">[\s\S]*?<\/style>\n<style id="living-css">[\s\S]*?<\/style>\n/, '')
+    .replace(/<style id="living-stamp">[\s\S]*?<\/style>\n/, '')
+    .replace(' data-stamp="ostrich-portrait"', '')
+    .replace(/<script type="application\/json" id="observer-data">[\s\S]*?<\/script>\n<script type="module" id="living-js">[\s\S]*?<\/script>\n/, '')
+    .replace(/ ?data-(ev|t|pk)="[^"]*"/g, '')
+    .replace(/<a +/g, '<a ')
+  assert.equal(undressed, page)
+})

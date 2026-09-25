@@ -37,6 +37,27 @@
   --accent-soft: rgba(114, 55, 255, .09);
 }
 
+/* The dark edition: Brainstorm's own night — Ink for the ground, a lifted
+ * Ink for cards, Balanced White for type — with the purple and cyan raised
+ * until they read on it. Two blocks, as house.css does: the reader's device
+ * when they have not chosen, their choice when they have. */
+@media (prefers-color-scheme: dark) {
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0A0E18; --paper-2: #141A26; --ink: #F2F3F0; --ink-2: #C3C8D0; --ink-3: #8C95A3;
+    --rule: #2A3242; --rule-soft: #1C2330; --accent: #A58BFF; --spot: #A58BFF; --bs-teal: #4FD6E4;
+    --reverse-bg: #1C2330; --reverse-ink: #F2F3F0; --reverse-ink-2: #9AA1AC; --reverse-spot: #13D2E5;
+    --accent-soft: rgba(165, 139, 255, .14);
+  }
+}
+:root[data-brand="brainstorm"][data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0A0E18; --paper-2: #141A26; --ink: #F2F3F0; --ink-2: #C3C8D0; --ink-3: #8C95A3;
+  --rule: #2A3242; --rule-soft: #1C2330; --accent: #A58BFF; --spot: #A58BFF; --bs-teal: #4FD6E4;
+  --reverse-bg: #1C2330; --reverse-ink: #F2F3F0; --reverse-ink-2: #9AA1AC; --reverse-spot: #13D2E5;
+  --accent-soft: rgba(165, 139, 255, .14);
+}
+
 /* --- nameplate: a newspaper's, with the brand in the ear ---------------- */
 /* The one gradient, as a hairline under the top rule — never under text. */
 [data-brand="brainstorm"] .masthead::before {
@@ -65,12 +86,12 @@
 /* --- cards: rounded, white, a hairline and the softest shadow ------------ */
 
 [data-brand="brainstorm"] .box {
-  background: #fff; border: 1px solid var(--rule); border-radius: 12px;
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 12px;
   box-shadow: 0 1px 2px rgba(10, 14, 24, .05);
 }
 [data-brand="brainstorm"] .box-head { border-bottom-color: var(--rule); color: var(--ink-2); }
 [data-brand="brainstorm"] .lv-card {
-  background: #fff; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden;
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden;
   box-shadow: 0 12px 32px -14px rgba(10, 14, 24, .28), 0 0 15px rgba(19, 210, 229, .12);
   border-top: 1px solid var(--rule); padding-top: 15px;
 }
@@ -125,7 +146,7 @@
 }
 
 [data-brand="brainstorm"] .lv-onair-live { color: var(--bs-teal); }
-[data-brand="brainstorm"] .band.tinted { background: #fff; }
+[data-brand="brainstorm"] .band.tinted { background: var(--paper-2); }
 [data-brand="brainstorm"] .lv-index a:hover { color: var(--bs-purple); }
 [data-brand="brainstorm"] .tabloid-bar h2 { font-family: var(--brand); }
 [data-brand="brainstorm"] .lv-tile.lv-hit, [data-brand="brainstorm"] .lv-keyboard .lv-key.lv-hit { background: var(--bs-purple); border-color: var(--bs-purple); }
@@ -139,3 +160,22 @@
 
 /* The folio line sits above the header now; the header carries the hairline. */
 [data-brand="brainstorm"] .sheet > .folio::before { content: none; }
+
+/* --- the dark edition's particulars --------------------------------------- */
+/* The Tabloid keeps a loud bar, in the brand's deep purple rather than a
+ * white slab; the cartoon's black line art turns to chalk on the night
+ * paper; Five's tiles keep white letters on colours dark enough to hold them. */
+:root[data-brand="brainstorm"][data-theme="dark"] .tabloid-bar { background: var(--bs-deep); color: #F2F3F0; }
+:root[data-brand="brainstorm"][data-theme="dark"] .band.back .cartoon img { filter: invert(.9) hue-rotate(180deg); background: #fff; border-color: var(--rule); }
+:root[data-brand="brainstorm"][data-theme="dark"] .lv-tile.lv-near,
+:root[data-brand="brainstorm"][data-theme="dark"] .lv-keyboard .lv-key.lv-near { background: #1F7F8A; border-color: #1F7F8A; color: #fff; }
+:root[data-brand="brainstorm"][data-theme="dark"] .lv-tile.lv-miss,
+:root[data-brand="brainstorm"][data-theme="dark"] .lv-keyboard .lv-key.lv-miss { background: #3A4354; border-color: #3A4354; color: #E3E6EA; }
+@media (prefers-color-scheme: dark) {
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .tabloid-bar { background: var(--bs-deep); color: #F2F3F0; }
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .band.back .cartoon img { filter: invert(.9) hue-rotate(180deg); background: #fff; border-color: var(--rule); }
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-tile.lv-near,
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-keyboard .lv-key.lv-near { background: #1F7F8A; border-color: #1F7F8A; color: #fff; }
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-tile.lv-miss,
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-keyboard .lv-key.lv-miss { background: #3A4354; border-color: #3A4354; color: #E3E6EA; }
+}

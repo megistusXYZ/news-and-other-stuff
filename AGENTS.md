@@ -666,6 +666,30 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   it reads as a vignette rather than a logo). `ostrich-profile` stays
   bundled as the alternative.
 
+- **A dark edition, switched by the ostrich (2026-09-25).** `readPaper`
+  takes `stampDark` (a name, like `stamp`); `dress.mjs` inlines it as
+  `--lv-stamp-dark` with `--lv-stamp-dark-ratio`, refuses an unknown one,
+  and it undresses away (both tested). living.js runs `theme()` first: the
+  reader's saved choice (`lv-theme`) wins, else their device setting (and
+  follows it live until they choose); the edition's printed
+  `data-theme="light"` is overwritten either way. The cut becomes a real
+  button (role, tab stop, "Switch to the dark/light edition", Enter/Space),
+  lifting 2px on hover. Light prints `ostrich-portrait` in faded ink; dark
+  prints `ostrich-profile` in chalk (#D8CFC0), each at its own shape. The
+  Brainstorm brand gets its own night palette — Ink ground, a lifted Ink
+  for cards, Balanced White type, purple raised to #A58BFF and teal to
+  #4FD6E4 so they read on it, `color-scheme: dark` — and its three fixed
+  whites (boxes, cards, the tinted wire band) follow `--paper-2`. In dark:
+  the Tabloid bar is the brand's deep purple, not a white slab; the xkcd
+  line art is inverted to chalk; Five's near/miss tiles use colours that
+  hold white letters. BRAINSTORM ITSELF: its theme lives in its own
+  `localStorage['brainstorm_theme']`, which the paper cannot set and which
+  is partitioned in the frame, so the panel stays light unless the reader
+  flips it there; every panel URL now carries `theme=` for team request #7.
+  A dark reader may see a light flash on load: the paper's one script runs
+  at the end of the page. Checked every band on a desk and the header on a
+  phone, both editions.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

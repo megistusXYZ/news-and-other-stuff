@@ -647,7 +647,7 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   gradient hairline stays on the header, and on the strip only when the
   strip exists. Checked at 1519, 1020, 768 and 375. The reader then asked for
   the cut faded, old-timey and less distracting: it is printed in a warm,
-  faded ink (#7A6F61 at .72) through the stamp as a mask, not the stamp's
+  faded ink (#7A6F61 at .72, then a touch stronger at the reader's word: #675C4F at .86) through the stamp as a mask, not the stamp's
   own black — an old engraving on aged newsprint. Dark mode swaps the ink
   for #C9BFAF rather than inverting.
 

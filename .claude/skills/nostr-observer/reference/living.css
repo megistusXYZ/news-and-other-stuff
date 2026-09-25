@@ -108,11 +108,11 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollba
 .masthead > .lv-cut {
   grid-column: 2; grid-row: 1 / span 2; align-self: end;
   height: var(--lv-cut-h, 104px); aspect-ratio: 298 / 280;
-  --lv-cut-ink: #7A6F61;
+  --lv-cut-ink: #675C4F;
   background: var(--lv-cut-ink);
   -webkit-mask: var(--lv-stamp) left bottom / contain no-repeat;
   mask: var(--lv-stamp) left bottom / contain no-repeat;
-  opacity: .72;
+  opacity: .86;
   transform: scaleX(-1);
 }
 .masthead:has(> .lv-cut) > h1, .masthead:has(> .lv-cut) > .motto { grid-column: 1; }

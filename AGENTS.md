@@ -209,8 +209,18 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   successful injection. Its haystack is the ranked desks only, matching
   `Validator.kt`'s `corpus.all()`; the control run is not quotable.
 
-- **Permalinks are jumble.social `nevent1` URLs**, decoded rather than captured.
-  The writer cites `https://jumble.social/notes/<64-hex>`; `resolve.mjs` encodes
+- **Permalinks are brainstorm.world `nevent1` URLs** (since 2026-09-25; they
+  were jumble.social before, and `resolve.mjs` still upgrades old jumble and
+  njump hex forms), decoded rather than captured. Articles (30023/30818) go to
+  `brainstorm.world/a/<naddr>` by address, for the calendar reason: edited in
+  place. Names link to `brainstorm.world/p/<npub>`; the writer form names one
+  of the person's POSTS (`/p/<64-hex-event-id>`) because the digest carries no
+  pubkeys, and the checker refuses a profile of anyone who did not post in the
+  window. Brainstorm routes were read from its live bundle and
+  `NosFabrica/Brainstorm-UI` `client/src/App.tsx` on 2026-09-25 — production
+  renders every naddr at /a/ as an article, which is why streams, listings and
+  calendars keep their own hosts.
+  The writer cites `https://brainstorm.world/e/<64-hex>`; `resolve.mjs` encodes
   the nevent; `validate.mjs` decodes it and checks the id against the corpus.
   The Kotlin regex once allowed `nevent1…` in a branch that captured nothing, so
   every such link compared against the empty string and a page citing its sources
@@ -277,6 +287,232 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   from the page itself and asserts nothing is flagged: the adversarial tests ask
   whether the boundary stops bad pages, and that one asks whether it damages good
   ones, which is the likelier way to ship something broken.
+
+- **The living layer is script, added after the boundary and never by the
+  writer (2026-09-25).** `scripts/dress.mjs` runs `check()` first and refuses a
+  page with any violation, then inlines `reference/living.css`, the fonts in
+  `reference/fonts/` (OFL: Playfair Display, Source Serif 4, IBM Plex Mono,
+  Figtree) and `reference/living.js` into a separate `.living.html`. The rule that the page
+  runs nothing is about content from the corpus, and it still holds: no byte
+  of script comes from the writer or from a post. The corpus rides along as a
+  JSON island with every `<` escaped, and `living.js` puts it in the DOM with
+  `textContent` only. Profiles now keep `picture` (https only) and `about` for
+  the hover cards; the digest does not print them, so a bio cannot steer the
+  writer. Hover cards ask three public relays (damus, nos.lol, primal) for
+  reply / repost / reaction / zap counts, on hover, once per note — the one
+  network read the paper makes after it is printed, stated here so it is a
+  decision and not a surprise. The accent comes from the lead photo when its
+  host allows CORS, else from the date. Tests: `test/dress.test.mjs`.
+
+- **A reader can name and brand their paper (2026-09-25).** `observer.config.json`
+  in the working directory (`name`, `motto`, `brand`; short strings, no
+  markup) is read by `corpus.mjs` into `corpus.paper`. `digest()` prints it as
+  a Masthead block — the brief always said the writer "will be given the
+  paper's current name" and nothing gave it — and `check()` flags `MASTHEAD`
+  when the nameplate or `<title>` drifts from it. `dress.mjs` applies
+  `reference/brands/<brand>/{brand.css,mark.svg}`; an unknown brand is refused.
+  The Brainstorm brand's tokens, mark and rules come from
+  `NosFabrica/Brainstorm-UI` (`docs/design-system.md`, `BrainLogo.tsx`), read
+  2026-09-25. No file, no change: The Nostr Observer as before.
+
+- **Reading through Brainstorm (2026-09-25).** `living.js` opens brainstorm.world
+  links in a panel (an iframe; a FRESH iframe per page, because repointing one
+  frame's src adds a joint-history step and Back then walks the frame instead
+  of closing the panel). `#read=<path>` only ever names a path on
+  brainstorm.world's origin, so a shared address cannot frame another site.
+  Framing works because Brainstorm sends no `frame-ancestors` today — by
+  omission, not decision; inside the frame the reader is signed out (storage
+  partitioning), so zap/follow stay one click away in a real tab and are never
+  faked on the page. `embed=1` is sent already for an embed mode that does not
+  exist yet. The "since this edition" strip re-asks the corpus's own ranked
+  filter (`filterFor`, from `until`) of the corpus relay, on load and every
+  five minutes while visible. What Brainstorm would need to make this seamless
+  is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
+
+- **The page is set as a newspaper, not an app (2026-09-25).** Tried and
+  taken out the same day, at the reader's request, as too distracting: a
+  Three.js "voices constellation" behind the nameplate (then shrunk to a still
+  plate in a boxed ear), boxed ears either side of the name, a "Voices of the
+  day" list filling short columns, and stacks of faces on bylines. What stays:
+  the nameplate alone between rules; ONE halftone cameo per story, floated
+  into the paragraph that quotes that person (a newspaper's column cut, never
+  a row of faces); justified, hyphenated columns; "Inside today"; pictures
+  cropped 3:2 / 4:3; and for a branded paper a colophon of plain small print
+  (`footer.html`, `{{name}}`, `{{mark}}`) as the last thing on the sheet.
+  White space is the WRITER's to fix — the brief tells it to balance the
+  columns — not something to paper over with generated boxes. No 3D engine is
+  inlined any more; the living copy went from 1.1 MB to about 400 KB.
+
+- **The wireless and the classifieds play inside the paper (2026-09-25).**
+  `dress.mjs` tags links `validate.mjs` already accepted as a live stream or a
+  listing (`data-stream` / `data-listing`) and carries their metadata in the
+  island — https pictures only, and only an https `.m3u8` as a playable feed.
+  `living.js` sets those rows as a period wireless programme and small ads
+  (halftone stamp, small caps, dotted leaders to the price) and opens them in
+  the reader panel as the paper's own sheets: `#read=stream:<id>` /
+  `#read=listing:<id>`, walked by the same arrows. A station plays through
+  hls.js 1.5.20 (`reference/vendor/hls.light.min.js`, Apache-2.0, ~297 KB),
+  inlined as inert text ONLY when the page has a playable station and run only
+  when the reader presses Tune in; leaving the station stops it. The zap.stream
+  feed sends CORS for any origin (measured 2026-09-25). On-air marks and
+  listener counts are re-read from the corpus relay once on load. A listing
+  sheet offers ONE open-web link — the listing's own `r` tag, https only,
+  from the structured tag and never from its text, shown with its hostname
+  as "Buy at <host> ↗" — because a classified is an offer and the offer lives
+  there. That is the deliberate exception to "no links to the open web", made
+  at the reader's request on 2026-09-25, and it is in the living copy only,
+  never in the checked edition. Credits for the wires are set ONCE, small —
+  in the weather box (a licence condition) and one `note credits` line at
+  the foot of the tinted band — not in every box.
+
+- **From the Wires: pages from outside Nostr (2026-09-25).** `scripts/wires.mjs`
+  `gatherWires(settings, { fetch, now })` fetches, on the reader's machine at
+  print time, from `observer.config.json` (`place`, `teams`, `feeds`,
+  `almanac`; the skill asks once and sets `wiresAsked`). Sources, all keyless,
+  measured 2026-09-25: Open-Meteo geocoding + forecast (CC BY 4.0; the credit
+  "Weather data by Open-Meteo.com" is a licence CONDITION; coordinates rounded
+  to 2 places), TheSportsDB free key `123` (one last + one next event per team,
+  and on the free key HOME matches only — a real gap; its terms call the free
+  tier development use), Wikipedia `rest_v1/feed/onthisday` (CC BY-SA; the feed
+  service is scheduled for gradual deprecation from July 2026 — it fails
+  quietly), and RSS/Atom titles (AP and Reuters have no public feeds). Every
+  source fails into a note, never into the paper. `digest()` prints them under
+  "From the Wires" BELOW the data warning, marked as not the lens; `check()`
+  lets a headline or almanac line be quoted word for word (each its own
+  source, so elision cannot stitch one to a note). The brief tells the writer
+  to set them apart and credit each. Tests: `test/wires.test.mjs` (fake
+  network), plus digest / check / readPaper cases.
+
+- **The construction (2026-09-25).** A front page fills positions from the
+  top: lead (`lead-head`, centre), off-lead (`main-head`, top of the right
+  column, own picture), rail (left: `small-head` briefs, pull quote, `box
+  weather`), then `band seconds` (a `cols4` of `sub-head` stories, no
+  heading), a `spread` of four figures (first largest), an `agate` of five
+  cells, and `band tinted` for the wires. `check()` holds the first rule —
+  exactly one `lead-head`, at most one `main-head`, on any page with a
+  `.fold` (`LAYOUT`); a fragment or single-column edition is exempt, and the
+  golden edition already obeys it. The DATELINE IS GONE from the brief: the
+  reader found five stacked rules before any news. In its place `dress.mjs`
+  PRINTS "Inside today" (`indexRow`: kickers' last segments and headed bands —
+  not the seconds, which made it a contents page; ids `lv-section-N`) with a slot at the right that
+  `living.js` fills with the since-count — so the index works on paper and
+  without script. Live ages moved from the kicker to the byline.
+
+- **The back page and the readings (2026-09-25).** Eight more wires, all
+  keyless, all in `wires.mjs` behind switches in `observer.config.json`:
+  xkcd (`cartoon`; CC BY-NC 2.5 — credit), a Project Gutenberg serial
+  (`serial: <number>`; cut into ~550-word instalments at paragraph breaks,
+  the day of the year since 2026-01-01 picks one, so no state), a sudoku made
+  locally from the edition code (`puzzle`; `scripts/puzzle.mjs`, seeded, the
+  solution rides in the island for the living copy, uniqueness not proved),
+  markets (`markets`; mempool.space prices/fees/tip + ECB rates via
+  api.frankfurter.dev, rounded to 4 places), the world (`world`; USGS 4.5+
+  past day, Nager.Date next holiday for the weather's `country_code` or
+  `country`), Wikimedia's featured picture (`picture`; any `*.wikimedia.org`
+  thumbnail host — it moved off upload.wikimedia.org on 2026-09-25), TheMealDB
+  (`recipe`; free key 1, source URL deliberately dropped), and air + moon
+  (`sky`; Open-Meteo air on the US or European index by place, the moon from
+  the synodic month counted from 2000-01-06 18:14 UTC). WIRE PICTURES JOIN
+  THE ART SHORTLIST (`gatherWires(…, { nextArt })`, merged in `corpus.mjs`)
+  so the writer cites ids and resolve/validate treat them as photographs; no
+  URL reaches the digest. The serial, recipe method, cartoon caption and
+  picture caption are quotable. The construction gained position 8, `band
+  back` (`back-grid`: cartoon span-6, puzzle span-3, recipe span-3; `serial`
+  across, three CSS columns); the writer prints the sudoku as nine lines in
+  `pre.sudoku` and `living.js` draws the grid over it. Readings go into the
+  agate's Conditions, the Diary, and the weather box. A feed may carry a
+  `section` (`{ "url", "section": "Culture" }`; plain strings are Wider World),
+  the digest groups headlines by it, and `culture: true` adds Wikipedia's
+  most-read pages (`lookedUp`, Main Page filtered) from the same featured feed
+  the picture uses. A feed titled "RSS: News" is credited to its outlet name.
+
+- **The Tabloid, and the puzzles played (2026-09-25).** The reader asked for
+  X / Facebook / TikTok / Instagram trends; measured that day, X's trends API
+  is paid (401), Meta publishes none, TikTok's answers "no permission",
+  YouTube's chart needs a key, Reddit blocks unsigned readers (403) — and
+  scraping any of them would put a stranger's planting under the reader's
+  masthead. What IS open and keyless: Google Trends' daily RSS
+  (`trends.google.com/trending/rss?geo=`), Bluesky's
+  `app.bsky.unspecced.getTrends` (topic, description, category, postCount,
+  status — `cooling` is left out), Mastodon's trends (not taken up), Google
+  News RSS (not taken up: overlaps the feeds). `tabloid: true`; the geo is the
+  reader's `country`, else the weather's, else US. Position 8 of the
+  construction, `band tabloid`, a black bar and a strap that says it is not
+  the lens. PUZZLES: the sudoku's solution never reaches the page —
+  `hashedPuzzle` ships sha-256 of `code:r:c:digit` per cell; the living copy
+  checks by hashing, reveals a cell by trying nine. FIVE, the word of the day
+  (`five: true`; `scripts/five.mjs`; answers in `reference/five-answers.txt`,
+  ours; guesses in `five-guesses.txt`, web2 five-letter words, public
+  domain), ships as hashes too: one per position, one per letter occurrence,
+  so scoring handles repeats the Wordle way and a lost word is found by
+  trying the answer list. Play is saved in localStorage per edition / day;
+  stats (played, won, streak) likewise. WORD5 is otherstuff.ai's game, hence
+  the name Five. The back page is two balanced rows (cartoon 8 + sudoku 4;
+  Five 4 + recipe 8, method in two columns) because the first cut left the
+  cartoon and puzzle columns half empty.
+
+- **The paper on a phone and a tablet (2026-09-25).** Measured at 375 and
+  768 before touching anything. Phone: the fold is typed rail-lead-rail, so
+  one column read the Markets rail before the lead — `order` puts the lead
+  first, the off-lead second, the rail last. The section bar wrapped into
+  four rows; it is now one row the thumb slides (`.lv-sections`, a wrapper
+  `indexRow` prints), sticky at the top because a 17,000px page needs its
+  sections within reach, with `scroll-margin-top` on the targets. Hover
+  cards are off under `(hover: none)`: no pointer to hover with, and a card
+  parked off the right edge was widening the page. Every key on the plates
+  is 44px tall under `(pointer: coarse)` — the Five keyboard's aspect ratio
+  is dropped there or the keys widen past the screen. Tablet: house.css
+  turns span-3 into span-6, which dropped the third fold column under the
+  first with half the screen empty; between 721 and 1000px the lead takes
+  the full width and the two rails sit beneath it, and the two puzzle plates
+  share a row instead of each running the width at 80px a cell. PICTURES:
+  `dress.mjs` marks the first picture `fetchpriority="high"` and every later
+  one `loading="lazy" decoding="async"` (a phone was fetching a 4032px
+  spread photograph to read the front); it never doubles an attribute the
+  writer set. Reserved boxes come from the ratios in `living.css`, so no
+  picture shifts the page as it arrives. Desktop was left alone: one-row
+  bar, 3-6-3, no overflow at 1420.
+
+- **Sharing Five (2026-09-25).** WORD5 (otherstuff.ai) is not used: Five is
+  ours, modelled on it. WORD5 posts a kind-1 note tagged `#word5` and a
+  kind-5555 score for leaderboards, loading nostr-tools from esm.sh and an
+  analytics script from unpkg — none of which a dressed page may load. So:
+  SHARE opens the system share sheet on a touch screen (`navigator.share`,
+  a cancel is silent) and copies elsewhere. POST appears only when the
+  browser has a NIP-07 signer; after the word is finished it asks the
+  reader's extension to sign a kind-1 note — the grid and `#five`, never the
+  word, never `#word5` (their word is not ours) — and sends it to the
+  reader's own write relays (`getRelays`), else the paper's public three,
+  never to `search-staging`. Only relays that answer OK true count; the note
+  id is remembered per day so Post becomes "Posted" and opens the note on
+  Brainstorm. It is the one thing the paper writes, and only on a click.
+  `shareGrid`, `shareNote` and `publishNote` live in `five.mjs`, tested there
+  with a fake socket; `living.js` carries copies that
+  `five.test.mjs` holds to byte-for-byte equality.
+
+- **The nameplate is flush left, with an ear (2026-09-25).** The reader
+  found the centred stack generic. The name is set flush left and large,
+  the motto under it; the folio the writer typed above the header becomes
+  the ear on the right (date first and darkest, then the number, then the
+  24h window) by a grid on `.sheet` — the edition's markup is not touched,
+  so undressing still gives back the checked page. One heavy rule under
+  both, the section bar's rule a hair below (thick-and-thin). On a phone
+  the ear is a single line beneath the name and drops the window. The
+  paper was renamed twice the same day, from "Across the Network": first
+  to "Word of Mouth", then — the reader wanting a news source's feel and
+  no talk of trust — to "The Morning Herald", and finally, the reader's
+  pick, **The Daily Dispatch**, "The day’s news, front to back." Mottos say what is in the paper, not how it is
+  ranked; the ranking is the colophon's job.
+
+- **The section bar slides at every width; no scroll bars are drawn
+  (2026-09-25).** On a desk the bar was `overflow: hidden`, which clipped
+  The Back Page and Weather out of reach. It is now one row that scrolls
+  sideways everywhere; a fade marks the side with more (`lv-more-left` /
+  `lv-more-right`, set by `sectionBar()` in living.js), and a vertical
+  mouse wheel over it slides it until an end, then lets the page scroll.
+  At the reader's request no scroll bar is drawn on the page, the bar, the
+  panel, the drawer or the tables; all of them still scroll by wheel,
+  trackpad, touch and keys.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

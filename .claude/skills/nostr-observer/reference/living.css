@@ -34,29 +34,27 @@ body { font-feature-settings: "kern", "liga", "onum"; }
 /* A front page has one thing at the top. Heavy serif, a plain rule above, the
  * motto in italic beneath; no boxes, no pictures, nothing that moves. */
 
-/* The nameplate is set flush left and the paper's cut stands at the far
- * right, looking back into the name. On a desk the folio rides the motto's
- * line — motto at the left, "FRIDAY, SEPTEMBER 25, 2026 · No. 13C931 · 24h
- * to …" at the right, ending before the cut — the way the Guardian sets its
- * date under the nameplate. Below 1000px there is no room for that line, so
- * the folio becomes its own ruled strip under the header. One heavy rule
- * closes the header; the section bar's rule a hair beneath makes it a
- * thick-and-thin. The edition's markup is untouched: the grid places the
- * folio the writer typed above the header. */
+/* The folio line leads the page, the way a front page and a news homepage
+ * both open: the date at the top left, darkest, and the edition's number
+ * and window at the right, in one thin line above a rule. Beneath it the
+ * nameplate, flush left, with the paper's cut at the far right looking back
+ * into the name, and the motto under the name. One heavy rule closes the
+ * header; the section bar's rule a hair beneath makes it a thick-and-thin.
+ * The same order on a desk, a tablet and a phone — nothing moves. The
+ * edition's markup is untouched: the writer typed the folio above the
+ * header, and here it stays. */
 .sheet { display: grid; grid-template-columns: minmax(0, 1fr); }
 .sheet > * { grid-column: 1; min-width: 0; }
+.sheet > .folio {
+  grid-row: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 0;
+  padding: 0 0 7px; border: 0; text-align: left;
+}
+.sheet > .folio > :nth-child(2) { order: -1; margin-right: auto; padding-right: 16px; font-weight: 600; color: var(--ink); letter-spacing: .1em; }
+.sheet > .folio > :nth-child(3)::before { content: "·"; margin: 0 .7em; color: var(--ink-3); }
 .sheet > .masthead {
-  grid-row: 1; text-align: left; padding: 16px 0 14px; position: relative;
+  grid-row: 2; text-align: left; padding: 16px 0 14px; position: relative;
   border-top: 1px solid var(--ink); border-bottom: 3px solid var(--ink);
 }
-.sheet > .folio {
-  grid-row: 1; align-self: end; justify-self: end; position: relative; z-index: 1;
-  display: flex; flex-direction: row; align-items: baseline; gap: 0; white-space: nowrap;
-  padding: 0 0 var(--lv-folio-drop, 20px); border: 0; text-align: right;
-}
-[data-stamp] .sheet > .folio { margin-right: calc(var(--lv-cut-h, 104px) * 1.0643 + 18px); }
-.sheet > .folio > :nth-child(2) { order: -1; font-weight: 600; color: var(--ink); letter-spacing: .1em; }
-.sheet > .folio > :nth-child(1)::before, .sheet > .folio > :nth-child(3)::before { content: "·"; margin: 0 .7em; color: var(--ink-3); }
 .masthead h1 {
   font-family: var(--serif); font-weight: 900; text-transform: none;
   letter-spacing: -0.018em; line-height: .95;
@@ -70,17 +68,9 @@ body { font-feature-settings: "kern", "liga", "onum"; }
   letter-spacing: .005em; text-transform: none; color: var(--ink-2);
 }
 .sheet > .lv-index { margin-top: 3px; }
-@media (max-width: 1000px) {
-  .sheet > .masthead { border-bottom: 0; }
-  .sheet > .folio, [data-stamp] .sheet > .folio {
-    grid-row: 2; justify-self: stretch; align-self: auto; margin-right: 0; white-space: normal; flex-wrap: wrap;
-    gap: 2px 0; padding: 7px 0; border-top: 1px solid var(--rule); border-bottom: 3px solid var(--ink);
-  }
-  .sheet > .folio > :nth-child(2) { margin-right: auto; padding-right: 12px; }
-  .sheet > .folio > :nth-child(1)::before { content: none; }
-}
 @media (max-width: 720px) {
   .sheet > .masthead { padding: 12px 0 10px; }
+  .sheet > .folio { padding-bottom: 6px; }
   .sheet > .folio > :nth-child(3) { display: none; }
   .masthead .motto { font-size: .98rem; }
 }

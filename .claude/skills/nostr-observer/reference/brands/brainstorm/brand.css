@@ -137,4 +137,5 @@
   [data-brand="brainstorm"] .masthead { column-gap: .45rem; }
 }
 
-@media (min-width: 1001px) { [data-brand="brainstorm"] .sheet > .folio::before { content: none; } }
+/* The folio line sits above the header now; the header carries the hairline. */
+[data-brand="brainstorm"] .sheet > .folio::before { content: none; }

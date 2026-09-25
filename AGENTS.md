@@ -649,7 +649,14 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   the cut faded, old-timey and less distracting: it is printed in a warm,
   faded ink (#7A6F61 at .72, then a touch stronger at the reader's word: #675C4F at .86) through the stamp as a mask, not the stamp's
   own black — an old engraving on aged newsprint. Dark mode swaps the ink
-  for #C9BFAF rather than inverting.
+  for #C9BFAF rather than inverting. FINALLY the folio moved to the top:
+  the date on the motto's line read as misplaced, and both print (the
+  folio line by the nameplate) and news homepages (the NYT's and the
+  WSJ's date strip) open with it. It is one thin line above the header's
+  rule at every width — date left and darkest, number and window right,
+  the phone dropping the window — so nothing moves between a desk and a
+  phone, and the motto has its line to itself. The brand's hairline is
+  the header's alone.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

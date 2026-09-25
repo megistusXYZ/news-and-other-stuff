@@ -606,10 +606,15 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   (#0A0E18) on transparency with its tones kept, its cut neck faded into
   the page over the bottom third, and shrunk from 1.4 MB to 21 KB at
   194×240. `dress.mjs` inlines it as `--lv-stamp` in `<style
-  id="living-stamp">` and marks `<html data-stamp>`; both undress away. On a
-  desk it leads the ear (84×104, left of the date, its neck on the heavy
-  rule); on a phone it sits at the end of the nameplate (56×70). Inverted
-  to chalk on a dark page. Checked at 1519, 1080, 768 and 375.
+  id="living-stamp">` and marks `<html data-stamp>`; both undress away.
+  First set as an 84×104 cut leading the ear — the reader found it
+  overpowering beside the date, with dead space to its left. Three layouts
+  were sketched (a device on a dateline strip, a seal in the ear, a mark by
+  the motto) and the seal was chosen: a 46px double-ruled roundel showing
+  the engraved head, centred on the three date lines and 14px before them,
+  so it is one of the ear's parts, not a picture beside it; on a phone the
+  same seal (40px) ends the nameplate. On a dark page the roundel keeps a
+  pale ground so the ink still reads. Checked at 1519, 820 and 375.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

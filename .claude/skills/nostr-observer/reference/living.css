@@ -81,32 +81,34 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollba
 .lv-panel ::-webkit-scrollbar, .lv-drawer::-webkit-scrollbar, .tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 /* --- the paper's stamp -------------------------------------------------------- */
-/* An engraved vignette beside the nameplate, the way papers once set a cut in
- * the ear: inked in the paper's own colour, its neck fading into the heavy
- * rule. On a desk it leads the ear, left of the date; on a phone it sits at
- * the end of the nameplate. dress.mjs sets --lv-stamp and data-stamp. */
-[data-stamp] .sheet > .folio { padding-left: 124px; }
-[data-stamp] .sheet > .folio::after {
-  content: ""; position: absolute; left: 24px; bottom: 0; width: 84px; height: 104px;
-  background: var(--lv-stamp) center bottom / contain no-repeat; opacity: .9; pointer-events: none;
+/* A seal in the ear, the way old papers pressed one beside the date: the
+ * engraved head in a small double-ruled roundel, the same height as the three
+ * date lines and set tight against them, so it reads as part of the ear and
+ * not a picture beside it. On a phone the same seal ends the nameplate.
+ * dress.mjs sets --lv-stamp and data-stamp. */
+[data-stamp] .sheet > .folio { padding-left: 88px; }
+[data-stamp] .sheet > .folio::after,
+[data-stamp] .sheet > .masthead::after {
+  content: ""; position: absolute; width: 46px; height: 46px; border-radius: 50%; pointer-events: none;
+  background: var(--lv-stamp) 50% 3px / 40px auto no-repeat;
+  box-shadow: 0 0 0 1px var(--ink), 0 0 0 3px var(--paper), 0 0 0 4px var(--ink);
 }
+/* Centred on the 60px date stack, 14px before it. */
+[data-stamp] .sheet > .folio::after { left: 28px; bottom: 23px; }
+[data-stamp] .sheet > .masthead::after { content: none; }
 @media (max-width: 720px) {
   [data-stamp] .sheet > .folio { padding-left: 0; }
   [data-stamp] .sheet > .folio::after { content: none; }
-  [data-stamp] .sheet > .masthead { padding-right: 64px; }
-  [data-stamp] .sheet > .masthead::after {
-    content: ""; position: absolute; right: 0; bottom: 0; width: 56px; height: 70px;
-    background: var(--lv-stamp) center bottom / contain no-repeat; opacity: .9; pointer-events: none;
-  }
+  [data-stamp] .sheet > .masthead { padding-right: 58px; }
+  [data-stamp] .sheet > .masthead::after { content: ""; right: 4px; bottom: 14px; width: 40px; height: 40px; background-size: 35px auto; }
 }
-/* On a dark page the ink turns to chalk. */
+/* On a dark page the seal keeps a pale ground, so the ink still reads. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) [data-stamp] .sheet > .folio::after,
-  :root:not([data-theme="light"]) [data-stamp] .sheet > .masthead::after { filter: invert(1); }
+  :root:not([data-theme="light"]) [data-stamp] .sheet > .masthead::after { background-color: #E9EAE6; }
 }
 :root[data-theme="dark"][data-stamp] .sheet > .folio::after,
-:root[data-theme="dark"][data-stamp] .sheet > .masthead::after { filter: invert(1); }
-@media print { [data-stamp] .sheet > .folio::after, [data-stamp] .sheet > .masthead::after { opacity: 1; } }
+:root[data-theme="dark"][data-stamp] .sheet > .masthead::after { background-color: #E9EAE6; }
 
 /* --- inside today: the section bar ------------------------------------------ */
 /* A newspaper front's section bar: the sections in small bold caps, a

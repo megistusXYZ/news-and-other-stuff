@@ -275,7 +275,7 @@ function cards () {
     const read = el('button', 'lv-card-read', ev ? 'Read post' : 'Profile')
     read.type = 'button'
     read.addEventListener('click', () => { hideNow(); openReader(anchor.href, anchor) })
-    const go = el('a', 'lv-card-go', ev ? 'Open in Brainstorm ↗' : 'Open profile in Brainstorm ↗')
+    const go = el('a', 'lv-card-go', ev ? 'Open post in Brainstorm ↗' : 'Open profile in Brainstorm ↗')
     go.href = anchor.href
     go.target = '_blank'
     go.rel = 'noopener noreferrer'

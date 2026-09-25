@@ -551,7 +551,7 @@ body.lv-reading-open .sheet { transform: scale(.985) translateX(-1.5%); filter: 
 body.lv-reading-open .lv-scrim { opacity: 1; pointer-events: auto; }
 
 .lv-panel {
-  position: fixed; z-index: 61; top: 0; right: 0; bottom: 0; width: min(46vw, 760px); min-width: 420px;
+  position: fixed; z-index: 61; top: 0; right: 0; bottom: 0; width: min(62vw, 1000px); min-width: 520px;
   display: flex; flex-direction: column; background: var(--paper-2, #fff);
   border-left: 1px solid var(--rule); box-shadow: -24px 0 60px -30px rgba(10, 14, 24, .45);
   transform: translateX(104%); transition: transform .28s cubic-bezier(.2, .7, .2, 1);
@@ -559,6 +559,9 @@ body.lv-reading-open .lv-scrim { opacity: 1; pointer-events: auto; }
 }
 .lv-panel::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--accent); }
 body.lv-reading-open .lv-panel { transform: none; }
+/* Wide enough for Brainstorm's own page: most of a desk, nearly all of a
+ * tablet; a phone keeps the full-width sheet below. */
+@media (min-width: 721px) and (max-width: 1000px) { .lv-panel { width: 88vw; min-width: 0; } }
 
 .lv-panel-head {
   display: flex; align-items: center; gap: 8px; padding: 12px 12px 10px 16px;

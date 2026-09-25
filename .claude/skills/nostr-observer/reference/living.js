@@ -267,11 +267,12 @@ function cards () {
 
     const counts = el('div', 'lv-card-counts')
     parts.push(counts)
-    // Two honest actions: read it here, or go to Brainstorm proper, where the
+    // Two honest actions: open it here, or go to Brainstorm proper, where the
     // reader is signed in and can zap or follow. Nothing on the card pretends
-    // to do either itself.
+    // to do either itself. The button says what the link opens: a post is
+    // read, a person's name or picture opens their profile.
     const foot = el('div', 'lv-card-foot')
-    const read = el('button', 'lv-card-read', 'Read')
+    const read = el('button', 'lv-card-read', ev ? 'Read' : 'Profile')
     read.type = 'button'
     read.addEventListener('click', () => { hideNow(); openReader(anchor.href, anchor) })
     const go = el('a', 'lv-card-go', 'Open in Brainstorm ↗')

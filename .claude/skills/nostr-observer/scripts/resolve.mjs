@@ -269,7 +269,7 @@ function main () {
   if (counts.profile) console.log(`  Linked ${counts.profile} name(s) to brainstorm.world profiles.`)
   if (counts.stream) console.log(`  Encoded ${counts.stream} stream watch link(s) to zap.stream.`)
   if (counts.listing) console.log(`  Encoded ${counts.listing} classified listing link(s) to Shopstr.`)
-  if (counts.calendar) console.log(`  Encoded ${counts.calendar} calendar link(s) to njump.`)
+  if (counts.calendar) console.log(`  Encoded ${counts.calendar} calendar link(s) to Brainstorm.`)
   if (counts.dropped || counts.unwrapped) {
     console.log('')
     console.log('  CHANGES WORTH READING - each of these is the page trying to do something')

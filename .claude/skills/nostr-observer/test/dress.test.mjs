@@ -397,3 +397,19 @@ test('each person carries their stories on this page, in reading order, for "In 
   assert.deepEqual(people[REPLIER].stories, [REPLY_ID, STORY_ARTICLE.id])
   assert.deepEqual(people[SELLER].stories, [], 'a seller named only on a listing has no stories here')
 })
+
+// --- the Diary opens on Brainstorm too, 2026-09-25 ---------------------------------
+
+import { toCalendarLink } from '../scripts/validate.mjs'
+
+test('a Diary entry opens in the panel like any post: marked by its event, and in the reading order', () => {
+  const meetup = {
+    id: '7'.repeat(64), kind: 31923, pubkey: AUTHOR, created_at: 1790304000, content: 'Quiz night.',
+    tags: [['d', 'quiz'], ['title', 'Bitcoin Bologna'], ['start', '1790362800']],
+  }
+  const withDiary = { ...corpus, desks: { ...corpus.desks, calendar: [meetup] } }
+  const diaryPage = page.replace('</p></article>', `</p></article><p><a href="${toCalendarLink(meetup)}">Bitcoin Bologna</a> quiz night.</p>`)
+  const { html } = dress(diaryPage, withDiary, assets)
+  assert.match(html, new RegExp(`<a data-ev="${meetup.id}" data-t="1790304000" data-pk="${AUTHOR}" href="https://brainstorm\\.world/a/naddr1`))
+  assert.deepEqual(islandOf(html).sequence, [NOTE_ID, meetup.id])
+})

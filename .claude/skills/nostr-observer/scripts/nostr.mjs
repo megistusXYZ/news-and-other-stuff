@@ -201,6 +201,17 @@ export function toBrainstormArticle (event) {
   return `${BRAINSTORM}/a/${toNaddr({ kind: event.kind, pubkey: event.pubkey, identifier: d })}`
 }
 
+/**
+ * A calendar entry (NIP-52, 31922 / 31923), by address: Brainstorm's /a/
+ * renders it (checked 2026-09-25), and an address follows the organiser's
+ * edits where an nevent would freeze one revision.
+ */
+export function toBrainstormCalendar (event) {
+  const d = tagValue(event, 'd')
+  if (!d || !CALENDAR_KINDS.has(event.kind)) throw new Error('Not a calendar address')
+  return `${BRAINSTORM}/a/${toNaddr({ kind: event.kind, pubkey: event.pubkey, identifier: d })}`
+}
+
 /** A person. npub rather than nprofile: no relay hint the corpus never spoke to. */
 export function toBrainstormProfile (pubkey) {
   const pk = String(pubkey || '').toLowerCase()

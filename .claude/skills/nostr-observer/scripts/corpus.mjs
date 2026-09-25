@@ -376,7 +376,7 @@ function printWires (p, wires) {
     for (const t of wires.sports.teams) {
       const bits = []
       if (t.last) bits.push(`last ${t.last.home} ${t.last.homeScore}–${t.last.awayScore} ${t.last.away} (${t.last.date})`)
-      if (t.next) bits.push(`next ${t.next.home} v ${t.next.away}, ${[t.next.date, t.next.time ? `${t.next.time} UTC` : null].filter(Boolean).join(' ')}${t.next.venue ? `, ${t.next.venue}` : ''}`)
+      if (t.next) bits.push(`next ${t.next.home} v ${t.next.away}, ${kickoff(t.next, wires.weather)}${t.next.venue ? `, ${t.next.venue}` : ''}`)
       p(`- ${t.team}${t.league ? ` (${t.league})` : ''}: ${bits.join('; ') || 'no fixtures listed'}.`)
     }
     p('')
@@ -430,6 +430,30 @@ function printWires (p, wires) {
     p('### Not in this edition')
     for (const note of wires.notes) p(`- ${note}`)
     p('')
+  }
+}
+
+/**
+ * When a match starts, in the reader's own time: the weather's time zone
+ * (Open-Meteo's, for the reader's place), a 12-hour a.m./p.m. clock for a US
+ * paper and 24-hour elsewhere, with the day — a late kick-off in UTC is often
+ * the evening before at home. Without a time zone, UTC, as TheSportsDB gives it.
+ */
+function kickoff (next, weather) {
+  const utc = [next.date, next.time ? `${next.time} UTC` : null].filter(Boolean).join(' ')
+  if (!next.time || !weather || !weather.timezone) return utc
+  const at = new Date(`${next.date}T${next.time}:00Z`)
+  if (Number.isNaN(at.getTime())) return utc
+  const us = weather.unit === '°F'
+  const locale = us ? 'en-US' : 'en-GB'
+  try {
+    const day = at.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric', timeZone: weather.timezone })
+    const part = Object.fromEntries(new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit', hour12: us, timeZone: weather.timezone, timeZoneName: 'short' })
+      .formatToParts(at).map((x) => [x.type, x.value]))
+    const time = us ? `${part.hour}:${part.minute} ${/p/i.test(part.dayPeriod) ? 'p.m.' : 'a.m.'}` : `${part.hour.padStart(2, '0')}:${part.minute}`
+    return `${day}, ${time} ${part.timeZoneName}`
+  } catch {
+    return utc
   }
 }
 

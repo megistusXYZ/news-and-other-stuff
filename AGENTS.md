@@ -228,7 +228,8 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   full Observer still uses njump.me; this is the skill's host.
 
 - **Three desks get a real destination, and nothing else does.** Broadcasting
-  links to zap.stream, Classifieds to Shopstr, Diary & Calendar to njump — each
+  links to zap.stream, Classifieds to Shopstr, Diary & Calendar to
+  brainstorm.world `/a/` (njump until 2026-09-25; see below) — each
   one an `naddr` the boundary derives, never a URL the writer composed. The
   shape is the art-id shape: the digest hands the writer a writer-form URL, the
   resolver re-encodes it to the host's canonical address, and the validator
@@ -237,9 +238,9 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   detectable, which is why these three are not an exception to "no links to the
   open web" so much as an application of the same rule. Only events carrying a
   `d` tag qualify: without one there is no address to build, and printing a link
-  the sanitizer will unwrap is worse than printing none. Calendar goes to njump
-  rather than jumble because jumble has no calendar view, and because an
-  `nevent` would freeze one revision of a replaceable event.
+  the sanitizer will unwrap is worse than printing none. Calendar went to njump
+  rather than jumble because jumble has no calendar view, and goes by address
+  because an `nevent` would freeze one revision of a replaceable event.
 
 - **`reference/` is generated.** `tools/sync-skill.sh` copies `system-prompt.md`
   and `house.css` in and prepends a banner correcting the three statements in the
@@ -543,6 +544,27 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   it. That waits on Brainstorm's postMessage and requestStorageAccess
   (team request #4, #5); until then zap, follow and reply go through the
   full page.
+
+- **The Diary opens on Brainstorm; kick-offs in the reader's time; the page
+  closes its last gaps (2026-09-25).** brainstorm.world's `/a/<naddr>`
+  renders calendar events (checked live on the Bitcoin Bologna meetup), so
+  `toCalendarLink` is `toBrainstormCalendar` now; `CALENDAR_NADDR` still
+  accepts an njump naddr so earlier editions validate. `dress.mjs` marks
+  calendar links `data-ev`, so a Diary entry opens in the panel, gets a
+  card, and joins the story sequence. KICK-OFFS: the weather wire keeps
+  Open-Meteo's `timezone` (geocoder's as fallback) and the digest prints a
+  kick-off in it — "Saturday, September 26, 7:30 p.m. CDT" for a US paper
+  (°F), "Saturday 26 September, 17:00 BST" elsewhere, UTC only when there is
+  no time zone; a late UTC kick-off is often the evening before at home.
+  PHONE: the panel's way out stays in the header as "Full page ↗"
+  (`.lv-out-short`); it was hidden there, so after "Got it" a phone reader
+  had no door. GAPS: on a desk the back page runs as two columns, not two
+  rows — the recipe rises under the cartoon, the sudoku and Five stack on
+  the right, the recipe's square photo shown whole and its method in two
+  columns (only when all four are present); the columns end 22px apart
+  where the cartoon row had a 138px hole. "Looked up" moved from Culture to
+  the Almanac, in the brief too, which brings the four wire cells within
+  71px of each other instead of 150.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

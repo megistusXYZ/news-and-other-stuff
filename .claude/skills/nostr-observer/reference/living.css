@@ -395,6 +395,22 @@ table.sudoku td.lv-revealed { color: var(--ink-3); }
 .lv-five-message a:hover { color: var(--accent); border-bottom-color: var(--accent); }
 .five > .note { margin-top: 6px; }
 
+/* On a desk the back page is two columns that each run on, not two rows
+ * that each wait for their taller half: the recipe rises under the cartoon
+ * while the sudoku and Five stack on the right. The recipe's photo is shown
+ * whole (TheMealDB's are square) and its method in two columns, which brings
+ * the left column down level with the right. Only when all four are there. */
+@media (min-width: 1001px) {
+  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five):has(> .recipe) { grid-template-rows: auto auto auto; align-items: start; }
+  .band.back .back-grid:has(> .puzzle):has(> .five):has(> .recipe) > .cartoon { grid-column: 1 / span 8; grid-row: 1; }
+  .band.back .back-grid:has(> .cartoon):has(> .five):has(> .recipe) > .puzzle { grid-column: 9 / span 4; grid-row: 1 / span 2; }
+  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five) > .recipe { grid-column: 1 / span 8; grid-row: 2 / span 2; }
+  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .recipe) > .five { grid-column: 9 / span 4; grid-row: 3; }
+  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five):has(> .recipe) > .serial { grid-row: 4; }
+  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five) > .recipe .recipe-method { columns: 2; }
+  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five) > .recipe .recipe-head figure img { aspect-ratio: 1 / 1; }
+}
+
 .serial { grid-column: 1 / -1; border-top: 1px solid var(--ink); padding-top: 14px; }
 .serial .kicker { margin-bottom: 8px; }
 .serial .serial-text { columns: 3; column-gap: 26px; column-rule: 1px solid var(--rule-soft); }
@@ -579,6 +595,7 @@ body.lv-reading-open .lv-panel { transform: none; }
 .lv-panel-close { font-size: 1.25rem; }
 a.lv-panel-out { border: 0; color: var(--ink-2); padding: 0 6px; white-space: nowrap; }
 a.lv-panel-out:hover { color: var(--accent); }
+.lv-out-short { display: none; }
 
 .lv-panel-body { position: relative; flex: 1; min-height: 0; }
 .lv-panel-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; transition: opacity .35s ease; background: transparent; }
@@ -632,7 +649,9 @@ a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72
     top: 6vh; left: 0; width: 100%; min-width: 0; border-left: 0; border-radius: 16px 16px 0 0; overflow: hidden;
     transform: translateY(104%);
   }
-  a.lv-panel-out { display: none; }
+  .lv-out-long { display: none; }
+  .lv-out-short { display: inline; }
+  a.lv-panel-out { padding: 0 4px; }
   body.lv-reading-open .sheet { transform: scale(.97); }
 }
 

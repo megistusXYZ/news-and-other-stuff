@@ -24,7 +24,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { join } from 'node:path'
-import { check, permalinkTarget, articleLinkTarget, profileLinkTarget, streamLinkTarget, listingLinkTarget, toStreamLink, toListingLink, decodeEntities } from './validate.mjs'
+import { check, permalinkTarget, articleLinkTarget, calendarLinkTarget, profileLinkTarget, streamLinkTarget, listingLinkTarget, toStreamLink, toListingLink, decodeEntities } from './validate.mjs'
 import { tags, attributes, textIn } from './html.mjs'
 import { filterFor } from './corpus.mjs'
 import { toNpub, BRAINSTORM, ARTICLE_KINDS } from './nostr.mjs'
@@ -299,7 +299,7 @@ export function dress (html, corpus, assets) {
       out = out.slice(0, anchor.start) + tag + out.slice(anchor.end)
       continue
     }
-    let id = permalinkTarget(href) || articleLinkTarget(href, corpus)
+    let id = permalinkTarget(href) || articleLinkTarget(href, corpus) || calendarLinkTarget(href, corpus)
     if (id && !byId.has(id)) id = null
     const pubkey = id ? byId.get(id).pubkey : profileLinkTarget(href, corpus)
     if (!id && !pubkey) continue

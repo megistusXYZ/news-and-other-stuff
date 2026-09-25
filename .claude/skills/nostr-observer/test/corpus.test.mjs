@@ -351,3 +351,23 @@ test('the digest prints the tabloid apart, loud about what it is not', async () 
   assert.match(text, /^Saying \(Bluesky\):$/m)
   assert.match(text, /^1\. U2 announces new album — The album features guests\. \(entertainment, 221 posts\)$/m)
 })
+
+// --- kick-offs in the reader's own time, 2026-09-25 ------------------------------
+
+test('a kick-off is printed in the reader\'s time zone: 12-hour for a US paper, 24-hour elsewhere', async () => {
+  const { digest } = await import('../scripts/corpus.mjs')
+  const base = { code: 'ABC123', since: 1790222949, until: 1790309349, desks: {}, control: [], profiles: {}, art: [] }
+  const team = (name, date, time, venue) => ({ team: name, league: null, last: null, next: { home: name, away: 'Visitors', date, time, venue } })
+  const sports = { source: 'TheSportsDB', teams: [
+    team('Northwestern Wildcats', '2026-09-26', '16:00', 'Neyland Stadium'),
+    team('Chicago Fire', '2026-09-27', '00:30', 'Soldier Field'),
+  ] }
+  const chicago = { place: 'Chicago, United States', unit: '°F', timezone: 'America/Chicago', source: 'x', now: { temp: 97, words: 'Clear' }, today: { date: '2026-09-25', high: 97, low: 78, rain: 0, words: 'Clear', sunrise: '07:21', sunset: '19:23' }, ahead: [] }
+  const us = digest({ ...base, wires: { asOf: 1790309349, weather: chicago, sports, almanac: null, headlines: [], notes: [] } })
+  assert.match(us, /next Northwestern Wildcats v Visitors, Saturday, September 26, 11:00 a\.m\. CDT, Neyland Stadium\./)
+  assert.match(us, /next Chicago Fire v Visitors, Saturday, September 26, 7:30 p\.m\. CDT, Soldier Field\./, 'a late kick-off in UTC is the evening before in Chicago')
+
+  const london = { ...chicago, place: 'London, United Kingdom', unit: '°C', timezone: 'Europe/London' }
+  const gb = digest({ ...base, wires: { asOf: 1790309349, weather: london, sports, almanac: null, headlines: [], notes: [] } })
+  assert.match(gb, /next Northwestern Wildcats v Visitors, Saturday 26 September, 17:00 BST, Neyland Stadium\./)
+})

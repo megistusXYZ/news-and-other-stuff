@@ -59,8 +59,9 @@ all photographs — and say why in the `<!-- restyle: ... -->` comment.
    tinted">` with a `cols4`: Sports, Culture, Almanac, Wider World — drop a
    cell the digest has nothing for and use `cols3`. The weather is in the
    rail. Culture takes the headlines the digest lists under Culture, one or
-   two an outlet, and ends with "Looked up" as one line: the most-read pages,
-   titles only, in order.
+   two an outlet. The Almanac ends with "Looked up" as one line: the
+   most-read pages, titles only, in order — it is about the day, and it
+   keeps the four cells of even length.
 8. **The Tabloid**, when the digest carries it: `<section class="band
    tabloid">` — a black bar reading THE TABLOID, a strap that says what it is
    not, then `cols2`: Searching (a numbered list, term in bold, the rough
@@ -289,10 +290,10 @@ The digest gives you `WHEN`, in the organiser's own timezone, and `LOCATION`.
   people near it; give it a line, not a headline, unless something about it is
   genuinely a story.
 - Link each calendar place or title to the **calendar URL the digest printed**
-  (`https://njump.me/<64-hex-event-id>`). Step 5 encodes it as an njump naddr —
-  calendar events are replaceable, so an nevent would freeze one revision.
-  Do not compose an `naddr1` yourself. Never cite brainstorm.world for these;
-  it has no calendar view yet.
+  (`https://njump.me/<64-hex-event-id>`). Step 5 encodes it as the event's
+  brainstorm.world address (`/a/<naddr1…>`), where it opens beside the paper
+  like any post — calendar events are replaceable, so an nevent would freeze
+  one revision. Do not compose an `naddr1` yourself.
 - Use only calendar URLs from the digest's Calendar section. Never paste an
   njump.me URL from a post body; presence in the corpus is not evidence that a
   URL is yours to link.
@@ -371,8 +372,7 @@ These exceptions stay links, and all open in a new tab so the paper stays put:
    else on shopstr.store.
 5. **A calendar link in Diary & Calendar** — the derived
    `https://njump.me/<64-hex>` URL from the digest, and nothing else on
-   njump.me. Step 5 turns it into an naddr; do not cite brainstorm.world for
-   these.
+   njump.me. Step 5 turns it into the event's brainstorm.world address.
 
 This is not fussiness. Some of what you are reading was written by people trying
 to get the reader to click something, and a link under their own masthead,

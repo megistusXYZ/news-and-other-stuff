@@ -23,7 +23,7 @@
 import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { tags, attributes as attrsOf, textIn } from './html.mjs'
-import { fromNevent, fromNaddr, fromNpub, toZapStreamUrl, LIVE_KIND, toShopstrUrl, CLASSIFIED_KIND, toNjumpCalendarUrl, CALENDAR_KINDS, tagValue, toBrainstormNote, toBrainstormArticle, toBrainstormProfile, ARTICLE_KINDS } from './nostr.mjs'
+import { fromNevent, fromNaddr, fromNpub, toZapStreamUrl, LIVE_KIND, toShopstrUrl, CLASSIFIED_KIND, toNjumpCalendarUrl, toBrainstormCalendar, CALENDAR_KINDS, tagValue, toBrainstormNote, toBrainstormArticle, toBrainstormProfile, ARTICLE_KINDS } from './nostr.mjs'
 
 function arg (name, fallback = null) {
   const at = process.argv.indexOf(name)
@@ -159,7 +159,9 @@ export const LISTING_WRITER = /^https:\/\/shopstr\.store\/listing\/([0-9a-f]{64}
 export const LISTING_NADDR = /^https:\/\/shopstr\.store\/listing\/(naddr1[0-9a-z]+)(?:[/?#].*)?$/i
 
 export const CALENDAR_WRITER = /^https:\/\/njump\.me\/([0-9a-f]{64})(?:[/?#].*)?$/i
-export const CALENDAR_NADDR = /^https:\/\/njump\.me\/(naddr1[0-9a-z]+)(?:[/?#].*)?$/i
+// brainstorm.world/a/ is the calendar's home since 2026-09-25; njump.me naddrs
+// printed before then still validate.
+export const CALENDAR_NADDR = /^https:\/\/(?:brainstorm\.world\/a|njump\.me)\/(naddr1[0-9a-z]+)(?:[/?#].*)?$/i
 
 /**
  * The corpus, indexed once per run instead of once per link.
@@ -299,7 +301,7 @@ export function toListingLink (event) {
 }
 
 /**
- * Event id if `href` is a verified njump calendar link for a listing we read;
+ * Event id if `href` is a verified calendar link for a listing we read;
  * otherwise null.
  *
  * Two shapes after resolve: canonical naddr, or the writer form
@@ -331,7 +333,7 @@ export function calendarWriterTarget (href, corpus) {
 }
 
 export function toCalendarLink (event) {
-  return toNjumpCalendarUrl(event)
+  return toBrainstormCalendar(event)
 }
 
 /**

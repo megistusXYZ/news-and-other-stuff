@@ -10,6 +10,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { toNaddr } from '../scripts/nostr.mjs'
 import { check, quotedText, attributes, normalize, isQuoted, PERMALINK, toPermalink, permalinkTarget, streamLinkTarget, toStreamLink, listingLinkTarget, toListingLink, calendarLinkTarget, toCalendarLink, toArticleLink, articleLinkTarget, toProfileLink, profileLinkTarget } from '../scripts/validate.mjs'
 import { toNpub } from '../scripts/nostr.mjs'
 import { resolve } from '../scripts/resolve.mjs'
@@ -233,7 +234,17 @@ test('a verified njump calendar link is allowed after resolve', () => {
     'writer form must be encoded before validate')
 })
 
-test('a jumble citation of a calendar event is rewritten to an njump naddr', () => {
+test('a calendar entry opens on brainstorm.world by address; an older njump link still passes', () => {
+  const event = corpus.desks.calendar[0]
+  const naddr = toNaddr({ kind: event.kind, pubkey: event.pubkey, identifier: event.tags.find((t) => t[0] === 'd')[1] })
+  assert.equal(toCalendarLink(event), `https://brainstorm.world/a/${naddr}`)
+  const { html } = resolve(`<a href="https://njump.me/${CALENDAR_ID}">Porto, Portugal</a>`, corpus)
+  assert.match(html, new RegExp(`href="https://brainstorm\\.world/a/${naddr}"`))
+  assert.equal(calendarLinkTarget(`https://njump.me/${naddr}`, corpus), CALENDAR_ID, 'editions printed before this still validate')
+  assert.deepEqual(kinds(`<a href="https://njump.me/${naddr}">Porto</a>`), [])
+})
+
+test('a jumble citation of a calendar event is rewritten to its calendar address', () => {
   const { html, changes } = resolve(`<a href="https://jumble.social/notes/${CALENDAR_ID}">meetup</a>`, corpus)
   const canonical = toCalendarLink(corpus.desks.calendar[0])
   assert.match(html, new RegExp(`href="${canonical.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`))
@@ -322,11 +333,11 @@ test('a jumble nevent naming a CALENDAR listing is refused, not cited', () => {
   assert.deepEqual(kinds(`<a href="${toPermalink(EVENT_ID)}">source</a>`), [])
 })
 
-test('resolve turns that frozen citation into the njump address', () => {
+test('resolve turns that frozen citation into the calendar\'s address on Brainstorm', () => {
   const page = `<a href="${toPermalink(CALENDAR_ID)}">the meetup</a>`
   const { html, changes } = resolve(page, corpus)
   assert.deepEqual(changes.map((c) => c.kind), ['calendar'])
-  assert.match(html, /njump\.me\/naddr1/)
+  assert.match(html, /brainstorm\.world\/a\/naddr1/)
   assert.deepEqual(check(html, corpus).violations, [])
 })
 

@@ -30,6 +30,7 @@ const barcelona = {
   results: [{ name: 'Barcelona', country: 'Spain', latitude: 41.38879, longitude: 2.15899, timezone: 'Europe/Madrid' }],
 }
 const forecast = {
+  timezone: 'Europe/Madrid',
   current: { temperature_2m: 18.4, weather_code: 1 },
   daily: {
     time: ['2026-09-25', '2026-09-26', '2026-09-27', '2026-09-28'],
@@ -55,6 +56,7 @@ test('the weather: the reader\'s place, today and the next three days, in words 
     country: null,
     source: 'Weather data by Open-Meteo.com',
     unit: '°C',
+    timezone: 'Europe/Madrid',
     now: { temp: 18, words: 'Mainly clear' },
     today: { date: '2026-09-25', high: 25, low: 17, rain: 10, words: 'Overcast', sunrise: '07:38', sunset: '19:32' },
     ahead: [

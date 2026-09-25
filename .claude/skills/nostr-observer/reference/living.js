@@ -394,8 +394,16 @@ function reader () {
   prev.type = 'button'; prev.setAttribute('aria-label', 'Previous')
   const next = el('button', 'lv-panel-step', '›')
   next.type = 'button'; next.setAttribute('aria-label', 'Next')
-  const out = el('a', 'lv-panel-out', 'Open full page to zap or follow ↗')
+  const out = el('a', 'lv-panel-out')
   out.target = '_blank'; out.rel = 'noopener noreferrer'
+  // The way out, said in full on a desk and in two words on a phone, where
+  // the header has no room for the sentence but must still have the door.
+  const setOut = (long, short, href) => {
+    out.replaceChildren(el('span', 'lv-out-long', long), el('span', 'lv-out-short', short), ' ↗')
+    out.setAttribute('aria-label', long)
+    out.href = href
+  }
+  setOut('Open full page to zap or follow', 'Full page', BRAINSTORM)
   const close = el('button', 'lv-panel-close', '×')
   close.type = 'button'; close.setAttribute('aria-label', 'Close and return to the paper')
   head.append(where, prev, next, out, close)
@@ -536,19 +544,16 @@ function reader () {
     if (target.type === 'stream') {
       const st = data.streams[target.id]
       kicker.textContent = 'The Wireless'
-      out.textContent = 'Listen on zap.stream ↗'
-      out.href = st.url
+      setOut('Listen on zap.stream', 'zap.stream', st.url)
       mountSheet(wireless(target.id))
     } else if (target.type === 'listing') {
       const ad = data.listings[target.id]
       kicker.textContent = 'The Classifieds'
-      out.textContent = 'Enquire on Shopstr ↗'
-      out.href = ad.url
+      setOut('Enquire on Shopstr', 'Shopstr', ad.url)
       mountSheet(classified(target.id))
     } else {
       kicker.textContent = pk ? 'Profile on Brainstorm' : 'Reading on Brainstorm'
-      out.textContent = 'Open full page to zap or follow ↗'
-      out.href = BRAINSTORM + target.path
+      setOut('Open full page to zap or follow', 'Full page', BRAINSTORM + target.path)
       mountFrame(embed(target.path))
     }
 

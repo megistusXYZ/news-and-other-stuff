@@ -661,8 +661,10 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   and `ostrich-portrait` (the first, front-on Grok picture, cropped with its
   neck faded, 223×280). `dress.mjs` reads each webp's width and height from
   its header (VP8X or VP8) and emits `--lv-stamp-ratio`, which the cut's
-  aspect-ratio uses, so each is drawn at its true shape. The reader's paper
-  uses the portrait as of this note.
+  aspect-ratio uses, so each is drawn at its true shape. Compared side by
+  side in the header, the reader CHOSE THE PORTRAIT (softer, narrower, and
+  it reads as a vignette rather than a logo). `ostrich-profile` stays
+  bundled as the alternative.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

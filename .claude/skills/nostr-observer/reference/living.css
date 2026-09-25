@@ -494,7 +494,7 @@ a[data-ev]:hover, a[data-pk]:hover, a[data-ev]:focus-visible, a[data-pk]:focus-v
 /* --- hover cards ---------------------------------------------------------- */
 
 .lv-card {
-  position: fixed; z-index: 50; width: min(320px, calc(100vw - 24px));
+  position: fixed; z-index: 50; width: min(352px, calc(100vw - 24px));
   background: var(--paper); color: var(--ink);
   border: 1px solid var(--ink); border-top: 3px solid var(--accent);
   box-shadow: 0 10px 30px -12px rgba(22, 18, 27, .35);
@@ -536,10 +536,13 @@ a[data-ev]:hover, a[data-pk]:hover, a[data-ev]:focus-visible, a[data-pk]:focus-v
 .lv-card-read {
   font: 600 .7rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
   color: var(--paper); background: var(--ink); border: 0; border-radius: 999px;
-  padding: 6px 12px; cursor: pointer;
+  padding: 6px 12px; cursor: pointer; white-space: nowrap; flex: none;
 }
 .lv-card-read:hover { background: var(--accent); }
-a.lv-card-go { border: 0; color: var(--accent); font-size: .68rem; }
+/* Neither label ever breaks mid-phrase; on a screen too narrow for both, the
+ * link takes its own line under the button. */
+.lv-card-foot { flex-wrap: wrap; row-gap: 6px; }
+a.lv-card-go { border: 0; color: var(--accent); font-size: .68rem; white-space: nowrap; }
 a.lv-card-go:hover { text-decoration: underline; background: none; }
 
 /* --- the reader panel ------------------------------------------------------ */

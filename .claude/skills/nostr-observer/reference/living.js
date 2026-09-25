@@ -224,7 +224,7 @@ function cards () {
 
   const place = (anchor) => {
     const r = anchor.getBoundingClientRect()
-    const w = card.offsetWidth || 320
+    const w = card.offsetWidth || 352
     const h = card.offsetHeight || 160
     let left = Math.min(Math.max(12, r.left), innerWidth - w - 12)
     let top = r.bottom + 8

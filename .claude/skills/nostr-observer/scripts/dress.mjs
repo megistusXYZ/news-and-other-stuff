@@ -181,6 +181,20 @@ export function hashedFive (five, words) {
   }
 }
 
+/**
+ * A webp's width and height, read from its header: the extended form (VP8X,
+ * which anything with transparency uses) or plain lossy (VP8 ). Null when
+ * the bytes are not a webp we can read.
+ */
+function webpSize (base64) {
+  const b = Buffer.from(base64, 'base64')
+  if (b.length < 30 || b.toString('ascii', 0, 4) !== 'RIFF' || b.toString('ascii', 8, 12) !== 'WEBP') return null
+  const chunk = b.toString('ascii', 12, 16)
+  if (chunk === 'VP8X') return { w: 1 + b.readUIntLE(24, 3), h: 1 + b.readUIntLE(27, 3) }
+  if (chunk === 'VP8 ') return { w: b.readUInt16LE(26) & 0x3fff, h: b.readUInt16LE(28) & 0x3fff }
+  return null
+}
+
 /** Every stamp under `reference/stamps/`: a small webp, as base64. */
 function loadStamps (dir = join(REFERENCE, 'stamps')) {
   const stamps = {}
@@ -282,6 +296,9 @@ export function dress (html, corpus, assets) {
   const stamp = stampName ? assets.stamps?.[stampName] : null
   if (stampName && !stamp) throw new Error(`Unknown stamp "${stampName}". Stamps live in reference/stamps/.`)
   if (stamp && !/^[A-Za-z0-9+/]+=*$/.test(stamp)) throw new Error(`The ${stampName} stamp must be base64.`)
+  // Its own proportions, so the cut is drawn at its true shape.
+  const stampSize = stamp ? webpSize(stamp) : null
+  const stampRatio = stampSize ? `;--lv-stamp-ratio:${stampSize.w} / ${stampSize.h}` : ''
   if (brand) {
     assertInlinable(`${brandName} css`, brand.css)
     assertInlinable(`${brandName} mark`, brand.mark)
@@ -463,7 +480,7 @@ export function dress (html, corpus, assets) {
 
   const head = `<style id="living-fonts">\n${assets.fonts}\n</style>\n<style id="living-css">\n${assets.css}</style>\n`
     + (brand ? `<style id="brand-css">\n${brand.css}</style>\n` : '')
-    + (stamp ? `<style id="living-stamp">:root{--lv-stamp:url("data:image/webp;base64,${stamp}")}</style>\n` : '')
+    + (stamp ? `<style id="living-stamp">:root{--lv-stamp:url("data:image/webp;base64,${stamp}")${stampRatio}}</style>\n` : '')
   // The printer's colophon, for a branded paper only: who made it and how to
   // get your own. The brand's own markup, with the reader's paper name in it.
   const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))

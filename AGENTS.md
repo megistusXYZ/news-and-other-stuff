@@ -656,7 +656,13 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   rule at every width — date left and darkest, number and window right,
   the phone dropping the window — so nothing moves between a desk and a
   phone, and the motto has its line to itself. The brand's hairline is
-  the header's alone.
+  the header's alone. TWO STAMPS are bundled, so the reader can
+  compare in one word: `ostrich-profile` (the engraved side view, 298×280)
+  and `ostrich-portrait` (the first, front-on Grok picture, cropped with its
+  neck faded, 223×280). `dress.mjs` reads each webp's width and height from
+  its header (VP8X or VP8) and emits `--lv-stamp-ratio`, which the cut's
+  aspect-ratio uses, so each is drawn at its true shape. The reader's paper
+  uses the portrait as of this note.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

@@ -97,7 +97,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollba
  * the eye from it. The stamp is the shape (a mask); the colour is ours. */
 .masthead > .lv-cut {
   grid-column: 2; grid-row: 1 / span 2; align-self: end;
-  height: var(--lv-cut-h, 104px); aspect-ratio: 298 / 280;
+  height: var(--lv-cut-h, 104px); aspect-ratio: var(--lv-stamp-ratio, 1);
   --lv-cut-ink: #675C4F;
   background: var(--lv-cut-ink);
   -webkit-mask: var(--lv-stamp) left bottom / contain no-repeat;

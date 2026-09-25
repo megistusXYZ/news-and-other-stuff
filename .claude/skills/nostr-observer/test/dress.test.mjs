@@ -441,7 +441,13 @@ test('a paper with a stamp carries it as its own inlined picture, and still undr
   assert.equal(undressed, page)
   assert.throws(() => dress(page, { ...corpus, paper: { stamp: 'pelican' } }, stamped), /Unknown stamp "pelican"/)
   assert.doesNotMatch(dress(page, corpus, stamped).html, /data-stamp|living-stamp/, 'no stamp configured, none applied')
-  assert.match(loadAssets().stamps.ostrich, /^[A-Za-z0-9+/]+=*$/, 'the bundled ostrich is base64 webp')
+  const bundled = loadAssets().stamps
+  assert.deepEqual(Object.keys(bundled).sort(), ['ostrich-portrait', 'ostrich-profile'])
+  // Each stamp carries its own proportions, read from the picture, so the cut
+  // is drawn at its true shape whichever one the reader names.
+  const shaped = (name) => dress(page, { ...corpus, paper: { stamp: name } }, loadAssets()).html
+  assert.match(shaped('ostrich-profile'), /--lv-stamp-ratio:298 \/ 280/)
+  assert.match(shaped('ostrich-portrait'), /--lv-stamp-ratio:223 \/ 280/)
 })
 
 test('the stamp is set as a cut before the nameplate, the name untouched, and undresses away', () => {

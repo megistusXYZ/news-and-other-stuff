@@ -620,9 +620,18 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   (`dress.mjs` wraps the middle word and a `.lv-crest` span, undressed
   away) — refused as well. The conclusion: the picture, not the place. A
   front-on portrait with a glossy eye reads as a smudge at 40–70px wherever
-  it goes. The stamp is off in the reader's config until a mark drawn for
-  the job arrives (a profile head in line engraving, made to be small); the
-  crest machinery stays.
+  it goes. The reader then supplied the right picture: a strict profile
+  facing right, in engraving, with a ruled cut-off under the neck. It is
+  set as a CUT before the nameplate, looking into the name — `dress.mjs`
+  puts `<span class="lv-cut">` first in the header (the name's text is not
+  touched; the crest code is gone), the masthead becomes a two-column grid,
+  and living.js measures the cut to exactly the name and motto on a desk
+  (101px at 1100, 113 at 1519, 125 at 768 where the name wraps) and to the
+  name alone on a phone (70px), the motto running beneath both. The
+  cut's width changes the text's width, so the sizing settles in at most
+  four passes and stops. The file had a transparent background: composite
+  onto white before reading its ink, or the crop takes the whole frame.
+  298×280, 43 KB.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

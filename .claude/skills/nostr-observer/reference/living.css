@@ -80,22 +80,30 @@ html, body, .lv-sections, .lv-panel, .lv-drawer, .tablewrap { scrollbar-width: n
 html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollbar,
 .lv-panel ::-webkit-scrollbar, .lv-drawer::-webkit-scrollbar, .tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
-/* --- the paper's crest --------------------------------------------------------- */
-/* The stamp stands in the nameplate like The Times's arms between "The" and
- * "Times": the engraved head at the height of the capitals, its cut neck
- * fading onto the baseline, inked in the paper's colour. Sized in em, so it
- * keeps its place in the name at every width; held to the word before it,
- * so a name that wraps on a phone breaks after the crest. dress.mjs sets
- * --lv-stamp and the span. */
-.lv-crest-hold { white-space: nowrap; }
-.lv-crest {
-  display: inline-block; width: .84em; height: 1.04em; margin: 0 .04em 0 .16em; vertical-align: -.1em;
-  background: var(--lv-stamp) 50% 0 / contain no-repeat;
+/* --- the paper's cut ----------------------------------------------------------- */
+/* An engraved head in profile set before the nameplate, facing into the name,
+ * the way old papers set a cut in the left ear. As tall as the name and the
+ * motto together on a desk (living.js measures them into --lv-cut-h), as tall
+ * as the two-line name on a phone, with the motto running beneath both. Its
+ * own ruled cut-off stands on the header's rule. dress.mjs sets --lv-stamp. */
+.sheet > .masthead:has(> .lv-cut) {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 18px; align-items: end;
+}
+.masthead > .lv-cut {
+  grid-column: 1; grid-row: 1 / span 2; align-self: end;
+  height: var(--lv-cut-h, 104px); aspect-ratio: 298 / 280;
+  background: var(--lv-stamp) left bottom / contain no-repeat;
+}
+.masthead:has(> .lv-cut) > h1, .masthead:has(> .lv-cut) > .motto { grid-column: 2; }
+@media (max-width: 720px) {
+  .sheet > .masthead:has(> .lv-cut) { column-gap: 12px; }
+  .masthead > .lv-cut { grid-row: 1; height: var(--lv-cut-h, 64px); }
+  .masthead:has(> .lv-cut) > .motto { grid-column: 1 / -1; }
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .lv-crest { filter: invert(1); }
+  :root:not([data-theme="light"]) .lv-cut { filter: invert(1); }
 }
-:root[data-theme="dark"] .lv-crest { filter: invert(1); }
+:root[data-theme="dark"] .lv-cut { filter: invert(1); }
 
 /* --- inside today: the section bar ------------------------------------------ */
 /* A newspaper front's section bar: the sections in small bold caps, a

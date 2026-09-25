@@ -1581,6 +1581,36 @@ function five () {
   })()
 }
 
+// --- the cut before the nameplate ------------------------------------------------
+
+// The engraved head is as tall as the lines it stands beside: the name and
+// the motto on a desk, the name alone on a phone. Measured, because the
+// name's size and wrapping change with the screen. The cut's width changes
+// the text's, which can change the height again — so settle in a few passes
+// and stop.
+function cut () {
+  const head = document.querySelector('.sheet > .masthead')
+  const mark = head && head.querySelector('.lv-cut')
+  const name = head && head.querySelector('h1')
+  if (!mark || !name) return
+  const motto = head.querySelector('.motto')
+  const phone = matchMedia('(max-width: 720px)')
+  const size = () => {
+    for (let pass = 0; pass < 4; pass++) {
+      const last = phone.matches || !motto ? name : motto
+      const height = Math.round(last.getBoundingClientRect().bottom - name.getBoundingClientRect().top)
+      const now = parseInt(head.style.getPropertyValue('--lv-cut-h'), 10) || 0
+      if (Math.abs(height - now) <= 1) return
+      head.style.setProperty('--lv-cut-h', `${height}px`)
+    }
+  }
+  let queued = 0
+  const soon = () => { cancelAnimationFrame(queued); queued = requestAnimationFrame(size) }
+  size()
+  addEventListener('resize', soon)
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(soon)
+}
+
 // --- the section bar: one row that slides -------------------------------------
 
 function sectionBar () {
@@ -1624,6 +1654,7 @@ if (data) {
   if (!data.brand) guard(accent)
   guard(timestamps)
   guard(sectionBar)
+  guard(cut)
   guard(reveal)
   guard(cameos)
   guard(puzzle)

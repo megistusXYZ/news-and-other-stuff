@@ -272,7 +272,7 @@ function cards () {
     // to do either itself. The button says what the link opens: a post is
     // read, a person's name or picture opens their profile.
     const foot = el('div', 'lv-card-foot')
-    const read = el('button', 'lv-card-read', ev ? 'Read post' : 'Profile')
+    const read = el('button', 'lv-card-read', ev ? 'Read post' : 'View profile')
     read.type = 'button'
     read.addEventListener('click', () => { hideNow(); openReader(anchor.href, anchor) })
     const go = el('a', 'lv-card-go', ev ? 'Open post in Brainstorm ↗' : 'Open profile in Brainstorm ↗')

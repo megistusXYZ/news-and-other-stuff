@@ -1594,14 +1594,16 @@ function cut () {
   const name = head && head.querySelector('h1')
   if (!mark || !name) return
   const motto = head.querySelector('.motto')
+  const sheet = head.parentElement
   const phone = matchMedia('(max-width: 720px)')
   const size = () => {
     for (let pass = 0; pass < 4; pass++) {
       const last = phone.matches || !motto ? name : motto
       const height = Math.round(last.getBoundingClientRect().bottom - name.getBoundingClientRect().top)
-      const now = parseInt(head.style.getPropertyValue('--lv-cut-h'), 10) || 0
+      const now = parseInt(sheet.style.getPropertyValue('--lv-cut-h'), 10) || 0
       if (Math.abs(height - now) <= 1) return
-      head.style.setProperty('--lv-cut-h', `${height}px`)
+      // On the sheet, so the folio can read it too and stop short of the cut.
+      sheet.style.setProperty('--lv-cut-h', `${height}px`)
     }
   }
   let queued = 0

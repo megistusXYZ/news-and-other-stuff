@@ -34,27 +34,34 @@ body { font-feature-settings: "kern", "liga", "onum"; }
 /* A front page has one thing at the top. Heavy serif, a plain rule above, the
  * motto in italic beneath; no boxes, no pictures, nothing that moves. */
 
-/* The nameplate is set flush left, the way the FT and the Guardian set
- * theirs, with an ear on the right carrying the day and the edition: the
- * date first and darkest, then the number, then the window. One heavy rule
- * runs under both; the section bar's own rule a hair beneath makes it a
- * thick-and-thin. The edition's markup is untouched — the folio the writer
- * typed above the header is placed in the ear by the grid. */
-.sheet { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
-.sheet > * { grid-column: 1 / -1; min-width: 0; }
-.sheet > .masthead, .sheet > .folio { grid-row: 1; border-top: 1px solid var(--ink); border-bottom: 3px solid var(--ink); }
-.sheet > .masthead { grid-column: 1; text-align: left; padding: 16px 0 14px; position: relative; }
-.sheet > .folio {
-  grid-column: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end;
-  gap: 5px; padding: 16px 0 16px 28px; text-align: right; position: relative;
+/* The nameplate is set flush left and the paper's cut stands at the far
+ * right, looking back into the name. On a desk the folio rides the motto's
+ * line — motto at the left, "FRIDAY, SEPTEMBER 25, 2026 · No. 13C931 · 24h
+ * to …" at the right, ending before the cut — the way the Guardian sets its
+ * date under the nameplate. Below 1000px there is no room for that line, so
+ * the folio becomes its own ruled strip under the header. One heavy rule
+ * closes the header; the section bar's rule a hair beneath makes it a
+ * thick-and-thin. The edition's markup is untouched: the grid places the
+ * folio the writer typed above the header. */
+.sheet { display: grid; grid-template-columns: minmax(0, 1fr); }
+.sheet > * { grid-column: 1; min-width: 0; }
+.sheet > .masthead {
+  grid-row: 1; text-align: left; padding: 16px 0 14px; position: relative;
+  border-top: 1px solid var(--ink); border-bottom: 3px solid var(--ink);
 }
-.sheet > .folio > * { text-align: right; }
+.sheet > .folio {
+  grid-row: 1; align-self: end; justify-self: end; position: relative; z-index: 1;
+  display: flex; flex-direction: row; align-items: baseline; gap: 0; white-space: nowrap;
+  padding: 0 0 var(--lv-folio-drop, 20px); border: 0; text-align: right;
+}
+[data-stamp] .sheet > .folio { margin-right: calc(var(--lv-cut-h, 104px) * 1.0643 + 18px); }
 .sheet > .folio > :nth-child(2) { order: -1; font-weight: 600; color: var(--ink); letter-spacing: .1em; }
+.sheet > .folio > :nth-child(1)::before, .sheet > .folio > :nth-child(3)::before { content: "·"; margin: 0 .7em; color: var(--ink-3); }
 .masthead h1 {
   font-family: var(--serif); font-weight: 900; text-transform: none;
   letter-spacing: -0.018em; line-height: .95;
   font-size: clamp(2.3rem, 6.2vw, 5.1rem);
-  /* A name that wraps on a phone breaks evenly: "News and / Other Stuff". */
+  /* A name that wraps breaks evenly: "News and / Other Stuff". */
   text-wrap: balance;
 }
 .masthead .the { display: inline; font-size: 1em; letter-spacing: 0; text-indent: 0; margin: 0 .2em 0 0; color: inherit; }
@@ -62,13 +69,18 @@ body { font-feature-settings: "kern", "liga", "onum"; }
   margin-top: 9px; font-family: var(--body); font-style: normal; font-weight: 400; font-size: 1.06rem;
   letter-spacing: .005em; text-transform: none; color: var(--ink-2);
 }
-.sheet > .masthead + * , .sheet > .lv-index { margin-top: 3px; }
-@media (max-width: 720px) {
-  .sheet > .masthead { grid-column: 1 / -1; border-bottom: 0; padding: 12px 0 10px; }
-  .sheet > .folio {
-    grid-column: 1 / -1; grid-row: 2; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
-    gap: 2px 12px; padding: 7px 0; border-top: 1px solid var(--rule);
+.sheet > .lv-index { margin-top: 3px; }
+@media (max-width: 1000px) {
+  .sheet > .masthead { border-bottom: 0; }
+  .sheet > .folio, [data-stamp] .sheet > .folio {
+    grid-row: 2; justify-self: stretch; align-self: auto; margin-right: 0; white-space: normal; flex-wrap: wrap;
+    gap: 2px 0; padding: 7px 0; border-top: 1px solid var(--rule); border-bottom: 3px solid var(--ink);
   }
+  .sheet > .folio > :nth-child(2) { margin-right: auto; padding-right: 12px; }
+  .sheet > .folio > :nth-child(1)::before { content: none; }
+}
+@media (max-width: 720px) {
+  .sheet > .masthead { padding: 12px 0 10px; }
   .sheet > .folio > :nth-child(3) { display: none; }
   .masthead .motto { font-size: .98rem; }
 }
@@ -81,20 +93,22 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollba
 .lv-panel ::-webkit-scrollbar, .lv-drawer::-webkit-scrollbar, .tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 /* --- the paper's cut ----------------------------------------------------------- */
-/* An engraved head in profile set before the nameplate, facing into the name,
- * the way old papers set a cut in the left ear. As tall as the name and the
- * motto together on a desk (living.js measures them into --lv-cut-h), as tall
- * as the two-line name on a phone, with the motto running beneath both. Its
- * own ruled cut-off stands on the header's rule. dress.mjs sets --lv-stamp. */
+/* An engraved head in profile at the far right of the nameplate, turned to
+ * look back into the name. As tall as the name and the motto together on a
+ * desk and a tablet (living.js measures them into --lv-cut-h on the sheet,
+ * which the folio also reads to stop short of it), as tall as the two-line
+ * name on a phone, where the motto runs beneath both. dress.mjs sets
+ * --lv-stamp and the span. */
 .sheet > .masthead:has(> .lv-cut) {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 18px; align-items: end;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 18px; align-items: end;
 }
 .masthead > .lv-cut {
-  grid-column: 1; grid-row: 1 / span 2; align-self: end;
+  grid-column: 2; grid-row: 1 / span 2; align-self: end;
   height: var(--lv-cut-h, 104px); aspect-ratio: 298 / 280;
   background: var(--lv-stamp) left bottom / contain no-repeat;
+  transform: scaleX(-1);
 }
-.masthead:has(> .lv-cut) > h1, .masthead:has(> .lv-cut) > .motto { grid-column: 2; }
+.masthead:has(> .lv-cut) > h1, .masthead:has(> .lv-cut) > .motto { grid-column: 1; }
 @media (max-width: 720px) {
   .sheet > .masthead:has(> .lv-cut) { column-gap: 12px; }
   .masthead > .lv-cut { grid-row: 1; height: var(--lv-cut-h, 64px); }

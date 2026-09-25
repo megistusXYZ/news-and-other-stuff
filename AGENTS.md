@@ -633,6 +633,20 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   onto white before reading its ink, or the crop takes the whole frame.
   298×280, 43 KB.
 
+- **The header, settled (2026-09-25).** The reader wanted the name flush
+  left and the ostrich at the far right, and a home for the date. On a
+  desk (≥1001px) the cut stands at the right edge, mirrored so it looks
+  back into the name, and the folio rides the motto's line — motto left,
+  "FRIDAY, SEPTEMBER 25, 2026 · No. 13C931 · 24h to 11:09 p.m. CDT" right,
+  on the same baseline (measured within half a pixel) and stopping 18px
+  short of the cut (it reads `--lv-cut-h`, which living.js now sets on the
+  sheet). The folio overlaps the header's grid cell rather than taking a
+  column, so the name has the width. At 1000px and below there is no room
+  on that line: the folio is its own ruled strip under the header, date
+  left, number and window right; the phone drops the window. The brand's
+  gradient hairline stays on the header, and on the strip only when the
+  strip exists. Checked at 1519, 1020, 768 and 375.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

@@ -514,6 +514,15 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   panel, the drawer or the tables; all of them still scroll by wheel,
   trackpad, touch and keys.
 
+- **The hover card has one quiet link, and it stays in the paper
+  (2026-09-25).** It had a black pill button (open in the panel) and a blue
+  link (leave for Brainstorm), and readers took the pill on a person's card
+  for the story. Now: one left-aligned link in the accent, "Read post →" or
+  "View profile →", that opens the reader panel. Brainstorm proper is one
+  deliberate click further, in the panel's "Open full page to zap or
+  follow ↗", or at once by modifier-click, since the link is a real link.
+  The arrows mean what they say: → stays in the paper, ↗ leaves it.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

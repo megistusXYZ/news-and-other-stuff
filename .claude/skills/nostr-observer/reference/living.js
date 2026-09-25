@@ -224,7 +224,7 @@ function cards () {
 
   const place = (anchor) => {
     const r = anchor.getBoundingClientRect()
-    const w = card.offsetWidth || 352
+    const w = card.offsetWidth || 320
     const h = card.offsetHeight || 160
     let left = Math.min(Math.max(12, r.left), innerWidth - w - 12)
     let top = r.bottom + 8
@@ -267,19 +267,21 @@ function cards () {
 
     const counts = el('div', 'lv-card-counts')
     parts.push(counts)
-    // Two honest actions: open it here, or go to Brainstorm proper, where the
-    // reader is signed in and can zap or follow. Nothing on the card pretends
-    // to do either itself. The button says what the link opens: a post is
-    // read, a person's name or picture opens their profile.
+    // One quiet action, and it stays in the paper: the post or the profile
+    // opens in the reader panel beside the page. Brainstorm proper, where the
+    // reader can zap or follow, is one deliberate click further, in the
+    // panel's header — or straight away with a modifier-click, since the link
+    // is a real link. → stays here; ↗ would leave.
     const foot = el('div', 'lv-card-foot')
-    const read = el('button', 'lv-card-read', ev ? 'Read post' : 'View profile')
-    read.type = 'button'
-    read.addEventListener('click', () => { hideNow(); openReader(anchor.href, anchor) })
-    const go = el('a', 'lv-card-go', ev ? 'Open post in Brainstorm ↗' : 'Open profile in Brainstorm ↗')
+    const go = el('a', 'lv-card-go', ev ? 'Read post →' : 'View profile →')
     go.href = anchor.href
-    go.target = '_blank'
-    go.rel = 'noopener noreferrer'
-    foot.append(read, go)
+    go.addEventListener('click', (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+      e.preventDefault()
+      hideNow()
+      openReader(anchor.href, anchor)
+    })
+    foot.append(go)
     parts.push(foot)
     if (ev) live(ev.id, counts)
     return parts

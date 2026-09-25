@@ -90,7 +90,6 @@
 
 [data-brand="brainstorm"] .lv-panel::before { background: var(--bs-aurora); }
 [data-brand="brainstorm"] .lv-panel-kicker { color: var(--bs-teal); }
-[data-brand="brainstorm"] .lv-card-read:hover { background: var(--bs-purple); }
 [data-brand="brainstorm"] .lv-has-new .lv-since-dot { background: var(--bs-cyan); box-shadow: 0 0 0 3px rgba(19, 210, 229, .22); }
 [data-brand="brainstorm"] .lv-drawer-all { background: rgba(114, 55, 255, .06); }
 [data-brand="brainstorm"] .lv-drawer-name { font-family: var(--brand); font-weight: 800; letter-spacing: -0.01em; }

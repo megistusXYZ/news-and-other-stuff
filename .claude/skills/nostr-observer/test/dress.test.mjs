@@ -548,3 +548,25 @@ test('the colophon carries the publisher\'s imprint: their logo, linked to their
   assert.ok(dress(brandPage, brandCorpus, withFooter).html.includes('<p class="lv-colophon-small">Open source</p>'), 'no imprint, no slot left behind')
   assert.throws(() => dress(brandPage, { ...brandCorpus, paper: { ...paper, imprint: { ...paper.imprint, logo: 'nobody' } } }, withFooter), /Unknown imprint "nobody"/)
 })
+
+test('a network comic must be a picture: a video is passed over, and a caption of bare hashtags is no caption', () => {
+  const VIDEO = '6'.repeat(64)
+  const TAGGED = '5'.repeat(64)
+  const withMedia = {
+    ...corpus,
+    art: [{ id: 'art-9', url: 'https://imgs.xkcd.com/comics/x.png' }],
+    desks: {
+      ...corpus.desks,
+      notes: [
+        ...corpus.desks.notes,
+        { id: VIDEO, kind: 1, pubkey: REPLIER, created_at: 1790306000, content: 'https://v.example/clip.mp4\n#meme', tags: [['t', 'meme'], ['imeta', 'url https://v.example/clip.mp4', 'm video/mp4']] },
+        { id: TAGGED, kind: 1, pubkey: AUTHOR, created_at: 1790306100, content: 'Relay operators, every time #meme #nostr', tags: [['t', 'meme'], ['imeta', 'url https://img.example/relay', 'm image/webp']] },
+      ],
+    },
+    wires: { cartoon: { title: 'X', caption: null, number: 1, art: 'art-9', source: 'xkcd' } },
+  }
+  const tabs = islandOf(dress(page, withMedia, assets).html).cartoons
+  assert.deepEqual(tabs.map((t) => t.image), ['https://imgs.xkcd.com/comics/x.png', 'https://img.example/relay'],
+    'the video is not a cartoon; an image typed by its tag counts even without an extension')
+  assert.equal(tabs[1].caption, 'Relay operators, every time', 'hashtags are the poster\'s filing, not the caption')
+})

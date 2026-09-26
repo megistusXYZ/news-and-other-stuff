@@ -452,11 +452,16 @@ export function dress (html, corpus, assets) {
       out.push({ tab: 'From the archive', title: [old.title, old.year].filter(Boolean).join(', '), image: old.image, caption: null, credit: old.source, link: https(old.link) })
     }
     const COMIC = /^(comic|comics|webcomic|cartoon|cartoons|meme|memes|memestr)$/i
+    // A picture: an imeta typed image/*, or with no type an image extension.
+    // A video posted as a meme is not a cartoon.
+    const IMAGE_FILE = /\.(?:png|jpe?g|gif|webp|avif)(?:[?#]|$)/i
     const pictureOf = (e) => {
       for (const tag of e.tags || []) {
         if (tag[0] !== 'imeta') continue
         const url = tag.slice(1).map((part) => /^url (\S+)/.exec(part)).find(Boolean)
-        if (url && https(url[1])) return url[1]
+        const mime = tag.slice(1).map((part) => /^m (\S+)/.exec(part)).find(Boolean)
+        const picture = mime ? /^image\//i.test(mime[1]) : url && IMAGE_FILE.test(url[1])
+        if (url && picture && https(url[1])) return url[1]
       }
       const inText = /https:\/\/\S+\.(?:png|jpe?g|gif|webp)(?:\?\S*)?/i.exec(String(e.content || ''))
       return inText && https(inText[0]) ? inText[0] : null
@@ -469,7 +474,8 @@ export function dress (html, corpus, assets) {
       .slice(0, 4)
     for (const { e, image } of found) {
       const name = (profiles[e.pubkey] && profiles[e.pubkey].name) || 'Someone'
-      const words = String(e.content || '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim()
+      // Hashtags are the poster's filing, not the caption.
+      const words = String(e.content || '').replace(/https?:\/\/\S+/g, '').replace(/(^|\s)#[\p{L}\p{N}_]+/gu, ' ').replace(/\s+/g, ' ').trim()
       out.push({ tab: 'From your network', title: name, image, caption: words ? words.slice(0, 200) : null, credit: `${name}, on Nostr`, link: toPermalink(e.id) })
     }
     return out.length > 1 ? out : null

@@ -1629,10 +1629,20 @@ function cartoonTabs () {
     hold()
     figure.classList.toggle('lv-line-art', i === 0)
     if (i === 0) {
+      img.onerror = null
       img.src = originalImg.src
       img.alt = originalImg.alt
       caption.replaceWith(original.cloneNode(true))
       return
+    }
+    // A picture that will not load takes its tab with it, and the paper
+    // goes back to the cartoon it opened with.
+    img.onerror = () => {
+      img.onerror = null
+      tabs[i].remove()
+      tabs.splice(i, 1)
+      list.splice(i, 1)
+      show(0)
     }
     img.src = c.image
     img.alt = c.title ? `${c.tab}: ${c.title}` : c.tab

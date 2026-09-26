@@ -416,3 +416,15 @@ test('a paper can name a second stamp for its dark edition, a name like the firs
   writeFileSync(file, JSON.stringify({ name: 'N', stamp: 'ostrich-portrait', stampDark: '/tmp/x.webp' }))
   assert.equal(readPaper(file).stampDark, null, 'a name, never a path')
 })
+
+test('a paper can carry its publisher\'s imprint: a name, an https address and a logo by name', async () => {
+  const { readPaper } = await import('../scripts/corpus.mjs')
+  const { writeFileSync, mkdtempSync } = await import('node:fs')
+  const { join } = await import('node:path')
+  const { tmpdir } = await import('node:os')
+  const file = join(mkdtempSync(join(tmpdir(), 'paper-')), 'observer.config.json')
+  writeFileSync(file, JSON.stringify({ name: 'N', imprint: { name: 'Megistus', url: 'https://www.megistus.xyz', logo: 'megistus' } }))
+  assert.deepEqual(readPaper(file).imprint, { name: 'Megistus', url: 'https://www.megistus.xyz', logo: 'megistus' })
+  writeFileSync(file, JSON.stringify({ name: 'N', imprint: { name: 'X', url: 'javascript:alert(1)', logo: '../x' } }))
+  assert.equal(readPaper(file).imprint, null, 'an https address and a logo name, or no imprint at all')
+})

@@ -147,8 +147,27 @@ a.lv-colophon-button:hover { background: var(--bs-purple-hover); color: #fff; tr
 a.lv-colophon-button:focus-visible { outline: 2px solid var(--bs-cyan); outline-offset: 3px; }
 .lv-colophon-small {
   grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--rule);
-  font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+  display: flex; align-items: center; flex-wrap: nowrap; gap: 0;
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; line-height: 1.6; text-transform: uppercase; color: var(--ink-3);
 }
+/* The logo keeps its size; the line wraps beside it on a narrow screen. */
+.lv-colophon-small > span { flex: 1; min-width: 0; }
+a.lv-imprint { flex: none; }
+/* The publisher's imprint leads the small print: their mark, drawn in the
+ * page's secondary ink through the logo as a mask (so it reads in light and
+ * dark), then the line. It turns Aurora Purple on hover. */
+a.lv-imprint {
+  display: inline-flex; align-items: center; border: 0; margin-right: 10px;
+  line-height: 0; color: var(--ink-2);
+}
+.lv-imprint-logo {
+  display: block; height: 28px; aspect-ratio: var(--lv-imprint-ratio, 2);
+  background: currentColor;
+  -webkit-mask: var(--lv-imprint) center / contain no-repeat; mask: var(--lv-imprint) center / contain no-repeat;
+  transition: background-color .2s ease;
+}
+a.lv-imprint:hover { color: var(--bs-purple); }
+a.lv-imprint:focus-visible { outline: 2px solid var(--bs-cyan); outline-offset: 3px; }
 @media (max-width: 720px) {
   .lv-colophon { grid-template-columns: 1fr; row-gap: 20px; padding-top: 22px; }
   .lv-colophon-wordmark svg { height: 30px; }

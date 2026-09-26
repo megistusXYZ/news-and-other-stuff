@@ -533,3 +533,18 @@ test('the colophon can sign with the brand\'s own wordmark, inlined as plain SVG
   const scripted = { ...signed, brands: { brainstorm: { ...signed.brands.brainstorm, wordmark: '<svg onload="x()"></svg>' } } }
   assert.throws(() => dress(brandPage, brandCorpus, scripted), /wordmark must be a plain SVG/)
 })
+
+// --- the publisher's imprint, 2026-09-25 -------------------------------------------------
+
+test('the colophon carries the publisher\'s imprint: their logo, linked to their address, or nothing', () => {
+  const real = loadAssets()
+  assert.match(real.imprints.megistus, /^[A-Za-z0-9+/]+=*$/, 'the bundled Megistus logo is base64 webp')
+  const footer = '<footer class="lv-colophon"><p class="lv-colophon-small">{{imprint}}Open source</p></footer>'
+  const withFooter = { ...real, brands: { brainstorm: { ...real.brands.brainstorm, footer } } }
+  const paper = { ...brandCorpus.paper, imprint: { name: 'Megistus', url: 'https://www.megistus.xyz', logo: 'megistus' } }
+  const { html } = dress(brandPage, { ...brandCorpus, paper }, withFooter)
+  assert.ok(html.includes('<p class="lv-colophon-small"><a class="lv-imprint" href="https://www.megistus.xyz" target="_blank" rel="noopener noreferrer" aria-label="Megistus"><span class="lv-imprint-logo"></span></a>Open source</p>'))
+  assert.match(html, /<style id="living-imprint">:root\{--lv-imprint:url\("data:image\/webp;base64,[A-Za-z0-9+/]+=*"\);--lv-imprint-ratio:\d+ \/ 112\}<\/style>/)
+  assert.ok(dress(brandPage, brandCorpus, withFooter).html.includes('<p class="lv-colophon-small">Open source</p>'), 'no imprint, no slot left behind')
+  assert.throws(() => dress(brandPage, { ...brandCorpus, paper: { ...paper, imprint: { ...paper.imprint, logo: 'nobody' } } }, withFooter), /Unknown imprint "nobody"/)
+})

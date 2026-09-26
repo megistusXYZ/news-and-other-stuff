@@ -213,6 +213,7 @@ export function loadAssets () {
   return {
     brands: loadBrands(),
     stamps: loadStamps(),
+    imprints: loadStamps(join(REFERENCE, 'imprints')),
     fiveWords: loadFiveWords(),
     fonts: fontFaces(),
     css: readFileSync(join(REFERENCE, 'living.css'), 'utf8'),
@@ -302,6 +303,14 @@ export function dress (html, corpus, assets) {
   // Its own proportions, so the cut is drawn at its true shape.
   const stampSize = stamp ? webpSize(stamp) : null
   const stampRatio = stampSize ? `;--lv-stamp-ratio:${stampSize.w} / ${stampSize.h}` : ''
+  // The publisher's imprint on the colophon's last line: their logo, linked
+  // to their address. The logo is our bundled picture, drawn as a mask in the
+  // page's ink so it reads in either edition.
+  const imprint = corpus.paper?.imprint || null
+  const imprintLogo = imprint ? assets.imprints?.[imprint.logo] : null
+  if (imprint && !imprintLogo) throw new Error(`Unknown imprint "${imprint.logo}". Imprints live in reference/imprints/.`)
+  if (imprintLogo && !/^[A-Za-z0-9+/]+=*$/.test(imprintLogo)) throw new Error(`The ${imprint.logo} imprint must be base64.`)
+  const imprintSize = imprintLogo ? webpSize(imprintLogo) : null
   // The dark edition's stamp, when the paper names one: shown when the
   // reader switches to dark, in its own shape.
   const darkName = stamp ? corpus.paper?.stampDark || null : null
@@ -533,12 +542,16 @@ export function dress (html, corpus, assets) {
 
   const head = `<style id="living-fonts">\n${assets.fonts}\n</style>\n<style id="living-css">\n${assets.css}</style>\n`
     + (brand ? `<style id="brand-css">\n${brand.css}</style>\n` : '')
+    + (imprintLogo ? `<style id="living-imprint">:root{--lv-imprint:url("data:image/webp;base64,${imprintLogo}")${imprintSize ? `;--lv-imprint-ratio:${imprintSize.w} / ${imprintSize.h}` : ''}}</style>\n` : '')
     + (stamp ? `<style id="living-stamp">:root{--lv-stamp:url("data:image/webp;base64,${stamp}")${stampRatio}${darkStamp}}</style>\n` : '')
   // The printer's colophon, for a branded paper only: who made it and how to
   // get your own. The brand's own markup, with the reader's paper name in it.
   const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
   const colophon = brand && brand.footer
-    ? brand.footer.trim().replaceAll('{{name}}', escapeHtml(corpus.paper?.name || 'This paper')).replaceAll('{{mark}}', brand.mark).replaceAll('{{wordmark}}', brand.wordmark || '') + '\n'
+    ? brand.footer.trim().replaceAll('{{name}}', escapeHtml(corpus.paper?.name || 'This paper')).replaceAll('{{mark}}', brand.mark).replaceAll('{{wordmark}}', brand.wordmark || '')
+      .replaceAll('{{imprint}}', imprintLogo
+        ? `<a class="lv-imprint" href="${escapeHtml(imprint.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(imprint.name)}"><span class="lv-imprint-logo"></span></a>`
+        : '') + '\n'
     : ''
   const tail = `<script type="application/json" id="observer-data">${islandJson(island)}</script>\n`
     // The player library, inert text until a reader presses play — and only

@@ -732,7 +732,16 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   each morning…" — beside "Your network has news too" and one button in
   Brainstorm's style (Aurora Purple, white Figtree, 0.75rem radius) to
   brainstorm.world/login; small print beneath. On a phone it stacks and
-  the button runs the width.
+  the button runs the width. THE PUBLISHER'S IMPRINT: `observer.config.json`
+  `"imprint": {name, url, logo}` (https address, logo a name in
+  `reference/imprints/`; all three or none, tested) puts the publisher's
+  mark first on the colophon's small-print line via `{{imprint}}`, linked
+  to their site in a new tab (tested). For this paper: Megistus's icon —
+  the meditating figure under the star-and-circuit halo, without the word
+  (the word version read as a smudge at 20–28px, and the reader asked for
+  the mark alone) — 28px, drawn as a mask in the page's secondary ink so it
+  reads in light and dark, no divider, the line wrapping beside it on a
+  phone.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

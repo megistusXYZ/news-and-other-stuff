@@ -593,6 +593,12 @@ export function readPaper (path = 'observer.config.json') {
   paper.stamp = stampName(raw.stamp)
   // And one for the dark edition, when the reader switches to it.
   paper.stampDark = stampName(raw.stampDark)
+  // The publisher's imprint on the colophon's last line: a name, an https
+  // address, and a logo by name from reference/imprints/. All three, or none.
+  const imp = raw.imprint && typeof raw.imprint === 'object' ? raw.imprint : null
+  paper.imprint = imp && clean(imp.name, 40) && /^https:\/\/[^\s"'<>]{1,200}$/.test(String(imp.url || '')) && stampName(imp.logo)
+    ? { name: clean(imp.name, 40), url: imp.url, logo: imp.logo }
+    : null
   // The wires: what the reader wants from outside Nostr. A place for the
   // weather, a few teams, a few https feeds, and whether to run the almanac.
   const list = (value, max, keep) => (Array.isArray(value) ? value : []).map((v) => keep(v)).filter(Boolean).slice(0, max)

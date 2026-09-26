@@ -577,6 +577,11 @@ export function dress (html, corpus, assets) {
     const masthead = tags(out, 'header').find((t) => /\bmasthead\b/.test(attributes(t.raw).class || ''))
     if (masthead) out = out.slice(0, masthead.end) + '<span class="lv-cut" aria-hidden="true"></span>' + out.slice(masthead.end)
   }
+  // A branded paper opens its issue number with the brand's mark, set
+  // between "No." and the digits. A pseudo-element can only reach either end
+  // of the writer's span, so the mark is its own empty span, and the text the
+  // writer typed is untouched around it.
+  if (brand) out = out.replace(/(<div class="folio">\s*<span>No\.?\s*)(?=[0-9A-Z])/, '$1<span class="lv-issue-mark" aria-hidden="true"></span>')
   out = indexRow(out)
 
   // The colophon is the last thing on the sheet, inside its margins; with no

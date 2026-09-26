@@ -739,9 +739,12 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   to their site in a new tab (tested). For this paper: Megistus's icon —
   the meditating figure under the star-and-circuit halo, without the word
   (the word version read as a smudge at 20–28px, and the reader asked for
-  the mark alone) — 28px, drawn as a mask in the page's secondary ink so it
-  reads in light and dark, no divider, the line wrapping beside it on a
-  phone.
+  the mark alone) — drawn as a mask in the page's secondary ink so it reads
+  in light and dark, no divider, and set IN the line like a glyph (1.45em,
+  about 14px, on the baseline) rather than a 28px block centred beside it.
+  THE B ON THE ISSUE: the Brainstorm B mark opens the folio's issue number
+  ("B No. 13C931"), in its own gradient at the folio's cap height, a little
+  muted — the printer's device on the edition, brand-only, from brand.css.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

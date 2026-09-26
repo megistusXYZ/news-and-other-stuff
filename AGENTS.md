@@ -748,6 +748,21 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   it reads as the printer's device. A pseudo-element cannot reach the middle
   of the writer's span, so dress sets an empty `lv-issue-mark` span there;
   brand-only, and it undresses away.
+- RECIPE TABS, HEALTH & SAFETY, LAUNCHES (2026-09-25): three more keyless
+  wires. Recipe: beside the dish of the day, a vegetarian dish and something
+  sweet from TheMealDB's categories, picked by the day index so they hold all
+  day; the writer prints only the dish of the day, dress carries the others
+  as plain text (`recipes` in the island, https pictures and links only), and
+  living.js swaps them into the same box under Today · Vegetarian · Something
+  sweet, holding at least Today's height. Health & Safety (`health: true`,
+  needs a place): the UV peak and its hours (Open-Meteo); for a US place the
+  NWS's active alerts, Class I food recalls of the past two weeks (openFDA)
+  and CPSC product recalls. Facts to act on, never advice; a quiet day says
+  "No weather alerts in force." The box goes at the foot of whichever front
+  column runs shortest (under the lead, its two lists side by side, when the
+  rail is already long). Launches (`launches: true`): the next two from The
+  Space Devs' Launch Library 2, as the last rows of Conditions, in the
+  reader's clock. Pollen was left out: no keyless US source.
 
 ### The public shelf (`.claude/skills/observer-pages/`)
 

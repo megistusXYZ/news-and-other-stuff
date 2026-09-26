@@ -466,3 +466,68 @@ test('from the archive: one published Puck cartoon a day from the Library of Con
   assert.match(query, /dates=1877\/1918/, 'only the years Puck was published and the work is out of copyright')
   assert.match(query, /[?&]sp=\d+/, 'a page chosen by the day, so the cartoon changes daily and holds all day')
 })
+
+// --- recipe alternates, health & safety, launches, 2026-09-25 ---------------------------
+
+const meal = (id, name, category) => ({ idMeal: id, strMeal: name, strCategory: category, strArea: 'Italian', strMealThumb: `https://www.themealdb.com/images/media/meals/${id}.jpg`,
+  strInstructions: 'Boil.\r\nServe.', strIngredient1: 'Pasta', strMeasure1: '200g', strIngredient2: '', strMeasure2: '' })
+const list = (prefix) => ({ meals: ['a', 'b', 'c', 'd'].map((x) => ({ idMeal: `${prefix}${x}`, strMeal: `${prefix} ${x}`, strMealThumb: 'https://www.themealdb.com/x.jpg' })) })
+
+test('the recipe comes with two alternates, a vegetarian dish and something sweet, each picked by the day', async () => {
+  const { fetch, asked } = network([
+    [/random\.php/, { meals: [meal('1', 'Today', 'Side')] }],
+    [/filter\.php\?c=Vegetarian/, list('veg')],
+    [/filter\.php\?c=Dessert/, list('sweet')],
+    [/lookup\.php\?i=vegb$/, { meals: [meal('vegb', 'Veg B', 'Vegetarian')] }],
+    [/lookup\.php\?i=sweetb$/, { meals: [meal('sweetb', 'Sweet B', 'Dessert')] }],
+  ])
+  const wires = await gatherWires({ ...off, recipe: true }, { fetch, now: NOW, nextArt: 41 })
+  // Day 20721; 20721 mod 4 = 1, so the second of each list of four.
+  assert.deepEqual(wires.recipes, [
+    { tab: 'Vegetarian', name: 'Veg B', kind: 'Italian · Vegetarian', image: 'https://www.themealdb.com/images/media/meals/vegb.jpg', ingredients: [{ item: 'Pasta', measure: '200g' }], method: 'Boil.\nServe.', link: 'https://www.themealdb.com/meal/vegb' },
+    { tab: 'Something sweet', name: 'Sweet B', kind: 'Italian · Dessert', image: 'https://www.themealdb.com/images/media/meals/sweetb.jpg', ingredients: [{ item: 'Pasta', measure: '200g' }], method: 'Boil.\nServe.', link: 'https://www.themealdb.com/meal/sweetb' },
+  ])
+  assert.ok(asked.some((u) => /random\.php/.test(u)), 'today\'s recipe is still the writer\'s')
+})
+
+test('health and safety: the UV and its hours, the weather service\'s alerts, and the week\'s serious recalls', async () => {
+  const chicago = { results: [{ name: 'Chicago', country: 'United States', country_code: 'US', latitude: 41.85003, longitude: -87.65005, timezone: 'America/Chicago' }] }
+  const hours = Array.from({ length: 24 }, (_, h) => `2026-09-25T${String(h).padStart(2, '0')}:00`)
+  const uv = [0, 0, 0, 0, 0, 0, 0, 0.2, 1.1, 2.6, 4.4, 6.1, 6.9, 7.05, 6.8, 6.3, 6.0, 4.1, 2.0, 0.5, 0, 0, 0, 0]
+  const { fetch, asked } = network([
+    [/geocoding-api\.open-meteo\.com/, chicago],
+    [/api\.open-meteo\.com\/v1\/forecast\?.*uv_index/, { daily: { uv_index_max: [7.05] }, hourly: { time: hours, uv_index: uv } }],
+    [/api\.weather\.gov\/alerts\/active\?point=30\.27,-97\.74/, { features: [{ properties: { event: 'Heat Advisory', headline: 'Heat Advisory until 8 PM CDT', ends: '2026-09-25T20:00:00-05:00' } }] }],
+    [/api\.fda\.gov\/food\/enforcement\.json/, { results: [
+      { classification: 'Class I', product_description: 'Crown Farms Dried Suri Cut, 200 gm, in plastic pack', recalling_firm: 'Crown Farms', report_date: '20260916', reason_for_recall: 'Undeclared sulfites' },
+      { classification: 'Class II', product_description: 'Almond spread', recalling_firm: 'Prolon', report_date: '20260916', reason_for_recall: 'Label' },
+    ] }],
+    [/saferproducts\.gov\/RestWebServices\/Recall/, [{ Title: '5Color Recalls Children’s Bicycle Helmet and Pads Sets Due to Risk of Serious Injury', RecallDate: '2026-09-24T00:00:00', URL: 'https://cpsc.gov/Recalls/2026/5Color' }]],
+  ])
+  const wires = await gatherWires({ ...off, place: 'Chicago', health: true }, { fetch, now: NOW, nextArt: 41 })
+  assert.deepEqual(wires.health, {
+    place: 'Chicago',
+    uv: { max: 7, level: 'high', from: '11:00', to: '16:00' },
+    alerts: [{ event: 'Heat Advisory', headline: 'Heat Advisory until 8 PM CDT' }],
+    foodRecalls: [{ product: 'Crown Farms Dried Suri Cut, 200 gm, in plastic pack', firm: 'Crown Farms', date: '2026-09-16', reason: 'Undeclared sulfites' }],
+    productRecalls: [{ title: '5Color Recalls Children’s Bicycle Helmet and Pads Sets Due to Risk of Serious Injury', date: '2026-09-24' }],
+    source: 'Open-Meteo · National Weather Service · openFDA · CPSC',
+  }, 'the hours the UV is high or worse; Class I food recalls only; US services only for a US place')
+  assert.ok(asked.some((u) => /api\.fda\.gov.*report_date:\[20260911\+TO\+20260925\]/.test(decodeURIComponent(u))), 'recalls from the last fourteen days')
+})
+
+test('launches: the next two rockets up, what they carry, from where and when', async () => {
+  const { fetch } = network([[/ll\.thespacedevs\.com\/2\.2\.0\/launch\/upcoming\/\?/, { results: [
+    { name: 'Electron | StriX Launch 13', net: '2026-09-26T00:39:00Z', lsp_name: 'Rocket Lab', location: 'Rocket Lab Launch Complex 1, Mahia Peninsula, New Zealand', status: { abbrev: 'Go' } },
+    { name: 'Falcon 9 Block 5 | USSF-385', net: '2026-09-27T14:10:00Z', lsp_name: 'SpaceX', location: 'Cape Canaveral SFS, FL, USA', status: { abbrev: 'TBC' } },
+    { name: 'A third', net: '2026-09-29T00:00:00Z', lsp_name: 'X', location: 'Y', status: { abbrev: 'Go' } },
+  ] }]])
+  const wires = await gatherWires({ ...off, launches: true }, { fetch, now: NOW, nextArt: 41 })
+  assert.deepEqual(wires.launches, {
+    source: 'The Space Devs, Launch Library 2',
+    next: [
+      { rocket: 'Electron', mission: 'StriX Launch 13', provider: 'Rocket Lab', place: 'Mahia Peninsula, New Zealand', at: 1790383140, status: 'Go' },
+      { rocket: 'Falcon 9 Block 5', mission: 'USSF-385', provider: 'SpaceX', place: 'Cape Canaveral SFS, FL, USA', at: 1790518200, status: 'TBC' },
+    ],
+  })
+})

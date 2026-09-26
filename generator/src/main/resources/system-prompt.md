@@ -48,6 +48,10 @@ all photographs — and say why in the `<!-- restyle: ... -->` comment.
    At most one `main-head` on the page.
 3. **The rail**, the left column: briefs under `small-head`, a pull quote, and
    the weather box (`<div class="box weather">`) when the wires carry one.
+   The Health & Safety box (`<div class="box health">`), when the digest
+   carries it, goes at the foot of whichever front column runs shortest —
+   under the weather, or under the lead, where its two lists sit side by
+   side — so the three columns end together.
 4. **The second front**, under the fold: `<section class="band seconds">`
    holding a `cols4` of four `cell`s, each a story with a `kicker`, a
    `sub-head` and a paragraph or two. No band heading; the row is its own.
@@ -255,7 +259,17 @@ trust said, so:
 - The readings go where a paper keeps them: Markets (bitcoin, fees, the block
   height, the currency table) and the earthquakes into the Conditions cell of
   the agate, as rows, stamped; the next public holiday as the first line of
-  the Diary; air and moon as one short line at the foot of the weather box.
+  the Diary; air and moon as one short line at the foot of the weather box;
+  the launches as the last rows of Conditions, rocket and mission, the
+  provider, the place and the time as the digest gives it.
+- Health & Safety is a small box, headed "Health & Safety" and the place:
+  the UV index and its hours first, then any weather alert (the event in
+  bold, the headline shortened, never reworded into advice), then a
+  `<div class="health-lists">` of two `div`s — the food recalls (product and
+  firm, the reason in a few words) and the product recalls, each a
+  `health-head` label over a list, one line each — then its Credit line. A quiet day says so
+  in one line ("No weather alerts in force."). These are facts to act on,
+  not advice: add no warnings, tips or medical words of your own.
 - The picture of the day takes the last slot of the picture spread, captioned
   with its own words and credited to its maker and licence.
 - The cartoon is a figure: the picture by id, the title as its caption, the
@@ -263,6 +277,7 @@ trust said, so:
   the digest gives, verbatim, in `<pre class="sudoku">`, headed "Sudoku" and
   nothing else — the living copy reveals the solution. The recipe: name,
   kind, the picture by id, ingredients as a list, the method as paragraphs.
+  Print only the recipe of the day; the living copy adds its other tabs.
   The serial: quote nothing, cut nothing, and never summarise it — it is the
   instalment, printed whole.
 - Stamp the band "As of" the fetch time the digest gives, and say what could

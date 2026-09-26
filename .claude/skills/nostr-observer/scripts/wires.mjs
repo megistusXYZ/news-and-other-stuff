@@ -412,6 +412,111 @@ async function recipe (fetch, art) {
   }
 }
 
+// Two alternates beside the recipe of the day, a vegetarian dish and
+// something sweet, from TheMealDB's categories. The day picks each, so they
+// hold all day and change tomorrow. The page offers them as quiet tabs.
+const ALTERNATES = [['Vegetarian', 'Vegetarian'], ['Something sweet', 'Dessert']]
+async function recipeAlternates (fetch, now) {
+  const day = Math.floor(now / 86400)
+  const out = []
+  for (const [tab, category] of ALTERNATES) {
+    const listed = await getJson(fetch, `https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`)
+    const meals = (listed && listed.meals) || []
+    if (!meals.length) continue
+    const pick = meals[day % meals.length]
+    const found = await getJson(fetch, `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${encodeURIComponent(pick.idMeal)}`)
+    const m = found && found.meals && found.meals[0]
+    if (!m || !m.strMeal) continue
+    const ingredients = []
+    for (let i = 1; i <= 20; i++) {
+      const item = String(m[`strIngredient${i}`] || '').trim()
+      if (item) ingredients.push({ item: item.slice(0, 60), measure: String(m[`strMeasure${i}`] || '').trim().slice(0, 40) })
+    }
+    out.push({
+      tab,
+      name: String(m.strMeal).slice(0, 120),
+      kind: [m.strArea, m.strCategory].filter(Boolean).join(' · '),
+      image: /^https:\/\/www\.themealdb\.com\//.test(m.strMealThumb || '') ? m.strMealThumb : null,
+      ingredients,
+      method: String(m.strInstructions || '').replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 4000),
+      link: `https://www.themealdb.com/meal/${encodeURIComponent(m.idMeal)}`,
+    })
+  }
+  return out
+}
+
+// Health and safety for the reader's place: facts to act on, not advice.
+// The UV peak and the hours it is high (Open-Meteo); for a US place, the
+// National Weather Service's active alerts, the fortnight's Class I food
+// recalls (openFDA) and consumer-product recalls (CPSC). All keyless. Each
+// source is asked on its own, so one that is down leaves the others.
+const UV_LEVELS = [[11, 'extreme'], [8, 'very high'], [6, 'high'], [3, 'moderate'], [0, 'low']]
+async function health (fetch, place, now) {
+  const found = await getJson(fetch, `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=1&language=en&format=json`)
+  const spot = found.results && found.results[0]
+  if (!spot) throw new Error(`no place called ${place}`)
+  const lat = spot.latitude.toFixed(2)
+  const lon = spot.longitude.toFixed(2)
+  const us = spot.country_code === 'US'
+  const out = { place: spot.name, uv: null, alerts: [], foodRecalls: [], productRecalls: [], source: us ? 'Open-Meteo · National Weather Service · openFDA · CPSC' : 'Open-Meteo' }
+  const day = (t) => new Date(t * 1000).toISOString().slice(0, 10)
+  const since = now - 14 * 86400
+
+  try {
+    const f = await getJson(fetch, `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=uv_index&daily=uv_index_max&forecast_days=1&timezone=auto`)
+    const max = Math.round(f.daily.uv_index_max[0])
+    const level = UV_LEVELS.find(([floor]) => max >= floor)[1]
+    // The hours it is high or worse; on a moderate day, the moderate hours.
+    const floor = max >= 6 ? 6 : max >= 3 ? 3 : null
+    const at = floor == null ? [] : f.hourly.time.filter((_, i) => f.hourly.uv_index[i] >= floor)
+    out.uv = { max, level, from: at.length ? at[0].slice(11, 16) : null, to: at.length ? at[at.length - 1].slice(11, 16) : null }
+  } catch {}
+  if (us) {
+    try {
+      const alerts = await getJson(fetch, `https://api.weather.gov/alerts/active?point=${lat},${lon}`)
+      out.alerts = (alerts.features || []).slice(0, 3).map((a) => ({ event: String(a.properties.event || '').slice(0, 80), headline: String(a.properties.headline || '').slice(0, 200) }))
+    } catch {}
+    try {
+      const range = `[${day(since).replace(/-/g, '')}+TO+${day(now).replace(/-/g, '')}]`
+      const food = await getJson(fetch, `https://api.fda.gov/food/enforcement.json?search=report_date:${range}&sort=report_date:desc&limit=20`)
+      out.foodRecalls = (food.results || []).filter((r) => r.classification === 'Class I').slice(0, 3).map((r) => ({
+        product: String(r.product_description || '').slice(0, 90),
+        firm: String(r.recalling_firm || '').slice(0, 60),
+        date: String(r.report_date || '').replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3'),
+        reason: String(r.reason_for_recall || '').slice(0, 140),
+      }))
+    } catch {}
+    try {
+      const products = await getJson(fetch, `https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${day(since)}`)
+      out.productRecalls = (Array.isArray(products) ? products : []).sort((a, b) => String(b.RecallDate).localeCompare(String(a.RecallDate))).slice(0, 2)
+        .map((r) => ({ title: String(r.Title || '').slice(0, 160), date: String(r.RecallDate || '').slice(0, 10) }))
+    } catch {}
+  }
+  return out
+}
+
+// Launches: the next two rockets up, from The Space Devs' Launch Library 2
+// (keyless, rate-limited, one call a print). "Rocket | mission" is split;
+// a leading launch-complex name is dropped from the place, a town is kept.
+async function launches (fetch) {
+  const found = await getJson(fetch, 'https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=2&mode=list')
+  const next = ((found && found.results) || []).slice(0, 2).map((l) => {
+    const [rocket, ...rest] = String(l.name || '').split(' | ')
+    const parts = String(l.location || '').split(', ')
+    const place = parts.length > 1 && /\b(complex|launch|pad|site|slc|lc-)\b/i.test(parts[0]) ? parts.slice(1).join(', ') : parts.join(', ')
+    return {
+      rocket: rocket.trim().slice(0, 60),
+      mission: rest.join(' | ').trim().slice(0, 100) || null,
+      provider: String(l.lsp_name || '').slice(0, 60) || null,
+      place: place.slice(0, 100) || null,
+      at: Math.floor(Date.parse(l.net) / 1000),
+      status: (l.status && l.status.abbrev) || null,
+    }
+  }).filter((l) => l.rocket && Number.isFinite(l.at))
+  if (!next.length) throw new Error('no launches listed')
+  return { source: 'The Space Devs, Launch Library 2', next }
+}
+
 // The tabloid: what the world is searching (Google Trends' daily feed, for
 // the reader's country) and saying (Bluesky's trending topics, with their
 // one-line whys). Not ranked by anyone the reader trusts, and the digest says
@@ -462,7 +567,7 @@ async function saying (fetch) {
  */
 export async function gatherWires (settings, { fetch = globalThis.fetch, now = Math.floor(Date.now() / 1000), nextArt = 1 } = {}) {
   if (!settings) return null
-  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, markets: null, world: null, picture: null, recipe: null, lookedUp: null, tabloid: null, art: [], notes: [] }
+  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, markets: null, world: null, picture: null, recipe: null, recipes: [], health: null, launches: null, lookedUp: null, tabloid: null, art: [], notes: [] }
   const reason = (error) => String(error && error.message ? error.message : error).slice(0, 120)
   // Pictures the wires bring, numbered after the corpus's own shortlist.
   let artN = nextArt
@@ -535,7 +640,28 @@ export async function gatherWires (settings, { fetch = globalThis.fetch, now = M
     } catch (error) {
       wires.notes.push(`Recipe: could not reach TheMealDB (${reason(error)})`)
     }
+  }  if (settings.launches) {
+    try {
+      wires.launches = await launches(fetch)
+    } catch (error) {
+      wires.notes.push(`Launches: could not reach Launch Library (${reason(error)})`)
+    }
   }
+  if (settings.health && settings.place) {
+    try {
+      wires.health = await health(fetch, settings.place, now)
+    } catch (error) {
+      wires.notes.push(`Health and safety: could not place ${settings.place} (${reason(error)})`)
+    }
+  }
+  if (settings.recipe) {
+    try {
+      wires.recipes = await recipeAlternates(fetch, now)
+    } catch (error) {
+      wires.notes.push(`Recipe alternates: could not reach TheMealDB (${reason(error)})`)
+    }
+  }
+
   if (settings.tabloid) {
     const geo = settings.country || (wires.weather && wires.weather.country) || 'US'
     const tabloid = { searching: null, saying: null }

@@ -183,7 +183,7 @@ test('readPaper takes the reader\'s place, teams and feeds, and nothing it shoul
     teams: ['FC Barcelona', 'Arsenal', 'a', 'b', 'c'],
     feeds: [{ url: 'https://feeds.bbci.co.uk/news/world/rss.xml', section: 'Wider World' }],
     almanac: true,
-    cartoon: false, puzzle: false, recipe: false, serial: null, picture: false, markets: false, world: false, sky: false, culture: false, tabloid: false, five: false, country: null,
+    cartoon: false, puzzle: false, recipe: false, serial: null, picture: false, markets: false, world: false, sky: false, culture: false, tabloid: false, five: false, health: false, launches: false, country: null,
   }, 'markup refused, at most five teams, https feeds only; the back page and readings off unless asked for')
 
   writeFileSync(file, JSON.stringify({ name: 'Plain' }))
@@ -279,10 +279,10 @@ test('readPaper takes the back page and the readings as switches, and the serial
   const { join } = await import('node:path')
   const { tmpdir } = await import('node:os')
   const file = join(mkdtempSync(join(tmpdir(), 'observer-')), 'observer.config.json')
-  writeFileSync(file, JSON.stringify({ place: 'Chicago', cartoon: true, puzzle: true, recipe: true, serial: 1342, picture: true, markets: true, world: true, sky: true, country: 'US', tabloid: true, five: true }))
+  writeFileSync(file, JSON.stringify({ place: 'Chicago', cartoon: true, puzzle: true, recipe: true, serial: 1342, picture: true, markets: true, world: true, sky: true, country: 'US', tabloid: true, five: true, health: true, launches: true }))
   const w = readPaper(file).wires
-  assert.deepEqual({ cartoon: w.cartoon, puzzle: w.puzzle, recipe: w.recipe, serial: w.serial, picture: w.picture, markets: w.markets, world: w.world, sky: w.sky, country: w.country, tabloid: w.tabloid, five: w.five },
-    { cartoon: true, puzzle: true, recipe: true, serial: 1342, picture: true, markets: true, world: true, sky: true, country: 'US', tabloid: true, five: true })
+  assert.deepEqual({ cartoon: w.cartoon, puzzle: w.puzzle, recipe: w.recipe, serial: w.serial, picture: w.picture, markets: w.markets, world: w.world, sky: w.sky, country: w.country, tabloid: w.tabloid, five: w.five, health: w.health, launches: w.launches },
+    { cartoon: true, puzzle: true, recipe: true, serial: 1342, picture: true, markets: true, world: true, sky: true, country: 'US', tabloid: true, five: true, health: true, launches: true })
   writeFileSync(file, JSON.stringify({ place: 'Chicago', serial: 'https://evil.example/book.txt', country: 'united states' }))
   const bad = readPaper(file).wires
   assert.equal(bad.serial, null, 'a serial is a Gutenberg number, never an address')
@@ -427,4 +427,41 @@ test('a paper can carry its publisher\'s imprint: a name, an https address and a
   assert.deepEqual(readPaper(file).imprint, { name: 'Megistus', url: 'https://www.megistus.xyz', logo: 'megistus' })
   writeFileSync(file, JSON.stringify({ name: 'N', imprint: { name: 'X', url: 'javascript:alert(1)', logo: '../x' } }))
   assert.equal(readPaper(file).imprint, null, 'an https address and a logo name, or no imprint at all')
+})
+
+test('the digest hands the writer a health box and the launches, in the reader\'s clock, credited; none fetched, none printed', async () => {
+  const { digest } = await import('../scripts/corpus.mjs')
+  const base = { code: 'ABC123', since: 1790222949, until: 1790309349, desks: { notes: [] }, control: [], profiles: {}, art: [] }
+  const chicago = { place: 'Chicago', unit: '°F', timezone: 'America/Chicago', source: 'x', now: { temp: 1, words: 'x' }, today: { date: '2026-09-25', high: 1, low: 1, rain: 0, words: 'x', sunrise: '07:21', sunset: '19:23' }, ahead: [] }
+  const health = {
+    place: 'Chicago',
+    uv: { max: 9, level: 'very high', from: '11:00', to: '16:00' },
+    alerts: [{ event: 'Heat Advisory', headline: 'Heat Advisory issued September 25 at 3:12AM CDT until September 25 at 8:00PM CDT by NWS Chicago IL' }],
+    foodRecalls: [{ product: 'Frozen spinach, 12 oz bags', firm: 'Green Acre Foods', date: '2026-09-23', reason: 'Listeria monocytogenes' }],
+    productRecalls: [{ title: 'Acme Space Heaters Recalled Due to Fire Hazard', date: '2026-09-24' }],
+    source: 'Open-Meteo · National Weather Service · openFDA · CPSC',
+  }
+  const launches = { source: 'The Space Devs, Launch Library 2', next: [{ rocket: 'Falcon 9 Block 5', mission: 'Starlink Group 10-12', provider: 'SpaceX', place: 'Cape Canaveral, FL, USA', at: 1790383140, status: 'Go' }] }
+  const wires = { asOf: 1790342880, weather: chicago, sports: null, almanac: null, headlines: [], notes: [], health, launches }
+
+  const out = digest({ ...base, wires })
+  assert.match(out, /^### Health & Safety — Chicago$/m)
+  assert.match(out, /^Credit: Open-Meteo · National Weather Service · openFDA · CPSC$/m)
+  assert.match(out, /^UV index: 9, very high; highest from 11 a\.m\. to 4 p\.m\.$/m, 'hours in the reader\'s 12-hour clock')
+  assert.match(out, /^Weather alert: Heat Advisory — Heat Advisory issued September 25/m)
+  assert.match(out, /^Food recall \(FDA Class I, 2026-09-23\): Frozen spinach, 12 oz bags — Green Acre Foods\. Listeria monocytogenes\.$/m)
+  assert.match(out, /^Product recall \(CPSC, 2026-09-24\): Acme Space Heaters Recalled Due to Fire Hazard\.$/m)
+  assert.match(out, /^### Launches$/m)
+  assert.match(out, /^- Falcon 9 Block 5, Starlink Group 10-12 \(SpaceX\), from Cape Canaveral, FL, USA: 2026-09-25 7:39 p\.m\. CDT, Go\.$/m)
+
+  const quiet = digest({ ...base, wires: { ...wires, health: { ...health, uv: { max: 1, level: 'low', from: null, to: null }, alerts: [], foodRecalls: [], productRecalls: [] } } })
+  assert.match(quiet, /^UV index: 1, low\.$/m)
+  assert.match(quiet, /^No weather alerts in force\.$/m, 'said outright, so a quiet day is not read as missing data')
+
+  const gb = digest({ ...base, wires: { ...wires, weather: { ...chicago, unit: '°C', timezone: 'Europe/London' }, health: { ...health, source: 'Open-Meteo', alerts: [], foodRecalls: [], productRecalls: [] } } })
+  assert.match(gb, /^UV index: 9, very high; highest from 11:00 to 16:00$/m, '24-hour clock outside the US')
+  assert.doesNotMatch(gb, /weather alerts/, 'no US alert service, nothing said about alerts')
+
+  const none = digest({ ...base, wires: { ...wires, health: null, launches: null } })
+  assert.doesNotMatch(none, /Health & Safety|### Launches/)
 })

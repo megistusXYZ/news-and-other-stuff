@@ -1668,6 +1668,84 @@ function cartoonTabs () {
   })
 }
 
+// The recipe, in tabs: Today (the dish the writer set), then a vegetarian
+// dish and something sweet, swapped into the same box as text only. The box
+// keeps at least Today's height, so the page below does not jump.
+function recipeTabs () {
+  const box = document.querySelector('.band.back .recipe')
+  const list = data.recipes
+  if (!box || !list || !list.length) return
+  const head = box.querySelector('.back-head')
+  const img = box.querySelector('.recipe-head img')
+  const name = box.querySelector('.recipe-head h3')
+  const note = box.querySelector('.recipe-head .note')
+  const items = box.querySelector('.recipe-head ul')
+  const method = box.querySelector('.recipe-method')
+  if (!head || !name || !items || !method) return
+  const today = {
+    src: img && img.getAttribute('src'), alt: img ? img.getAttribute('alt') || '' : '',
+    name: name.cloneNode(true), note: note && note.cloneNode(true), items: items.cloneNode(true), method: method.cloneNode(true),
+  }
+  const hold = () => { if (!box.style.minHeight) box.style.minHeight = `${Math.round(box.getBoundingClientRect().height)}px` }
+
+  const bar = el('span', 'lv-tabs')
+  bar.setAttribute('role', 'tablist')
+  bar.setAttribute('aria-label', 'Recipes')
+  const tabs = ['Today', ...list.map((r) => r.tab)].map((label, i) => {
+    const b = el('button', 'lv-tab', label)
+    b.type = 'button'
+    b.setAttribute('role', 'tab')
+    b.setAttribute('aria-selected', i === 0 ? 'true' : 'false')
+    b.tabIndex = i === 0 ? 0 : -1
+    b.addEventListener('click', () => show(i))
+    bar.append(b)
+    return b
+  })
+  head.classList.add('lv-with-tabs')
+  head.append(bar)
+
+  const swap = (selector, next) => { const now = box.querySelector(selector); if (now) now.replaceWith(next) }
+  function show (i) {
+    hold()
+    tabs.forEach((b, j) => { b.setAttribute('aria-selected', String(i === j)); b.tabIndex = i === j ? 0 : -1 })
+    if (i === 0) {
+      if (img) { img.src = today.src; img.alt = today.alt; img.hidden = false }
+      swap('.recipe-head h3', today.name.cloneNode(true))
+      if (today.note) swap('.recipe-head .note', today.note.cloneNode(true))
+      swap('.recipe-head ul', today.items.cloneNode(true))
+      swap('.recipe-method', today.method.cloneNode(true))
+      return
+    }
+    const r = list[i - 1]
+    if (img) {
+      img.hidden = !r.image
+      if (r.image) { img.src = r.image; img.alt = `The picture TheMealDB keeps for ${r.name}` }
+    }
+    swap('.recipe-head h3', el('h3', 'small-head', r.name))
+    const credit = el('p', 'note', r.kind ? `${r.kind} · ` : '')
+    if (r.link) {
+      const a = el('a', '', 'TheMealDB ↗')
+      a.href = r.link; a.target = '_blank'; a.rel = 'noopener noreferrer'
+      credit.append(a)
+    } else credit.append('TheMealDB')
+    if (box.querySelector('.recipe-head .note')) swap('.recipe-head .note', credit)
+    const ul = el('ul')
+    for (const line of r.ingredients) ul.append(el('li', '', line))
+    swap('.recipe-head ul', ul)
+    const steps = el('div', 'recipe-method')
+    for (const line of r.method) steps.append(el('p', '', line))
+    swap('.recipe-method', steps)
+  }
+  bar.addEventListener('keydown', (e) => {
+    const at = tabs.findIndex((b) => b.getAttribute('aria-selected') === 'true')
+    const to = e.key === 'ArrowRight' ? (at + 1) % tabs.length : e.key === 'ArrowLeft' ? (at - 1 + tabs.length) % tabs.length : -1
+    if (to < 0) return
+    e.preventDefault()
+    show(to)
+    tabs[to].focus()
+  })
+}
+
 // --- light and dark editions ------------------------------------------------------
 
 // The paper follows the reader's device until they choose; the ostrich is the
@@ -1787,6 +1865,7 @@ if (data) {
   guard(puzzle)
   guard(five)
   guard(cartoonTabs)
+  guard(recipeTabs)
   guard(cards)
   guard(wireRows)
   guard(reader)

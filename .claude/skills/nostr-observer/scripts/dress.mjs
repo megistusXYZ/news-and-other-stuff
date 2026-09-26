@@ -435,6 +435,25 @@ export function dress (html, corpus, assets) {
       link: tagsOf(e, 'r').find(https) || null,
     }
   }
+  // The recipe, in tabs: the page shows the dish of the day the writer set;
+  // beside it, a vegetarian dish and something sweet, as plain text for
+  // living.js to swap into the same box. Only beside a recipe of the day.
+  const recipes = (() => {
+    const wires = corpus.wires || {}
+    if (!wires.recipe || !Array.isArray(wires.recipes) || !wires.recipes.length) return null
+    const text = (v, n) => String(v || '').replace(/\s+/g, ' ').trim().slice(0, n)
+    const out = wires.recipes.map((r) => ({
+      tab: text(r.tab, 40),
+      name: text(r.name, 120),
+      kind: text(r.kind, 80) || null,
+      image: https(r.image),
+      ingredients: (r.ingredients || []).map((i) => text([i.measure, i.item].filter(Boolean).join(' '), 100)).filter(Boolean).slice(0, 20),
+      method: String(r.method || '').split(/\n+/).map((line) => text(line, 600)).filter((line) => line && !/^step\s*\d+[.:]?$/i.test(line)).slice(0, 30),
+      link: https(r.link),
+    })).filter((r) => r.tab && r.name)
+    return out.length ? out : null
+  })()
+
   // The cartoon, in tabs: today's xkcd (the one the writer set), a
   // public-domain cartoon from the archive, then comics people in the
   // reader's network posted — tagged comic or meme, with an https picture.
@@ -537,6 +556,7 @@ export function dress (html, corpus, assets) {
     relays: COUNT_RELAYS,
     sequence,
     cartoons,
+    recipes,
     // The reader's clock, for the page's own times ("since 11:09 p.m. CDT"):
     // their place's zone from the weather, 12 hours for a US paper.
     clock: corpus.wires && corpus.wires.weather && /^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)*$/.test(String(corpus.wires.weather.timezone || ''))

@@ -583,3 +583,40 @@ test('a branded paper sets the B before the issue number\'s digits, the text unt
   assert.doesNotMatch(plain, /lv-issue-mark/, 'no brand, no B')
   assert.ok(html.replace('<span class="lv-issue-mark" aria-hidden="true"></span>', '').includes('<span>No. 13C931</span>'))
 })
+
+// --- recipe tabs, 2026-09-25 ---------------------------------------------------------
+
+test('the living copy carries the recipe\'s other tabs: each dish as plain text, its steps one by one, and only an https picture', () => {
+  const dish = (tab, over = {}) => ({
+    tab,
+    name: 'Spicy Arrabiata Penne',
+    kind: 'Italian · Vegetarian',
+    image: 'https://www.themealdb.com/images/media/meals/ustsqw1468250014.jpg',
+    ingredients: [{ item: 'penne rigate', measure: '1 pound' }, { item: 'olive oil', measure: '' }],
+    method: 'STEP 1\nBring a large pot of water to a boil.\n\nSTEP 2\nAdd the penne.\n',
+    link: 'https://www.themealdb.com/meal/52771',
+    ...over,
+  })
+  const withRecipe = {
+    ...corpus,
+    wires: {
+      recipe: { name: 'Dominica mastiff bread', kind: 'Side', ingredients: [], method: 'Mix.', art: null, source: 'TheMealDB' },
+      recipes: [dish('Vegetarian'), dish('Something sweet', { name: 'Apple Frangipan Tart', image: 'http://www.themealdb.com/x.jpg', link: 'javascript:alert(1)' })],
+    },
+  }
+  const tabs = islandOf(dress(page, withRecipe, assets).html).recipes
+  assert.deepEqual(tabs[0], {
+    tab: 'Vegetarian',
+    name: 'Spicy Arrabiata Penne',
+    kind: 'Italian · Vegetarian',
+    image: 'https://www.themealdb.com/images/media/meals/ustsqw1468250014.jpg',
+    ingredients: ['1 pound penne rigate', 'olive oil'],
+    method: ['Bring a large pot of water to a boil.', 'Add the penne.'],
+    link: 'https://www.themealdb.com/meal/52771',
+  })
+  assert.equal(tabs[1].image, null, 'never an insecure picture')
+  assert.equal(tabs[1].link, null, 'a link is https or nothing')
+  assert.equal(islandOf(dress(page, { ...corpus, wires: { recipes: [dish('Vegetarian')] } }, assets).html).recipes, null,
+    'no recipe of the day on the page, nothing to tab beside')
+  assert.equal(islandOf(dress(page, corpus, assets).html).recipes, null)
+})

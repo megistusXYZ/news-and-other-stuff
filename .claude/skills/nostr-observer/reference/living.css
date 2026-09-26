@@ -247,6 +247,23 @@ a.lv-cartoon-title:hover { color: var(--accent); }
 .box.weather th, .box.weather td { font-size: .76rem; padding: 4px 8px 4px 0; }
 .box.weather .note { font-size: .7rem; }
 
+/* Health & Safety sits under the weather, in the same small type: the UV
+ * first, then the recalls, one line each under a small-caps label. */
+.box.health { gap: 6px; }
+.box.health .health-uv { font-size: .84rem; line-height: 1.4; color: var(--ink-2); }
+.box.health .health-uv strong { color: var(--ink); }
+.box.health .health-head { margin-top: 4px; font-family: var(--mono); font-size: .58rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.box.health ul { margin: 0; padding: 0; list-style: none; }
+.box.health li { font-size: .78rem; line-height: 1.4; color: var(--ink-2); padding: 4px 0; border-bottom: 1px dotted var(--rule); }
+.box.health li:last-child { border-bottom: 0; }
+.box.health li strong { color: var(--ink); font-weight: 600; }
+.box.health .note { font-size: .7rem; }
+.box.weather + .box.health { margin-top: 14px; }
+.story + .box.health { margin-top: 18px; }
+/* At the foot of the wide lead column, the two recall lists sit side by side. */
+.col.span-6 .box.health .health-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; }
+@media (max-width: 700px) { .col.span-6 .box.health .health-lists { grid-template-columns: 1fr; } }
+
 @media (max-width: 1000px) {
   .agate { grid-template-columns: repeat(3, 1fr); row-gap: 14px; }
   .spread > figure, .spread > figure:first-child { grid-column: span 6; grid-row: auto; }

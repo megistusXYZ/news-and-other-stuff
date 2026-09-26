@@ -363,6 +363,35 @@ function printWires (p, wires) {
     if (wires.world.holiday) p(`Next public holiday (${wires.world.holiday.country}): ${wires.world.holiday.name}, ${wires.world.holiday.date}.`)
     p('')
   }
+  if (wires.health) {
+    const h = wires.health
+    const us = !!(wires.weather && wires.weather.unit === '°F')
+    // UV hours come as the place's own "HH:MM"; a US paper reads them in 12 hours.
+    const hour = (hhmm) => {
+      if (!us) return hhmm
+      const [hh, mm] = hhmm.split(':').map(Number)
+      return `${hh % 12 || 12}${mm ? `:${String(mm).padStart(2, '0')}` : ''} ${hh < 12 ? 'a.m.' : 'p.m.'}`
+    }
+    p(`### Health & Safety — ${h.place}`)
+    p(`Credit: ${h.source}`)
+    if (h.uv) p(`UV index: ${h.uv.max}, ${h.uv.level}${h.uv.from ? `; highest from ${hour(h.uv.from)} to ${hour(h.uv.to)}` : '.'}`)
+    // Said outright when the alert service was asked, so a quiet day is not
+    // read as missing data.
+    if (/National Weather Service/.test(h.source) && !h.alerts.length) p('No weather alerts in force.')
+    for (const a of h.alerts) p(`Weather alert: ${a.event} — ${a.headline}`)
+    for (const r of h.foodRecalls) p(`Food recall (FDA Class I, ${r.date}): ${r.product} — ${r.firm}. ${r.reason.replace(/\.$/, '')}.`)
+    for (const r of h.productRecalls) p(`Product recall (CPSC, ${r.date}): ${r.title.replace(/\.$/, '')}.`)
+    p('')
+  }
+  if (wires.launches) {
+    const clock = clockOf(wires.weather)
+    p('### Launches')
+    p(`Credit: ${wires.launches.source}`)
+    for (const l of wires.launches.next) {
+      p(`- ${l.rocket}${l.mission ? `, ${l.mission}` : ''}${l.provider ? ` (${l.provider})` : ''}${l.place ? `, from ${l.place}` : ''}: ${clock(l.at)}${l.status ? `, ${l.status}` : ''}.`)
+    }
+    p('')
+  }
   if (wires.picture) {
     const pic = wires.picture
     p('### Picture of the day')
@@ -630,9 +659,11 @@ export function readPaper (path = 'observer.config.json') {
     culture: raw.culture === true,
     tabloid: raw.tabloid === true,
     five: raw.five === true,
+    health: raw.health === true,
+    launches: raw.launches === true,
     country: typeof raw.country === 'string' && /^[A-Z]{2}$/.test(raw.country) ? raw.country : null,
   }
-  const asked = ['place', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'sky', 'culture', 'tabloid', 'five']
+  const asked = ['place', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'sky', 'culture', 'tabloid', 'five', 'health', 'launches']
   paper.wires = wires.teams.length || wires.feeds.length || asked.some((k) => wires[k]) ? wires : null
   return paper.name || paper.brand || paper.wires ? paper : null
 }
@@ -733,7 +764,7 @@ async function main () {
       wires.five = { name: 'Five', day: dayNumber(until), answer: dailyWord(until, answers) }
     }
     art.push(...wires.art)
-    const got = ['weather', 'sports', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'tabloid', 'five'].filter((k) => wires[k]).concat(wires.headlines.length ? ['headlines'] : [])
+    const got = ['weather', 'sports', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'tabloid', 'five', 'health', 'launches'].filter((k) => wires[k]).concat(wires.headlines.length ? ['headlines'] : [])
     process.stderr.write(`  Wires: ${got.join(', ') || 'nothing'}${wires.notes.length ? ` (${wires.notes.length} note(s))` : ''}.\n`)
   }
 

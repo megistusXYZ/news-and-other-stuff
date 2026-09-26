@@ -676,11 +676,18 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   button (role, tab stop, "Switch to the dark/light edition", Enter/Space),
   lifting 2px on hover. Light prints `ostrich-portrait` in faded ink; dark
   prints `ostrich-profile` in chalk (#D8CFC0), each at its own shape. The
-  Brainstorm brand gets its own night palette — Ink ground, a lifted Ink
-  for cards, Balanced White type, purple raised to #A58BFF and teal to
-  #4FD6E4 so they read on it, `color-scheme: dark` — and its three fixed
+  Brainstorm brand gets its night palette FROM BRAINSTORM-UI'S OWN `.dark`
+  TOKENS (client/src/index.css and docs/design-system.md, staging,
+  2026-09-25; HSL converted): Ink #0A0E18 ground, card #151C29, border
+  #2A3441, foreground #F3F3F1, muted #A1A1AA, links #A78BFA, Aurora Cyan
+  #13D2E5 unchanged for kickers ("the bright brand fills already pop on
+  dark"), deeper shadows, `color-scheme: dark`. Their rule "on dark grounds
+  don't use bg-brand-deep; use primary/15 + accent/25 border" sets the
+  Tabloid bar; Five's near tile is the sanctioned cyan hover #287E89 and
+  its miss tile the border colour, not off-palette hues. The warm chalk of
+  the ostrich (#D8CFC0) is the paper's own, like its serifs. Its three fixed
   whites (boxes, cards, the tinted wire band) follow `--paper-2`. In dark:
-  the Tabloid bar is the brand's deep purple, not a white slab; the xkcd
+  the Tabloid bar is not a white slab; the xkcd
   line art is inverted to chalk; Five's near/miss tiles use colours that
   hold white letters. BRAINSTORM ITSELF: its theme lives in its own
   `localStorage['brainstorm_theme']`, which the paper cannot set and which

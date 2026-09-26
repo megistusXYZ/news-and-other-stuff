@@ -37,25 +37,26 @@
   --accent-soft: rgba(114, 55, 255, .09);
 }
 
-/* The dark edition: Brainstorm's own night — Ink for the ground, a lifted
- * Ink for cards, Balanced White for type — with the purple and cyan raised
- * until they read on it. Two blocks, as house.css does: the reader's device
+/* The dark edition, to Brainstorm-UI's own `.dark` tokens (client/src/
+ * index.css, read 2026-09-25): Ink #0A0E18 ground, card #151C29, border
+ * #2A3441, foreground #F3F3F1, muted #A1A1AA, links #A78BFA; Aurora Cyan
+ * #13D2E5 unchanged ("the bright brand fills already pop on dark"). Two blocks, as house.css does: the reader's device
  * when they have not chosen, their choice when they have. */
 @media (prefers-color-scheme: dark) {
   :root[data-brand="brainstorm"]:not([data-theme="light"]) {
     color-scheme: dark;
-    --paper: #0A0E18; --paper-2: #141A26; --ink: #F2F3F0; --ink-2: #C3C8D0; --ink-3: #8C95A3;
-    --rule: #2A3242; --rule-soft: #1C2330; --accent: #A58BFF; --spot: #A58BFF; --bs-teal: #4FD6E4;
-    --reverse-bg: #1C2330; --reverse-ink: #F2F3F0; --reverse-ink-2: #9AA1AC; --reverse-spot: #13D2E5;
-    --accent-soft: rgba(165, 139, 255, .14);
+    --paper: #0A0E18; --paper-2: #151C29; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA;
+    --rule: #2A3441; --rule-soft: #1D2533; --accent: #A78BFA; --spot: #A78BFA; --bs-teal: #13D2E5;
+    --reverse-bg: #151C29; --reverse-ink: #F3F3F1; --reverse-ink-2: #A1A1AA; --reverse-spot: #13D2E5;
+    --accent-soft: rgba(114, 55, 255, .15);
   }
 }
 :root[data-brand="brainstorm"][data-theme="dark"] {
   color-scheme: dark;
-  --paper: #0A0E18; --paper-2: #141A26; --ink: #F2F3F0; --ink-2: #C3C8D0; --ink-3: #8C95A3;
-  --rule: #2A3242; --rule-soft: #1C2330; --accent: #A58BFF; --spot: #A58BFF; --bs-teal: #4FD6E4;
-  --reverse-bg: #1C2330; --reverse-ink: #F2F3F0; --reverse-ink-2: #9AA1AC; --reverse-spot: #13D2E5;
-  --accent-soft: rgba(165, 139, 255, .14);
+  --paper: #0A0E18; --paper-2: #151C29; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA;
+  --rule: #2A3441; --rule-soft: #1D2533; --accent: #A78BFA; --spot: #A78BFA; --bs-teal: #13D2E5;
+  --reverse-bg: #151C29; --reverse-ink: #F3F3F1; --reverse-ink-2: #A1A1AA; --reverse-spot: #13D2E5;
+  --accent-soft: rgba(114, 55, 255, .15);
 }
 
 /* --- nameplate: a newspaper's, with the brand in the ear ---------------- */
@@ -162,20 +163,24 @@
 [data-brand="brainstorm"] .sheet > .folio::before { content: none; }
 
 /* --- the dark edition's particulars --------------------------------------- */
-/* The Tabloid keeps a loud bar, in the brand's deep purple rather than a
- * white slab; the cartoon's black line art turns to chalk on the night
+/* The Tabloid keeps a loud bar — Aurora Purple at 15% with a 25% cyan edge,
+ * as Brainstorm's design system says to do on dark instead of brand-deep; the cartoon's black line art turns to chalk on the night
  * paper; Five's tiles keep white letters on colours dark enough to hold them. */
-:root[data-brand="brainstorm"][data-theme="dark"] .tabloid-bar { background: var(--bs-deep); color: #F2F3F0; }
+:root[data-brand="brainstorm"][data-theme="dark"] .tabloid-bar { background: rgba(114, 55, 255, .15); box-shadow: inset 0 0 0 1px rgba(19, 210, 229, .25); color: #F3F3F1; }
 :root[data-brand="brainstorm"][data-theme="dark"] .band.back .cartoon.lv-line-art img { filter: invert(.9) hue-rotate(180deg); background: #fff; border-color: var(--rule); }
 :root[data-brand="brainstorm"][data-theme="dark"] .lv-tile.lv-near,
-:root[data-brand="brainstorm"][data-theme="dark"] .lv-keyboard .lv-key.lv-near { background: #1F7F8A; border-color: #1F7F8A; color: #fff; }
+:root[data-brand="brainstorm"][data-theme="dark"] .lv-keyboard .lv-key.lv-near { background: #287E89; border-color: #287E89; color: #fff; }
 :root[data-brand="brainstorm"][data-theme="dark"] .lv-tile.lv-miss,
-:root[data-brand="brainstorm"][data-theme="dark"] .lv-keyboard .lv-key.lv-miss { background: #3A4354; border-color: #3A4354; color: #E3E6EA; }
+:root[data-brand="brainstorm"][data-theme="dark"] .lv-keyboard .lv-key.lv-miss { background: #2A3441; border-color: #2A3441; color: #F3F3F1; }
 @media (prefers-color-scheme: dark) {
-  :root[data-brand="brainstorm"]:not([data-theme="light"]) .tabloid-bar { background: var(--bs-deep); color: #F2F3F0; }
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .tabloid-bar { background: rgba(114, 55, 255, .15); box-shadow: inset 0 0 0 1px rgba(19, 210, 229, .25); color: #F3F3F1; }
   :root[data-brand="brainstorm"]:not([data-theme="light"]) .band.back .cartoon.lv-line-art img { filter: invert(.9) hue-rotate(180deg); background: #fff; border-color: var(--rule); }
   :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-tile.lv-near,
-  :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-keyboard .lv-key.lv-near { background: #1F7F8A; border-color: #1F7F8A; color: #fff; }
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-keyboard .lv-key.lv-near { background: #287E89; border-color: #287E89; color: #fff; }
   :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-tile.lv-miss,
-  :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-keyboard .lv-key.lv-miss { background: #3A4354; border-color: #3A4354; color: #E3E6EA; }
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-keyboard .lv-key.lv-miss { background: #2A3441; border-color: #2A3441; color: #F3F3F1; }
 }
+
+/* Shadows deepen on the night ground, as Brainstorm's do. */
+:root[data-brand="brainstorm"][data-theme="dark"] .box { box-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
+:root[data-brand="brainstorm"][data-theme="dark"] .lv-card { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, .4), 0 0 15px rgba(19, 210, 229, .10); }

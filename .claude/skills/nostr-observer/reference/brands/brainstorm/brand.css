@@ -118,33 +118,44 @@
 [data-brand="brainstorm"] .lv-drawer-name { font-family: var(--brand); font-weight: 800; letter-spacing: -0.01em; }
 
 /* --- the printer's colophon ---------------------------------------------- */
-/* Set like the paper's own small print: centred, in the body type, between
- * hairlines. The brand appears once, as a small mark; the invitation is one
- * sentence and an underlined address, not a button. */
+/* Brainstorm leads: its handwritten gradient wordmark — Brainstorm-UI's
+ * "default brand signature", which reads on light and dark alike — stands as
+ * the subject of the sentence that says who printed the paper and how. Beside
+ * it, the invitation, with one button in Brainstorm's own style: Aurora Purple,
+ * white Figtree, the design system's 0.75rem radius. Small print beneath. */
 
 .lv-colophon {
-  margin-top: 36px; padding: 16px 0 6px; border-top: 3px double var(--ink);
-  display: grid; grid-template-columns: 1fr 1fr; column-gap: 0;
+  margin-top: 40px; padding: 26px 0 8px; border-top: 3px double var(--ink);
+  display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); column-gap: 40px; row-gap: 18px; align-items: center;
   text-align: left; font-family: var(--body); color: var(--ink-2);
 }
-.lv-colophon p { margin: 0; font-size: .84rem; line-height: 1.55; max-width: 60ch; }
-.lv-colophon > p:first-child { padding-right: 22px; }
-.lv-colophon > p:nth-child(2) { padding-left: 22px; border-left: 1px solid var(--rule); }
-.lv-colophon-mark { display: inline-block; width: 12px; line-height: 0; vertical-align: -1px; margin-right: 4px; }
-.lv-colophon-mark svg { width: 100%; height: auto; display: block; }
+.lv-colophon p { margin: 0; }
+.lv-colophon-wordmark { display: inline-block; border: 0; line-height: 0; margin-bottom: 10px; }
+.lv-colophon-wordmark svg { height: 34px; width: auto; display: block; }
+.lv-colophon-lead p { font-size: .95rem; line-height: 1.55; max-width: 58ch; }
 .lv-colophon b { color: var(--ink); font-weight: 600; }
-.lv-colophon-caps { font-variant: small-caps; letter-spacing: .06em; color: var(--ink); }
-.lv-colophon a { border-bottom: 1px solid var(--rule); color: var(--ink); }
-.lv-colophon a:hover { color: var(--bs-purple); border-bottom-color: var(--bs-purple); }
+.lv-colophon-cta { padding-left: 32px; border-left: 1px solid var(--rule); }
+.lv-colophon-kicker { font-family: var(--mono); font-weight: 600; font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--bs-teal); margin-bottom: 6px !important; }
+.lv-colophon-cta > p:not(.lv-colophon-kicker) { font-size: .95rem; line-height: 1.45; color: var(--ink); margin-bottom: 14px !important; }
+a.lv-colophon-button {
+  display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: .75rem;
+  background: var(--bs-purple); color: #fff; padding: 10px 18px;
+  font-family: var(--brand); font-weight: 700; font-size: .88rem; letter-spacing: 0;
+  transition: background-color .2s ease, transform .2s ease;
+}
+a.lv-colophon-button:hover { background: var(--bs-purple-hover); color: #fff; transform: translateY(-1px); }
+a.lv-colophon-button:focus-visible { outline: 2px solid var(--bs-cyan); outline-offset: 3px; }
 .lv-colophon-small {
-  grid-column: 1 / -1; margin-top: 14px !important; padding-top: 8px; border-top: 1px solid var(--rule); max-width: none !important;
-  font-family: var(--mono) !important; font-size: .6rem !important; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+  grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--rule);
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
 }
 @media (max-width: 720px) {
-  .lv-colophon { grid-template-columns: 1fr; row-gap: 10px; }
-  .lv-colophon > p:first-child { padding-right: 0; }
-  .lv-colophon > p:nth-child(2) { padding-left: 0; border-left: 0; }
+  .lv-colophon { grid-template-columns: 1fr; row-gap: 20px; padding-top: 22px; }
+  .lv-colophon-wordmark svg { height: 30px; }
+  .lv-colophon-cta { padding: 18px 0 0; border-left: 0; border-top: 1px solid var(--rule); }
+  a.lv-colophon-button { width: 100%; justify-content: center; padding: 12px 18px; }
 }
+@media (prefers-reduced-motion: reduce) { a.lv-colophon-button { transition: none; } a.lv-colophon-button:hover { transform: none; } }
 
 [data-brand="brainstorm"] .lv-onair-live { color: var(--bs-teal); }
 [data-brand="brainstorm"] .band.tinted { background: var(--paper-2); }

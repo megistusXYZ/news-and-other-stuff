@@ -721,6 +721,19 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   line on a desk and stacks them on a phone. Dark keeps the brand's deep
   purple.
 
+- **The colophon leads with Brainstorm's wordmark (2026-09-25).** The
+  reader asked for Brainstorm to lead the footer, in its own lettering.
+  Brainstorm-UI's handwritten gradient wordmark (client/public/brand/
+  wordmark.svg, 328×73; its design system calls it "the default brand
+  signature" and it reads on light and dark) is bundled as
+  `brands/brainstorm/wordmark.svg`, its gradient id namespaced; dress
+  fills `{{wordmark}}` and refuses one with script (tested). The footer:
+  the wordmark as the subject — "[Brainstorm] prints News and Other Stuff
+  each morning…" — beside "Your network has news too" and one button in
+  Brainstorm's style (Aurora Purple, white Figtree, 0.75rem radius) to
+  brainstorm.world/login; small print beneath. On a phone it stacks and
+  the button runs the width.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

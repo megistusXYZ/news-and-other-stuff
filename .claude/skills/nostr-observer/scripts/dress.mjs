@@ -69,6 +69,9 @@ function loadBrands (dir = join(REFERENCE, 'brands')) {
     brands[name] = {
       css: readFileSync(join(dir, name, 'brand.css'), 'utf8'),
       mark: readFileSync(join(dir, name, 'mark.svg'), 'utf8').trim(),
+      // The brand's own signature, when it has one (Brainstorm-UI's
+      // handwritten gradient wordmark, client/public/brand/wordmark.svg).
+      wordmark: existsSync(join(dir, name, 'wordmark.svg')) ? readFileSync(join(dir, name, 'wordmark.svg'), 'utf8').trim() : '',
       footer: existsSync(footer) ? readFileSync(footer, 'utf8') : '',
     }
   }
@@ -312,6 +315,7 @@ export function dress (html, corpus, assets) {
     assertInlinable(`${brandName} mark`, brand.mark)
     if (/<script|\son[a-z]+\s*=/i.test(brand.mark)) throw new Error(`The ${brandName} mark must be a plain SVG.`)
     if (brand.footer && /<script|\son[a-z]+\s*=|javascript:/i.test(brand.footer)) throw new Error(`The ${brandName} footer must be plain markup.`)
+    if (brand.wordmark && /<script|\son[a-z]+\s*=|javascript:/i.test(brand.wordmark)) throw new Error(`The ${brandName} wordmark must be a plain SVG.`)
   }
 
   const events = Object.values(corpus.desks).flat()
@@ -534,7 +538,7 @@ export function dress (html, corpus, assets) {
   // get your own. The brand's own markup, with the reader's paper name in it.
   const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
   const colophon = brand && brand.footer
-    ? brand.footer.trim().replaceAll('{{name}}', escapeHtml(corpus.paper?.name || 'This paper')).replaceAll('{{mark}}', brand.mark) + '\n'
+    ? brand.footer.trim().replaceAll('{{name}}', escapeHtml(corpus.paper?.name || 'This paper')).replaceAll('{{mark}}', brand.mark).replaceAll('{{wordmark}}', brand.wordmark || '') + '\n'
     : ''
   const tail = `<script type="application/json" id="observer-data">${islandJson(island)}</script>\n`
     // The player library, inert text until a reader presses play — and only

@@ -520,3 +520,16 @@ test('the living copy carries the cartoon tabs: today\'s xkcd, the archive, then
   assert.ok(!tabs.some((t) => /^http:/.test(t.image)), 'never an insecure picture')
   assert.equal(islandOf(dress(page, corpus, assets).html).cartoons, null, 'no cartoon wire, no tabs')
 })
+
+// --- the colophon leads with Brainstorm's wordmark, 2026-09-25 --------------------------
+
+test('the colophon can sign with the brand\'s own wordmark, inlined as plain SVG', () => {
+  const real = loadAssets()
+  assert.match(real.brands.brainstorm.wordmark, /^<svg[^>]*viewBox="0 0 328 73"/, 'Brainstorm-UI\'s handwritten gradient wordmark, 328×73')
+  assert.doesNotMatch(real.brands.brainstorm.wordmark, /<script|\son[a-z]+\s*=/i)
+  const signed = { ...branded, brands: { brainstorm: { ...branded.brands.brainstorm, wordmark: '<svg viewBox="0 0 328 73"><path d="M0 0"/></svg>', footer: '<footer class="lv-colophon">{{wordmark}} prints {{name}}.</footer>' } } }
+  const { html } = dress(brandPage, brandCorpus, signed)
+  assert.ok(html.includes('<footer class="lv-colophon"><svg viewBox="0 0 328 73"><path d="M0 0"/></svg> prints The Daily Brainstorm.</footer>'))
+  const scripted = { ...signed, brands: { brainstorm: { ...signed.brands.brainstorm, wordmark: '<svg onload="x()"></svg>' } } }
+  assert.throws(() => dress(brandPage, brandCorpus, scripted), /wordmark must be a plain SVG/)
+})

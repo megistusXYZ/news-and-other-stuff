@@ -690,6 +690,30 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   at the end of the page. Checked every band on a desk and the header on a
   phone, both editions.
 
+- **The cartoon has tabs (2026-09-25).** Asked for "open-source cartoons,
+  current events or tech culture". Checked licences: xkcd CC BY-NC 2.5
+  (kept); Pepper&Carrot CC BY 4.0 (not topical, not taken up);
+  CommitStrip has no clear licence (left out); nothing current AND open
+  exists for editorial cartoons. So: today's xkcd (the writer's), FROM
+  THE ARCHIVE — `wires.archive`, one Puck lithograph a day from the
+  Library of Congress (`loc.gov/photos/?q=puck&dates=1877/1918`,
+  keyless; published before 1929, so public domain; the day picks the
+  page and item; later years and pictureless items skipped; tested) —
+  and FROM YOUR NETWORK, comic- or meme-tagged posts with an https
+  picture, credited to the poster and opening in the reader panel.
+  `dress.mjs` assembles `cartoons` in that order (tested); living.js puts
+  a quiet tab row on the Cartoon line (small caps, the showing one
+  underlined in the accent, arrow keys) and swaps the picture and caption
+  in a box held at the first cartoon's height, so nothing else moves. In
+  the dark edition only the xkcd line art is inverted (`.lv-line-art`);
+  the lithograph and network pictures keep their colours.
+
+- **The Tabloid in step with the other bands (2026-09-25).** It opened
+  with no space above its bar, butting the From the Wires band; it now
+  has every band's 22px, and its slab centres the name and strap on one
+  line on a desk and stacks them on a phone. Dark keeps the brand's deep
+  purple.
+
 ### The public shelf (`.claude/skills/observer-pages/`)
 
 A second skill, and a second folder, because printing and publishing are

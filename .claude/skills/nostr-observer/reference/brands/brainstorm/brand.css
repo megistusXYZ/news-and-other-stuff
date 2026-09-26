@@ -166,14 +166,14 @@
  * white slab; the cartoon's black line art turns to chalk on the night
  * paper; Five's tiles keep white letters on colours dark enough to hold them. */
 :root[data-brand="brainstorm"][data-theme="dark"] .tabloid-bar { background: var(--bs-deep); color: #F2F3F0; }
-:root[data-brand="brainstorm"][data-theme="dark"] .band.back .cartoon img { filter: invert(.9) hue-rotate(180deg); background: #fff; border-color: var(--rule); }
+:root[data-brand="brainstorm"][data-theme="dark"] .band.back .cartoon.lv-line-art img { filter: invert(.9) hue-rotate(180deg); background: #fff; border-color: var(--rule); }
 :root[data-brand="brainstorm"][data-theme="dark"] .lv-tile.lv-near,
 :root[data-brand="brainstorm"][data-theme="dark"] .lv-keyboard .lv-key.lv-near { background: #1F7F8A; border-color: #1F7F8A; color: #fff; }
 :root[data-brand="brainstorm"][data-theme="dark"] .lv-tile.lv-miss,
 :root[data-brand="brainstorm"][data-theme="dark"] .lv-keyboard .lv-key.lv-miss { background: #3A4354; border-color: #3A4354; color: #E3E6EA; }
 @media (prefers-color-scheme: dark) {
   :root[data-brand="brainstorm"]:not([data-theme="light"]) .tabloid-bar { background: var(--bs-deep); color: #F2F3F0; }
-  :root[data-brand="brainstorm"]:not([data-theme="light"]) .band.back .cartoon img { filter: invert(.9) hue-rotate(180deg); background: #fff; border-color: var(--rule); }
+  :root[data-brand="brainstorm"]:not([data-theme="light"]) .band.back .cartoon.lv-line-art img { filter: invert(.9) hue-rotate(180deg); background: #fff; border-color: var(--rule); }
   :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-tile.lv-near,
   :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-keyboard .lv-key.lv-near { background: #1F7F8A; border-color: #1F7F8A; color: #fff; }
   :root[data-brand="brainstorm"]:not([data-theme="light"]) .lv-tile.lv-miss,

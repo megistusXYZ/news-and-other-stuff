@@ -443,3 +443,26 @@ test('the tabloid follows the reader\'s country for its searches, and one source
   assert.deepEqual(wires.notes, ['Tabloid: could not reach Bluesky (HTTP 404)'])
   assert.ok(asked.some((u) => u.includes('geo=ES')))
 })
+
+// --- from the archive: a public-domain cartoon a day, 2026-09-25 -------------------
+
+test('from the archive: one published Puck cartoon a day from the Library of Congress, public domain only', async () => {
+  const loc = { results: [
+    { title: 'Bosses of the Senate / J. Keppler.', date: '1889-01-23', url: 'https://www.loc.gov/item/2011649406/',
+      image_url: ['https://tile.loc.gov/storage-services/service/pnp/ppmsca/27800/27898_150px.jpg#h=150&w=110', 'https://tile.loc.gov/storage-services/service/pnp/ppmsca/27800/27898v.jpg#h=1024&w=752'] },
+    { title: 'A later drawing', date: '1935-06-01', url: 'https://www.loc.gov/item/2/', image_url: ['https://tile.loc.gov/x.jpg'] },
+    { title: 'No picture', date: '1901-01-01', url: 'https://www.loc.gov/item/3/', image_url: [] },
+  ] }
+  const { fetch, asked } = network([[/^https:\/\/www\.loc\.gov\/photos\/\?/, loc]])
+  const wires = await gatherWires({ ...off, cartoon: true }, { fetch, now: NOW, nextArt: 41 })
+  assert.deepEqual(wires.archive, {
+    title: 'Bosses of the Senate',
+    year: 1889,
+    image: 'https://tile.loc.gov/storage-services/service/pnp/ppmsca/27800/27898v.jpg',
+    link: 'https://www.loc.gov/item/2011649406/',
+    source: 'Puck, via the Library of Congress · public domain',
+  }, 'the largest picture, the title without its signature, and nothing after 1928 or without a picture')
+  const query = asked.find((u) => u.startsWith('https://www.loc.gov/photos/?'))
+  assert.match(query, /dates=1877\/1918/, 'only the years Puck was published and the work is out of copyright')
+  assert.match(query, /[?&]sp=\d+/, 'a page chosen by the day, so the cartoon changes daily and holds all day')
+})

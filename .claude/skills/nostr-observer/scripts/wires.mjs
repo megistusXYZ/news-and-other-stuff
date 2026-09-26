@@ -238,6 +238,32 @@ async function cartoon (fetch, art) {
   return { title, caption, number: strip.num, art: id, source: 'xkcd.com, CC BY-NC 2.5' }
 }
 
+// From the archive: one cartoon a day from Puck, the satirical weekly of
+// 1877–1918, as published lithographs in the Library of Congress — public
+// domain (published before 1929), keyless, and in keeping with a paper that
+// looks back as well as forward. The day picks the page and the item, so it
+// holds all day and changes tomorrow. Anything later than 1928 or without a
+// picture is passed over.
+async function archive (fetch, now) {
+  const day = Math.floor(now / 86400)
+  const page = (day % 60) + 1
+  const found = await getJson(fetch, `https://www.loc.gov/photos/?q=puck&dates=1877/1918&fa=online-format:image&fo=json&c=25&sp=${page}`)
+  const usable = (found && found.results || []).filter((r) => {
+    const year = parseInt(String(r.date || ''), 10)
+    const pictures = Array.isArray(r.image_url) ? r.image_url : []
+    return year >= 1877 && year <= 1928 && pictures.length && /^https:\/\/tile\.loc\.gov\//.test(pictures[pictures.length - 1])
+  })
+  if (!usable.length) throw new Error('no cartoon on that page')
+  const item = usable[day % usable.length]
+  return {
+    title: String(item.title || 'A cartoon').split(' / ')[0].replace(/^\[|\]$/g, '').replace(/[.\s]+$/, '').slice(0, 140),
+    year: parseInt(item.date, 10),
+    image: item.image_url[item.image_url.length - 1].replace(/#.*$/, ''),
+    link: /^https:\/\/www\.loc\.gov\//.test(item.url || '') ? item.url : null,
+    source: 'Puck, via the Library of Congress · public domain',
+  }
+}
+
 // The serial: a public-domain novel from Project Gutenberg, one instalment a
 // day, in order. The book is cut at paragraph breaks into instalments of about
 // a column, and the day of the year picks which one — so no state is kept,
@@ -436,7 +462,7 @@ async function saying (fetch) {
  */
 export async function gatherWires (settings, { fetch = globalThis.fetch, now = Math.floor(Date.now() / 1000), nextArt = 1 } = {}) {
   if (!settings) return null
-  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, serial: null, markets: null, world: null, picture: null, recipe: null, lookedUp: null, tabloid: null, art: [], notes: [] }
+  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, markets: null, world: null, picture: null, recipe: null, lookedUp: null, tabloid: null, art: [], notes: [] }
   const reason = (error) => String(error && error.message ? error.message : error).slice(0, 120)
   // Pictures the wires bring, numbered after the corpus's own shortlist.
   let artN = nextArt
@@ -477,6 +503,13 @@ export async function gatherWires (settings, { fetch = globalThis.fetch, now = M
       wires.cartoon = await cartoon(fetch, art)
     } catch (error) {
       wires.notes.push(`Cartoon: could not reach xkcd (${reason(error)})`)
+    }
+  }
+  if (settings.cartoon) {
+    try {
+      wires.archive = await archive(fetch, now)
+    } catch (error) {
+      wires.notes.push(`Cartoon archive: could not reach the Library of Congress (${reason(error)})`)
     }
   }
   if (settings.serial) {

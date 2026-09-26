@@ -488,3 +488,35 @@ test('a paper with a dark stamp carries both pictures and both shapes, refuses a
     .replace(/<a +/g, '<a ')
   assert.equal(undressed, page)
 })
+
+// --- the cartoon, in tabs, 2026-09-25 -------------------------------------------------
+
+test('the living copy carries the cartoon tabs: today\'s xkcd, the archive, then comics from the network', () => {
+  const PIC = 'e'.repeat(64)
+  const MEME = 'f'.repeat(64)
+  const BAD = '8'.repeat(64)
+  const comics = {
+    ...corpus,
+    art: [{ id: 'art-9', url: 'https://imgs.xkcd.com/comics/voyager_instruments.png' }],
+    desks: {
+      ...corpus.desks,
+      pictures: [
+        { id: PIC, kind: 20, pubkey: AUTHOR, created_at: 1790305000, content: 'Monday again.', tags: [['t', 'comic'], ['imeta', 'url https://img.example/strip.png', 'm image/png']] },
+        { id: BAD, kind: 20, pubkey: AUTHOR, created_at: 1790305100, content: 'insecure', tags: [['t', 'comics'], ['imeta', 'url http://img.example/x.png']] },
+      ],
+      notes: [...corpus.desks.notes, { id: MEME, kind: 1, pubkey: REPLIER, created_at: 1790306000, content: 'every relay operator https://img.example/meme.jpg', tags: [['t', 'meme']] }],
+    },
+    wires: {
+      cartoon: { title: 'Voyager Instruments', caption: 'Convincing him.', number: 3302, art: 'art-9', source: 'xkcd.com, CC BY-NC 2.5' },
+      archive: { title: 'Bosses of the Senate', year: 1889, image: 'https://tile.loc.gov/a.jpg', link: 'https://www.loc.gov/item/1/', source: 'Puck, via the Library of Congress · public domain' },
+    },
+  }
+  const tabs = islandOf(dress(page, comics, assets).html).cartoons
+  assert.deepEqual(tabs.map((t) => t.tab), ['xkcd', 'From the archive', 'From your network', 'From your network'])
+  assert.deepEqual(tabs[0], { tab: 'xkcd', title: 'Voyager Instruments', image: 'https://imgs.xkcd.com/comics/voyager_instruments.png', caption: 'Convincing him.', credit: 'xkcd.com · CC BY-NC 2.5', link: 'https://xkcd.com/3302/' })
+  assert.deepEqual(tabs[1], { tab: 'From the archive', title: 'Bosses of the Senate, 1889', image: 'https://tile.loc.gov/a.jpg', caption: null, credit: 'Puck, via the Library of Congress · public domain', link: 'https://www.loc.gov/item/1/' })
+  assert.deepEqual(tabs[2], { tab: 'From your network', title: 'Joe', image: 'https://img.example/strip.png', caption: 'Monday again.', credit: 'Joe, on Nostr', link: toPermalink(PIC) })
+  assert.equal(tabs[3].image, 'https://img.example/meme.jpg', 'a picture in a note\'s text counts too')
+  assert.ok(!tabs.some((t) => /^http:/.test(t.image)), 'never an insecure picture')
+  assert.equal(islandOf(dress(page, corpus, assets).html).cartoons, null, 'no cartoon wire, no tabs')
+})

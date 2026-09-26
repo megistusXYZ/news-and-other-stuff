@@ -24,7 +24,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { join } from 'node:path'
-import { check, permalinkTarget, articleLinkTarget, calendarLinkTarget, profileLinkTarget, streamLinkTarget, listingLinkTarget, toStreamLink, toListingLink, decodeEntities } from './validate.mjs'
+import { check, permalinkTarget, toPermalink, articleLinkTarget, calendarLinkTarget, profileLinkTarget, streamLinkTarget, listingLinkTarget, toStreamLink, toListingLink, decodeEntities } from './validate.mjs'
 import { tags, attributes, textIn } from './html.mjs'
 import { filterFor } from './corpus.mjs'
 import { toNpub, BRAINSTORM, ARTICLE_KINDS } from './nostr.mjs'
@@ -422,6 +422,46 @@ export function dress (html, corpus, assets) {
       link: tagsOf(e, 'r').find(https) || null,
     }
   }
+  // The cartoon, in tabs: today's xkcd (the one the writer set), a
+  // public-domain cartoon from the archive, then comics people in the
+  // reader's network posted — tagged comic or meme, with an https picture.
+  // The page shows the first and swaps the others into the same place.
+  const cartoons = (() => {
+    const wires = corpus.wires || {}
+    const out = []
+    const strip = wires.cartoon
+    const stripArt = strip && (corpus.art || []).find((a) => a.id === strip.art)
+    if (strip && stripArt && https(stripArt.url)) {
+      out.push({ tab: 'xkcd', title: strip.title || null, image: stripArt.url, caption: strip.caption || null, credit: 'xkcd.com · CC BY-NC 2.5', link: Number.isInteger(strip.number) ? `https://xkcd.com/${strip.number}/` : 'https://xkcd.com/' })
+    }
+    const old = wires.archive
+    if (old && https(old.image)) {
+      out.push({ tab: 'From the archive', title: [old.title, old.year].filter(Boolean).join(', '), image: old.image, caption: null, credit: old.source, link: https(old.link) })
+    }
+    const COMIC = /^(comic|comics|webcomic|cartoon|cartoons|meme|memes|memestr)$/i
+    const pictureOf = (e) => {
+      for (const tag of e.tags || []) {
+        if (tag[0] !== 'imeta') continue
+        const url = tag.slice(1).map((part) => /^url (\S+)/.exec(part)).find(Boolean)
+        if (url && https(url[1])) return url[1]
+      }
+      const inText = /https:\/\/\S+\.(?:png|jpe?g|gif|webp)(?:\?\S*)?/i.exec(String(e.content || ''))
+      return inText && https(inText[0]) ? inText[0] : null
+    }
+    const found = Object.values(corpus.desks || {}).flat()
+      .filter((e) => (e.tags || []).some((t) => t[0] === 't' && COMIC.test(t[1] || '')))
+      .map((e) => ({ e, image: pictureOf(e) }))
+      .filter((c) => c.image)
+      .sort((a, b) => a.e.created_at - b.e.created_at)
+      .slice(0, 4)
+    for (const { e, image } of found) {
+      const name = (profiles[e.pubkey] && profiles[e.pubkey].name) || 'Someone'
+      const words = String(e.content || '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim()
+      out.push({ tab: 'From your network', title: name, image, caption: words ? words.slice(0, 200) : null, credit: `${name}, on Nostr`, link: toPermalink(e.id) })
+    }
+    return out.length > 1 ? out : null
+  })()
+
   // The reading order the panel's arrows step through: every cited post and
   // article once, as the page first meets it. People, stations and listings
   // are opened from their own links, not stepped to.
@@ -477,6 +517,7 @@ export function dress (html, corpus, assets) {
     until: corpus.until,
     relays: COUNT_RELAYS,
     sequence,
+    cartoons,
     // The reader's clock, for the page's own times ("since 11:09 p.m. CDT"):
     // their place's zone from the weather, 12 hours for a US paper.
     clock: corpus.wires && corpus.wires.weather && /^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)*$/.test(String(corpus.wires.weather.timezone || ''))

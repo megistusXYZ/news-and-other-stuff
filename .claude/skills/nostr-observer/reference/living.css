@@ -82,6 +82,25 @@ html, body, .lv-sections, .lv-panel, .lv-drawer, .tablewrap { scrollbar-width: n
 html::-webkit-scrollbar, body::-webkit-scrollbar, .lv-sections::-webkit-scrollbar,
 .lv-panel ::-webkit-scrollbar, .lv-drawer::-webkit-scrollbar, .tablewrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
+/* --- the cartoon's tabs ------------------------------------------------------- */
+/* A quiet row on the Cartoon line: small caps, the one showing underlined. The
+ * picture box holds the first cartoon's height, so a tall lithograph fits
+ * inside it rather than pushing the page down. */
+.band.back .back-head.lv-with-tabs { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.lv-tabs { display: inline-flex; gap: 0; margin-left: auto; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.lv-tab {
+  border: 0; background: none; cursor: pointer; padding: 0 0 2px 12px; margin-left: 12px;
+  border-left: 1px solid var(--rule); font: 600 .6rem/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-3); white-space: nowrap;
+}
+.lv-tab:first-child { border-left: 0; margin-left: 0; padding-left: 0; }
+.lv-tab[aria-selected="true"] { color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--accent); }
+.lv-tab:hover { color: var(--accent); }
+.band.back figure.cartoon img { height: var(--lv-cartoon-h, auto); width: 100%; object-fit: contain; }
+.band.back figure.cartoon:not(.lv-line-art) img { background: transparent; border-color: transparent; }
+a.lv-cartoon-title { font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--rule); }
+a.lv-cartoon-title:hover { color: var(--accent); }
+
 /* --- the paper's cut ----------------------------------------------------------- */
 /* An engraved head in profile at the far right of the nameplate, turned to
  * look back into the name. As tall as the name and the motto together on a
@@ -354,11 +373,21 @@ a.lv-buy-alt:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* --- the tabloid: a red-top turned newsprint ------------------------------------ */
 
-.band.tabloid { padding: 0 0 24px; border-bottom: 3px double var(--ink); }
-.tabloid-bar { background: var(--ink); color: var(--paper); padding: 10px 16px 9px; display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
-.tabloid-bar h2 { font-family: var(--brand, var(--util)); font-weight: 800; font-size: 1.5rem; letter-spacing: .06em; text-transform: uppercase; color: inherit; line-height: 1; }
-.tabloid-bar .strap { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--reverse-ink-2, #A79DB0); margin: 0; }
-.band.tabloid .cols2 { margin-top: 16px; }
+/* The same rhythm as every other band — 22px above its header, the header
+ * the column's width — with its own loud slab for a header: the name large,
+ * the strap beside it on one centred line on a desk, beneath it on a phone. */
+.band.tabloid { padding: 22px 0 26px; border-bottom: 3px double var(--ink); }
+.tabloid-bar {
+  background: var(--ink); color: var(--paper); padding: 11px 16px; border-radius: 2px;
+  display: flex; align-items: center; gap: 6px 18px; flex-wrap: wrap;
+}
+.tabloid-bar h2 { font-family: var(--brand, var(--util)); font-weight: 800; font-size: 1.4rem; letter-spacing: .06em; text-transform: uppercase; color: inherit; line-height: 1; margin: 0; }
+.tabloid-bar .strap { font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; line-height: 1.4; text-transform: uppercase; color: var(--reverse-ink-2, #A79DB0); margin: 0; padding-top: 1px; }
+.band.tabloid .cols2 { margin-top: 18px; }
+@media (max-width: 720px) {
+  .tabloid-bar { flex-direction: column; align-items: flex-start; padding: 12px 14px 11px; }
+  .tabloid-bar h2 { font-size: 1.25rem; }
+}
 .tabloid-list { margin: 0; padding: 0 0 0 1.6em; counter-reset: t; list-style: none; }
 .tabloid-list li { counter-increment: t; position: relative; padding: 8px 0; border-bottom: 1px dotted var(--rule); font-size: .9rem; line-height: 1.4; }
 .tabloid-list li::before { content: counter(t); position: absolute; left: -1.6em; top: 7px; font-family: var(--brand, var(--util)); font-weight: 800; font-size: 1.1rem; color: var(--ink); }

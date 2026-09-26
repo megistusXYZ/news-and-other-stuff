@@ -1584,6 +1584,80 @@ function five () {
   })()
 }
 
+// --- the cartoon, in tabs ----------------------------------------------------------
+
+// Today's xkcd is the cartoon the writer set; beside the Cartoon heading, a
+// quiet row of tabs swaps in the day's public-domain Puck cartoon and any
+// comics the reader's network posted — in the same box, at the same height,
+// so nothing else on the back page moves. Text only, as everywhere.
+function cartoonTabs () {
+  const figure = document.querySelector('.band.back figure.cartoon')
+  const list = data.cartoons
+  if (!figure || !list || list.length < 2) return
+  const head = figure.querySelector('.back-head')
+  const img = figure.querySelector('img')
+  const caption = figure.querySelector('figcaption')
+  if (!head || !img || !caption) return
+  const original = caption.cloneNode(true)
+  const originalImg = { src: img.getAttribute('src'), alt: img.getAttribute('alt') || '' }
+  figure.classList.add('lv-line-art')
+
+  // Hold the box at the first cartoon's height once it has drawn.
+  const hold = () => { if (img.naturalWidth && !figure.style.getPropertyValue('--lv-cartoon-h')) figure.style.setProperty('--lv-cartoon-h', `${Math.round(img.getBoundingClientRect().height)}px`) }
+  if (img.complete) hold(); else img.addEventListener('load', hold, { once: true })
+
+  const bar = el('span', 'lv-tabs')
+  bar.setAttribute('role', 'tablist')
+  bar.setAttribute('aria-label', 'Cartoons')
+  const label = (c) => (c.tab === 'From your network' ? c.title : c.tab === 'From the archive' ? 'The archive' : c.tab)
+  const tabs = list.map((c, i) => {
+    const b = el('button', 'lv-tab', label(c))
+    b.type = 'button'
+    b.setAttribute('role', 'tab')
+    b.setAttribute('aria-selected', i === 0 ? 'true' : 'false')
+    b.tabIndex = i === 0 ? 0 : -1
+    b.addEventListener('click', () => show(i))
+    bar.append(b)
+    return b
+  })
+  head.classList.add('lv-with-tabs')
+  head.append(bar)
+
+  function show (i) {
+    tabs.forEach((b, j) => { b.setAttribute('aria-selected', String(i === j)); b.tabIndex = i === j ? 0 : -1 })
+    const c = list[i]
+    hold()
+    figure.classList.toggle('lv-line-art', i === 0)
+    if (i === 0) {
+      img.src = originalImg.src
+      img.alt = originalImg.alt
+      caption.replaceWith(original.cloneNode(true))
+      return
+    }
+    img.src = c.image
+    img.alt = c.title ? `${c.tab}: ${c.title}` : c.tab
+    const next = el('figcaption')
+    if (c.title) {
+      const title = el('a', 'lv-cartoon-title', c.title)
+      title.href = c.link || c.image
+      if (c.link && c.link.startsWith(BRAINSTORM + '/')) title.addEventListener('click', (e) => { if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); openReader(c.link) })
+      else { title.target = '_blank'; title.rel = 'noopener noreferrer' }
+      next.append(title)
+    }
+    if (c.caption) next.append(' ', el('q', '', c.caption))
+    next.append(' ', el('span', 'credit', c.credit))
+    figure.querySelector('figcaption').replaceWith(next)
+  }
+  bar.addEventListener('keydown', (e) => {
+    const at = tabs.findIndex((b) => b.getAttribute('aria-selected') === 'true')
+    const to = e.key === 'ArrowRight' ? (at + 1) % tabs.length : e.key === 'ArrowLeft' ? (at - 1 + tabs.length) % tabs.length : -1
+    if (to < 0) return
+    e.preventDefault()
+    show(to)
+    tabs[to].focus()
+  })
+}
+
 // --- light and dark editions ------------------------------------------------------
 
 // The paper follows the reader's device until they choose; the ostrich is the
@@ -1702,6 +1776,7 @@ if (data) {
   guard(cameos)
   guard(puzzle)
   guard(five)
+  guard(cartoonTabs)
   guard(cards)
   guard(wireRows)
   guard(reader)

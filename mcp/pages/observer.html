@@ -64,6 +64,18 @@ a:hover { text-decoration-color: currentColor; }
 .empty { padding: 36px 0; font-style: italic; color: var(--ink-2); }
 .week { border-left: 1px solid var(--hair); padding-left: 22px; }
 .week h3 { margin: 0 0 4px; padding-bottom: 8px; border-bottom: 3px solid var(--rule); }
+.week-toggle { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; background: none; border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.week-toggle .arrow { font-family: var(--serif); font-size: 1.1rem; line-height: 1; color: var(--ink-3); }
+.week-toggle:hover .arrow { color: var(--ink); }
+/* folded: a narrow rail at the right edge, the paper takes the room */
+.layout { transition: grid-template-columns .2s ease; }
+.layout.folded { grid-template-columns: minmax(0, 1fr) 40px; }
+.layout.folded .week { padding-left: 0; }
+.layout.folded .week h3 { border-bottom: 0; padding: 0; }
+.layout.folded .week-toggle { flex-direction: column; justify-content: flex-start; gap: 10px; padding: 2px 0 0 12px; }
+.layout.folded .week-toggle .label { writing-mode: vertical-rl; }
+.layout.folded #week { display: none; }
+@media (prefers-reduced-motion: reduce) { .layout { transition: none; } }
 .day { display: block; width: 100%; text-align: left; padding: 11px 0; background: none; border: 0; border-bottom: 1px solid var(--hair); color: var(--ink); font: inherit; cursor: pointer; }
 .day b { display: block; font: 700 1.05rem/1.3 var(--display); }
 .day span { color: var(--ink-3); }
@@ -78,6 +90,9 @@ a:hover { text-decoration-color: currentColor; }
   .paper { padding-right: 0; }
   .paper iframe { height: 80vh; }
   .week { border-left: 0; padding-left: 0; margin-top: 22px; }
+  .layout.folded { grid-template-columns: 1fr; }
+  .layout.folded .week-toggle { flex-direction: row; padding: 0; }
+  .layout.folded .week-toggle .label { writing-mode: horizontal-tb; }
   .actions { margin-left: 0; }
   .actions button:first-child { padding-left: 0; }
   .folio span:last-child { display: none; }
@@ -124,7 +139,7 @@ a:hover { text-decoration-color: currentColor; }
       <p class="fill mono" id="fill" hidden></p>
     </section>
     <aside class="week" aria-label="This week">
-      <h3 class="mono">This week</h3>
+      <h3 class="mono"><button class="week-toggle" id="week-toggle" type="button" aria-expanded="true" aria-controls="week" title="Fold this week away"><span class="label">This week</span><span class="arrow" aria-hidden="true">›</span></button></h3>
       <div id="week"></div>
     </aside>
   </div>
@@ -139,6 +154,21 @@ a:hover { text-decoration-color: currentColor; }
   if (npub) { $('tab').href = $('setup-link').href = '/setup?npub=' + encodeURIComponent(npub) }
   const toggle = (btn, panel) => btn.addEventListener('click', () => { const open = panel.hidden; panel.hidden = !open; btn.setAttribute('aria-expanded', String(open)) })
   toggle($('fresh-btn'), $('fresh'))
+
+  // This week folds into a rail to give the paper the room; remembered here.
+  const layout = document.querySelector('.layout')
+  const fold = (folded) => {
+    layout.classList.toggle('folded', folded)
+    $('week-toggle').setAttribute('aria-expanded', String(!folded))
+    $('week-toggle').title = folded ? 'Show this week' : 'Fold this week away'
+    $('week-toggle').querySelector('.arrow').textContent = folded ? '‹' : '›'
+  }
+  try { fold(localStorage.getItem('observer-week') === 'folded') } catch { fold(false) }
+  $('week-toggle').addEventListener('click', () => {
+    const folded = !layout.classList.contains('folded')
+    fold(folded)
+    try { localStorage.setItem('observer-week', folded ? 'folded' : 'open') } catch { /* private window: not remembered */ }
+  })
   toggle($('archive-btn'), $('archive'))
 
   const dayName = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })

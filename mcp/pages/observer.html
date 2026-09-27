@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Observer · Brainstorm</title>
+<style>
+@font-face { font-family: "Figtree"; font-weight: 600; font-display: swap; src: url("/assets/fonts/figtree-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Figtree"; font-weight: 800; font-display: swap; src: url("/assets/fonts/figtree-latin-800-normal.woff2") format("woff2"); }
+:root {
+  --bg: #F2F3F0; --card: #FFFFFF; --ink: #0A0E18; --ink-2: #2B3442; --ink-3: #555D69;
+  --rule: #D6D9DB; --rule-soft: #E8EAE7; --purple: #7237FF; --purple-hover: #612FD9; --teal: #267882;
+  --field: #F7F8F6; --shadow: 0 1px 2px rgba(10, 14, 24, .05);
+  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0A0E18; --card: #151C29; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #2A3441; --rule-soft: #1D2533;
+    --purple: #8B5CF6; --purple-hover: #A78BFA; --teal: #13D2E5; --field: #0F1520; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--purple); }
+:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.nav { background: var(--card); border-bottom: 1px solid var(--rule); }
+.nav-in { max-width: 1320px; margin: 0 auto; padding: 0 24px; height: 68px; display: flex; align-items: center; gap: 28px; }
+.logo { display: flex; align-items: center; gap: 10px; font: 800 1.2rem/1 var(--sans); color: var(--ink); text-decoration: none; }
+.logo i { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #7237FF, #13D2E5); display: block; }
+.tabs { display: flex; gap: 22px; height: 100%; }
+.tabs a { display: flex; align-items: center; color: var(--ink-2); text-decoration: none; font: 600 .95rem/1 var(--sans); border-bottom: 3px solid transparent; padding-top: 3px; }
+.tabs a[aria-current] { color: var(--ink); border-bottom-color: var(--purple); }
+.who { margin-left: auto; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: #2B174F; color: #fff; display: grid; place-items: center; font: 800 .85rem/1 var(--sans); }
+main { max-width: 1320px; margin: 0 auto; padding: 22px 24px 48px; }
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; margin-bottom: 18px; }
+.head h1 { font: 800 1.45rem/1.2 var(--sans); margin: 0; }
+.meta { color: var(--ink-3); font-size: .9rem; margin: 2px 0 0; }
+.chip { display: inline-flex; align-items: center; padding: 6px 12px; border: 1px solid var(--rule); border-radius: 999px; background: var(--card); font: 600 .85rem/1 var(--sans); color: var(--ink-2); }
+.actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 10px; font: 600 .95rem/1 var(--sans); cursor: pointer; border: 1px solid var(--rule); background: var(--card); color: var(--ink); text-decoration: none; }
+.btn.link { border-color: transparent; background: transparent; color: var(--purple); padding: 0 8px; }
+.btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; }
+.btn[disabled] { opacity: .55; cursor: not-allowed; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
+.paper { background: var(--card); border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+.paper iframe { display: block; width: 100%; height: calc(100vh - 210px); min-height: 560px; border: 0; background: #F2F3F0; }
+.fill { padding: 10px 16px; border-top: 1px solid var(--rule-soft); color: var(--ink-3); font-size: .85rem; }
+.empty { padding: 48px 28px; color: var(--ink-2); }
+.week h2 { font: 800 .8rem/1 var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--teal); margin: 4px 0 14px; }
+.day { display: block; width: 100%; text-align: left; padding: 14px 16px; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--rule); background: var(--card); color: var(--ink); font: inherit; cursor: pointer; }
+.day b { display: block; font: 800 1rem/1.3 var(--sans); }
+.day span { color: var(--ink-3); font-size: .88rem; }
+.day[aria-current="true"] { border: 2px solid var(--purple); padding: 13px 15px; }
+.day.none { border-style: dashed; background: transparent; cursor: default; }
+.panel { margin: 0 0 18px; padding: 16px 18px; border-radius: 12px; border: 1px solid var(--rule); background: var(--card); }
+.panel pre { white-space: pre-wrap; margin: 8px 0 10px; padding: 10px 12px; border-radius: 8px; background: var(--field); font-size: .9rem; }
+.archive a { display: block; padding: 6px 0; }
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+  .tabs a:not([aria-current]) { display: none; }
+  .actions { margin-left: 0; }
+  .paper iframe { height: 80vh; }
+}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Brainstorm">
+  <div class="nav-in">
+    <a class="logo" href="#"><i aria-hidden="true"></i>Brainstorm</a>
+    <div class="tabs"><a href="#">Search</a><a href="#">Dashboard</a><a href="#">Network</a><a id="tab" href="/setup" aria-current="page">Observer</a></div>
+    <div class="who"><span class="avatar" aria-hidden="true">R</span></div>
+  </div>
+</nav>
+
+<main>
+  <div class="head">
+    <div>
+      <h1 id="date">Your Observer</h1>
+      <p class="meta" id="meta" aria-live="polite">Loading your papers…</p>
+    </div>
+    <span class="chip">Written by your Claude</span>
+    <div class="actions">
+      <button class="btn link" type="button" id="archive-btn" aria-expanded="false" aria-controls="archive">Archive</button>
+      <button class="btn" type="button" id="fresh-btn" aria-expanded="false" aria-controls="fresh">↻ Print a fresh edition</button>
+      <button class="btn primary" type="button" disabled title="Coming next: you sign it, and it is stored on your own media server">↑ Publish to my Blossom</button>
+    </div>
+  </div>
+
+  <div class="panel" id="fresh" hidden>
+    <b>Print a fresh edition</b>
+    <p style="margin:6px 0 0">Your Claude prints it, on your plan. Paste this into any Claude chat that has the Brainstorm connector, and the new paper appears here when it is handed in:</p>
+    <pre id="fresh-prompt">Print today's Nostr Observer with the Brainstorm connector. If my lens isn't ready, stop and tell me why.</pre>
+    <a href="/setup" id="setup-link">Add your topics on the setup page →</a>
+  </div>
+  <div class="panel archive" id="archive" hidden><b>Every paper</b><div id="archive-list"></div></div>
+
+  <div class="layout">
+    <section class="paper" aria-label="Today's paper">
+      <div class="empty" id="empty" hidden></div>
+      <iframe id="frame" title="Your paper" hidden></iframe>
+      <p class="fill" id="fill" hidden></p>
+    </section>
+    <aside class="week" aria-label="This week">
+      <h2>This week</h2>
+      <div id="week"></div>
+    </aside>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id)
+  const npub = (new URLSearchParams(location.search).get('npub') || '').trim()
+  if (npub) { $('tab').href = $('setup-link').href = '/setup?npub=' + encodeURIComponent(npub) }
+  const toggle = (btn, panel) => btn.addEventListener('click', () => { const open = panel.hidden; panel.hidden = !open; btn.setAttribute('aria-expanded', String(open)) })
+  toggle($('fresh-btn'), $('fresh'))
+  toggle($('archive-btn'), $('archive'))
+
+  const dayName = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+  const short = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+  const clock = (ts) => ts ? new Date(ts * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e }
+
+  if (!npub) {
+    $('meta').textContent = 'Add ?npub= to the address to see your papers.'
+    $('empty').hidden = false
+    $('empty').textContent = 'No reader named. On Brainstorm this page knows you from your sign-in.'
+    return
+  }
+
+  fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).then((editions) => {
+    if (!editions.length) {
+      $('meta').textContent = 'No papers yet.'
+      $('empty').hidden = false
+      $('empty').textContent = 'Nothing handed in yet. Set up your daily print, or print a fresh edition now.'
+      return
+    }
+    // One paper a day: the latest of each date.
+    const byDate = new Map()
+    for (const e of editions) if (!byDate.has(e.date)) byDate.set(e.date, e)
+
+    const show = (e) => {
+      $('date').textContent = dayName(e.date)
+      const window = e.until ? new Date(e.until * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : ''
+      $('meta').textContent = `Printed ${clock(e.printedAt)}${window ? ' · covers the 24 hours to ' + window : ''} · edition ${e.code}`
+      $('frame').src = e.url
+      $('frame').hidden = false
+      const f = e.fullness
+      const topics = e.topics && e.topics.length ? ' · Your topics: ' + e.topics.join(', ') : ''
+      $('fill').textContent = f ? `${f.sections} sections · ${f.pictures} pictures, from a day of ${f.desks} desks and ${f.shortlist} pictures${topics}` : topics.slice(3)
+      $('fill').hidden = !$('fill').textContent
+      document.querySelectorAll('.day').forEach((d) => d.setAttribute('aria-current', String(d.dataset.date === e.date)))
+    }
+
+    // This week: seven days back from the newest paper, gaps shown as gaps.
+    const newest = [...byDate.keys()][0]
+    const week = $('week')
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(newest + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - i)
+      const date = d.toISOString().slice(0, 10)
+      const e = byDate.get(date)
+      const card = el(e ? 'button' : 'div', 'day' + (e ? '' : ' none'))
+      card.dataset.date = date
+      card.append(el('b', null, short(date)), el('span', null, e ? `${i === 0 ? 'Latest' : 'Printed'} · ${clock(e.printedAt)}` : 'No paper · nothing handed in'))
+      if (e) { card.type = 'button'; card.addEventListener('click', () => show(e)) }
+      week.append(card)
+    }
+
+    const list = $('archive-list')
+    for (const e of editions) {
+      const a = el('a', null, `${short(e.date)} · edition ${e.code}${e.topics && e.topics.length ? ' · ' + e.topics.join(', ') : ''}`)
+      a.href = e.url; a.target = '_blank'; a.rel = 'noopener'
+      list.append(a)
+    }
+    show(byDate.get(newest))
+  }).catch(() => { $('meta').textContent = 'Could not load your papers.' })
+})()
+</script>
+</body>
+</html>

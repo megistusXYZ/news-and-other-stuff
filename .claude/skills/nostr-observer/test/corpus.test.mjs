@@ -244,7 +244,7 @@ test('the digest hands the writer the wires: credited, stamped, and marked as no
       today: { date: '2026-09-25', high: 25, low: 17, rain: 10, words: 'Overcast', sunrise: '07:38', sunset: '19:32' },
       ahead: [{ date: '2026-09-26', high: 21, low: 16, rain: 80, words: 'Slight rain' }],
     },
-    sports: { source: 'TheSportsDB', teams: [{ team: 'Arsenal', league: 'English Premier League',
+    sports: { source: 'TheSportsDB', teams: [{ team: 'Arsenal', league: 'Major League Baseball',
       last: { home: 'Arsenal', away: 'Chelsea', homeScore: 2, awayScore: 1, date: '2026-09-21' },
       next: { home: 'Leeds United', away: 'Arsenal', date: '2026-09-28', time: '14:00', venue: 'Elland Road' } }] },
     almanac: { date: 'September 25', source: 'Wikipedia (CC BY-SA)', items: [{ year: 1066, text: 'Harald Hardrada is defeated at Stamford Bridge.' }] },
@@ -260,7 +260,7 @@ test('the digest hands the writer the wires: credited, stamped, and marked as no
   assert.match(text, /^Credit: Weather data by Open-Meteo\.com$/m)
   assert.match(text, /^Now: 18°C, Mainly clear$/m)
   assert.match(text, /^Today \(2026-09-25\): high 25°C, low 17°C, 10% chance of rain, Overcast\. Sunrise 07:38, sunset 19:32 \(local\)\.$/m)
-  assert.match(text, /^- Arsenal \(English Premier League\): last Arsenal 2–1 Chelsea \(2026-09-21\); next Leeds United v Arsenal, 2026-09-28 14:00 UTC, Elland Road\.$/m)
+  assert.match(text, /^- Arsenal \(Major League Baseball\): last Arsenal 2–1 Chelsea \(2026-09-21\); next Leeds United v Arsenal, 2026-09-28 14:00 UTC, Elland Road\.$/m)
   assert.match(text, /^- 1066: Harald Hardrada is defeated at Stamford Bridge\.$/m)
   assert.match(text, /^- BBC News - World: Leaders meet in Geneva$/m)
   assert.match(text, /^- Headlines: broken\.example had no headlines to read$/m, 'what could not be fetched is said, so a missing box is explained')

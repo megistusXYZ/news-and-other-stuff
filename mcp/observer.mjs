@@ -48,8 +48,9 @@ export async function submitEdition ({ reader, code, html }, { store }) {
   assets = assets || loadAssets()
   const { html: living } = dress(page, corpus, assets)
   const date = dateOf(corpus)
-  store.putEdition(reader, { date, code: corpus.code, html: page, living })
-  return { accepted: true, edition: corpus.code, date, changes, fullness: fullness(page, corpus) }
+  const record = { date, code: corpus.code, html: page, living, until: corpus.until, topics: (corpus.topics || []).map((t) => t.topic), fullness: fullness(page, corpus) }
+  store.putEdition(reader, record)
+  return { accepted: true, edition: corpus.code, date, changes, fullness: record.fullness }
 }
 
 // --- the tools --------------------------------------------------------------
@@ -164,6 +165,8 @@ const verdictText = (v) => (v.ready ? `READY\n${v.say || 'Your lens is ready.'}`
  */
 export async function callTool (name, args, reader, deps) {
   args = args && typeof args === 'object' ? args : {}
+  // The setup page's "connected" comes from this: the reader's Claude called.
+  if (deps.store.touch) deps.store.touch(reader)
   switch (name) {
     case 'get_readiness':
       return say(verdictText(await deps.readiness(reader)))

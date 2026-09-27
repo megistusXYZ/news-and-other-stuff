@@ -860,6 +860,20 @@ paper lands on the reader's Observer page in brainstorm.world.
   prompt into a chat.
 - **Watch.** Topic searches surface templated spam that clears the trust
   floor: "lightning" was mostly identical GM posts.
+- **The demo pages.** Alongside `/mcp` the service serves the two pages
+  Brainstorm's Observer tab will take over:
+  - `/setup`: Vitor's three steps, a live lens badge, the connector address,
+    a "connected" line that lights on the reader's first tool call, and a
+    topics box that composes the daily prompt. Nothing is stored.
+  - `/observer`: the paper in a frame, "This week" with the gaps shown, an
+    archive, "Print a fresh edition" (the prompt to paste), and a disabled
+    "Publish to my Blossom".
+  - They read three small JSON routes: `/api/readiness` (public, by npub),
+    `/api/status`, and `/api/editions`, which lists editions only for readers
+    this connector serves. Each paper is served at
+    `/observer/<npub>/<date>-<code>`.
+  - On Brainstorm these sit behind its own sign-in; locally `?npub=` stands
+    in.
 
 ## Conventions
 

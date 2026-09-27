@@ -20,8 +20,8 @@ hs_err_pid*
 # observer.config.example.json to start.
 observer.config.json
 .claude/launch.json
-MEGISTUS-PLAN.md
-BRAINSTORM-TEAM-REQUEST.md
+# Local notes: an edition's own decision log and private drafts.
+*.local.md
 .env
 .env.*
 local.properties

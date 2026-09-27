@@ -120,10 +120,9 @@ export const REMEDY = {
   },
   'no-score-list': {
     say: 'You have not chosen who works out your web of trust, so there is no lens to rank through.',
-    do: 'Get a lens minted at https://brainstorm.world - it computes your web of trust and publishes the '
-      + 'kind 30382 cards this reads. Neither nip85.nosfabrica.com nor scores.brainstorm.world exposes an API '
-      + 'for that yet, so it is an operator step and not a button. Once your kind 10040 names a 30382:rank '
-      + 'service with a relay hint, run this again.',
+    do: 'Lenses are set up by the Brainstorm team for now, not by a button: sign in at https://brainstorm.world '
+      + 'and ask for your web-of-trust lens, then run this again once it is ready. (It is ready when your '
+      + 'kind 10040 names a 30382:rank service with a relay hint.)',
   },
   'no-rank-service': {
     say: 'Your trust provider list exists but does not name a usable rank service. A list with only '

@@ -547,18 +547,18 @@ test('the digest hands the writer What\'s On: near the reader first, then online
   const at = (iso) => Math.floor(Date.parse(iso) / 1000)
   const cal = (id, title, start, location, g) => ({ id: id.repeat(64), kind: 31923, pubkey: '9'.repeat(64), created_at: 1790300000, content: '',
     tags: [['d', id], ['title', title], ['start', String(start)], ...(location ? [['location', location]] : []), ...(g ? [['g', g]] : [])] })
-  const coffee = cal('1', 'Bitcoin & Coffee', at('2026-09-29T13:00:00Z'), 'The Corner Cafe, 100 N State St, Chicago, IL', 'dp3tvjpgj')
+  const coffee = cal('1', 'Bitcoin & Coffee', at('2026-09-29T13:00:00Z'), 'The Corner Café, 100 Main St, Chicago, IL', 'dp3wjnpym')
   const online = cal('2', 'Webend Coffee Talk', at('2026-09-26T11:00:00Z'), 'Online Nostr Meeting', null)
   const london = cal('3', 'Socratic Seminar #53', at('2026-09-30T18:00:00Z'), 'Antidote, Hatton Garden, London', 'gcpvje0vq')
-  const chicago = { place: 'Chicago', unit: '°F', timezone: 'America/Chicago', lat: 41.85, lon: -87.65, source: 'x', now: { temp: 1, words: 'x' }, today: { date: '2026-09-25', high: 1, low: 1, rain: 0, words: 'x', sunrise: '07:21', sunset: '19:23' }, ahead: [] }
+  const chicago = { place: 'Chicago', unit: '°F', timezone: 'America/Chicago', lat: 41.88, lon: -87.63, source: 'x', now: { temp: 1, words: 'x' }, today: { date: '2026-09-25', high: 1, low: 1, rain: 0, words: 'x', sunrise: '07:21', sunset: '19:23' }, ahead: [] }
   const corpus = { code: 'ABC123', since: 1790222949, until: 1790309349, desks: { calendar: [london, online, coffee] }, control: [], profiles: {}, art: [],
     wires: { asOf: 1790309349, weather: chicago, sports: null, almanac: null, headlines: [], notes: [] } }
   const out = digest(corpus)
   const part = out.slice(out.indexOf("## What's On"), out.indexOf('\n## ', out.indexOf("## What's On") + 5))
   assert.match(part, /^## What's On — near Chicago$/m)
-  assert.match(part, /Near you:\n- \[1{64}\] Bitcoin & Coffee · Tue 2026-09-29 8:00 a\.m\. CDT · The Corner Cafe, 100 N State St, Chicago, IL · 2 mi\n  calendar: /)
+  assert.match(part, /Near you:\n- \[1{64}\] Bitcoin & Coffee · Tue 2026-09-29 8:00 a\.m\. CDT · The Corner Café, 100 Main St, Chicago, IL · 2 mi\n  calendar: /)
   assert.match(part, /Online:\n- \[2{64}\] Webend Coffee Talk · Sat 2026-09-26 6:00 a\.m\. CDT · Online Nostr Meeting\n/)
-  assert.match(part, /Farther away:\n- \[3{64}\] Socratic Seminar #53 · Wed 2026-09-30 1:00 p\.m\. CDT · Antidote, Hatton Garden, London · 4,9\d\d mi\n/)
+  assert.match(part, /Farther away:\n- \[3{64}\] Socratic Seminar #53 · Wed 2026-09-30 1:00 p\.m\. CDT · Antidote, Hatton Garden, London · 3,9\d\d mi\n/)
   assert.ok(part.indexOf('Near you') < part.indexOf('Online') && part.indexOf('Online') < part.indexOf('Farther'))
 
   const none = digest({ ...corpus, desks: { calendar: [] } })

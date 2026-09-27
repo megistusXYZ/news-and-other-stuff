@@ -18,15 +18,21 @@ cover.
 
 **What you need.** [Claude Code](https://claude.com/claude-code), Node 22 or
 newer, and a Nostr account with a Brainstorm web-of-trust lens: the paper is
-ranked through it, and a readiness check stops before printing, and says what
-is missing, if the lens is not ready yet.
+ranked through it. Lenses are set up by the Brainstorm team for now, not by a
+button: sign in at [brainstorm.world](https://brainstorm.world) and ask for
+yours. Until it is ready, a readiness check stops before printing and says
+what it is waiting on. The ranked relay is Brainstorm's `search-staging` while
+the lens service is in beta.
 
-**Run it.** Copy `observer.config.example.json` to `observer.config.json`, set
-your place, teams and feeds, then open this repository in Claude Code and ask
-`print my Nostr Observer`. Your papers land in `editions/`, which is never
-committed. The Tape (share closes) is off by default: Yahoo's terms do not
-permit automated collection, so turning it on is for personal use at your own
-risk.
+**Run it.** Open this repository in Claude Code and ask
+`print my Nostr Observer`. It asks for your npub and, once, for your place,
+teams, feeds and the pages you want, and writes `observer.config.json` for
+you; `observer.config.example.json` shows every setting. Your papers land in
+`editions/`, which is never committed. You can name your paper and set its
+motto; the Brainstorm edition (`"brand": "brainstorm"`) and the ostrich stamps
+are marks listed in [NOTICE](NOTICE), not covered by the MIT licence. The
+Tape (share closes) is off by default: Yahoo's terms do not permit automated
+collection, so turning it on is for personal use at your own risk.
 
 **Keeping up with upstream.** Once, after cloning:
 

@@ -81,7 +81,7 @@ again:
 > Would you like a few pages from outside Nostr, like a real paper carries?
 > - **Weather**: which city? (sent only to Open-Meteo, from this machine)
 > - **Sports**: any teams to follow? (up to five; add the sport in brackets
->   when a name is shared, e.g. `Northwestern Wildcats (American Football)`)
+>   when a name is shared, e.g. `Michigan Wolverines (American Football)`)
 > - **Almanac**: "on this day" from Wikipedia? (yes/no)
 > - **Wider world**: any news feeds? e.g. BBC World
 >   `https://feeds.bbci.co.uk/news/world/rss.xml`, The Guardian
@@ -107,6 +107,12 @@ first issue there itself, and every issue number counts from it. Never turn on `
 Yahoo's terms do not permit automated collection, so it is theirs to choose,
 for personal use. "No thanks" is an answer: write
 `"wiresAsked": true` alone. Step 3 fetches whatever is set.
+
+`observer.config.example.json` in the repository shows every key. You may
+also offer, in the same question, to name the paper and give it a motto
+(`name`, `motto`). Never set `brand`, `stamp`, `stampDark` or `imprint` unless
+the reader asks for one by name: those are marks, listed in NOTICE, and a
+reader's own paper does not carry somebody else's.
 
 ---
 
@@ -182,9 +188,10 @@ Read both of these now, at `<skill>/reference/`:
 Write one complete, self-contained HTML file. The layout is yours and it should
 change from day to day — this is a newspaper, not a template.
 
-**Set `<title>` to the date, not the edition code** — `The Nostr Observer —
-Friday, August 28, 2026`, same form as the folio's centred span. The code stays
-in the folio only.
+**Set `<title>` to the paper's name and the date, not the edition code** —
+`The Nostr Observer — Friday, August 28, 2026`, or the configured name in its
+place when the digest's Masthead block gives one (the validator checks it),
+same date form as the folio's. The code stays out of the title.
 
 **The digest window is UTC.** Its times end in `Z`. The folio stamp is
 `24h to HH:MM UTC` (the 24 hours *ending* at that clock). If you print prices,

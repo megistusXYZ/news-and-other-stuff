@@ -36,12 +36,16 @@ Third-party files, each with its own licence beside it
   The answer list (reference/five-answers.txt) was curated for this project
   and is MIT like the code.
 
-Data services
--------------
+Known limits
+------------
 The wires fetch from outside services on the reader's own machine; each is
-credited in the paper's "Sources & licences" list, as its terms ask. Some
-are for personal or non-commercial use only (Open-Meteo, xkcd, TheMealDB's
-test key). The Tape (share closes from Yahoo Finance) is off unless the
-reader turns it on: Yahoo's terms do not permit automated collection, so it
-is for personal use at the reader's own risk, until a licensed feed
-replaces it.
+credited in the paper's "Sources & licences" list, as its terms ask.
+- Open-Meteo (weather), xkcd (cartoon) and TheMealDB's free test key
+  (recipes) are for personal or non-commercial use.
+- The Feature republishes The Conversation's articles under CC BY-ND 4.0.
+  Their republishing guidelines ask online republishers to include a
+  counter pixel, which this edition does not add, so the Feature is for
+  personal reading on the reader's machine until it does.
+- The Tape (share closes from Yahoo Finance) is off unless the reader turns
+  it on. Yahoo's terms do not permit automated collection, so it is for
+  personal use at the reader's own risk, until a licensed feed replaces it.

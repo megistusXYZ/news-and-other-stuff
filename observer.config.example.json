@@ -1,7 +1,4 @@
 {
-  "name": "News and Other Stuff",
-  "motto": "The observer for your network.",
-  "brand": "brainstorm",
   "place": "London",
   "units": "metric",
   "teams": [
@@ -31,8 +28,5 @@
   "health": true,
   "launches": true,
   "feature": true,
-  "tape": false,
-  "stamp": "ostrich-portrait",
-  "stampDark": "ostrich-profile",
-  "wiresAsked": true
+  "tape": false
 }

@@ -161,14 +161,14 @@ test('a team can name its sport, and the search keeps looking until the sport ma
     [/searchteams\.php\?t=Northwestern%20Wildcats$/, basketball],
     [/searchteams\.php\?t=Wildcats$/, { teams: [{ idTeam: '136958', strTeam: 'Northwestern', strSport: 'American Football', strLeague: 'NCAA Division 1' }] }],
     [/searchteams\.php\?t=Northwestern$/, basketball],
-    [/eventslast\.php\?id=136958/, { results: [{ strHomeTeam: 'Northwestern', strAwayTeam: 'UTSA', intHomeScore: '30', intAwayScore: '6', dateEvent: '2026-09-20' }] }],
+    [/eventslast\.php\?id=136958/, { results: [{ strHomeTeam: 'Northwestern', strAwayTeam: 'Illinois State', intHomeScore: '30', intAwayScore: '6', dateEvent: '2026-09-20' }] }],
     [/eventsnext\.php\?id=136958/, { events: [{ strHomeTeam: 'Tennessee', strAwayTeam: 'Northwestern', dateEvent: '2026-09-26', strTime: '16:00:00', strVenue: 'Neyland Stadium' }] }],
   ])
   const wires = await gatherWires({ place: null, teams: ['Northwestern Wildcats (American Football)', 'Northwestern Wildcats (Curling)'], feeds: [], almanac: false }, { fetch, now: NOW })
   assert.deepEqual(wires.sports.teams, [{
     team: 'Northwestern',
     league: 'NCAA Division 1',
-    last: { home: 'Northwestern', away: 'UTSA', homeScore: 30, awayScore: 6, date: '2026-09-20' },
+    last: { home: 'Northwestern', away: 'Illinois State', homeScore: 30, awayScore: 6, date: '2026-09-20' },
     next: { home: 'Tennessee', away: 'Northwestern', date: '2026-09-26', time: '16:00', venue: 'Neyland Stadium' },
   }])
   assert.deepEqual(wires.notes, ['Sports: TheSportsDB knows no Curling team called Northwestern Wildcats'])
@@ -503,7 +503,7 @@ test('health and safety: the UV and its hours, the weather service\'s alerts, an
   const { fetch, asked } = network([
     [/geocoding-api\.open-meteo\.com/, chicago],
     [/api\.open-meteo\.com\/v1\/forecast\?.*uv_index/, { daily: { uv_index_max: [7.05] }, hourly: { time: hours, uv_index: uv } }],
-    [/api\.weather\.gov\/alerts\/active\?point=30\.27,-97\.74/, { features: [{ properties: { event: 'Heat Advisory', headline: 'Heat Advisory until 8 PM CDT', ends: '2026-09-25T20:00:00-05:00' } }] }],
+    [/api\.weather\.gov\/alerts\/active\?point=41\.85,-87\.65/, { features: [{ properties: { event: 'Heat Advisory', headline: 'Heat Advisory until 8 PM CDT', ends: '2026-09-25T20:00:00-05:00' } }] }],
     [/api\.fda\.gov\/food\/enforcement\.json/, { results: [
       { classification: 'Class I', product_description: 'Crown Farms Dried Suri Cut, 200 gm, in plastic pack', recalling_firm: 'Crown Farms', report_date: '20260916', reason_for_recall: 'Undeclared sulfites' },
       { classification: 'Class II', product_description: 'Almond spread', recalling_firm: 'Prolon', report_date: '20260916', reason_for_recall: 'Label' },

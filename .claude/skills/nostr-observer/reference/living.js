@@ -593,7 +593,7 @@ function reader () {
     const u = new URL(path, BRAINSTORM)
     u.searchParams.set('embed', '1')
     // Brainstorm keeps its theme in its own storage today; this asks for the
-    // reader's edition the day it honours ?theme= (team request #7).
+    // reader's edition the day it honours ?theme=.
     u.searchParams.set('theme', themeNow())
     return u.href
   }

@@ -128,7 +128,7 @@ export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paper
       const remedy = REMEDY[verdict.state] || { say: verdict.state, do: null }
       return { ready: verdict.ready, state: verdict.state, say: remedy.say, do: remedy.do || '' }
     },
-    pull: (reader, { topics }) => pullCorpus(reader, { relay, topics, paper: paperFor(reader) }),
+    pull: (reader, { topics, paper }) => pullCorpus(reader, { relay, topics, paper: paper || paperFor(reader) }),
   }
 }
 

@@ -34,7 +34,7 @@ function deps ({ ready = true } = {}) {
 const text = (result) => result.content.map((c) => c.text).join('')
 
 test('four tools, each saying what it is for', () => {
-  assert.deepEqual(TOOLS.map((t) => t.name), ['get_readiness', 'get_brief', 'get_digest', 'submit_edition'])
+  assert.deepEqual(TOOLS.map((t) => t.name), ['get_readiness', 'get_paper', 'set_paper', 'get_brief', 'get_digest', 'submit_edition'])
   for (const t of TOOLS) assert.ok(t.description.length > 40 && t.inputSchema.type === 'object', t.name)
 })
 
@@ -149,4 +149,45 @@ test('readiness says when today\'s paper is already in, so a second run does not
   const said = text(await callTool('get_readiness', {}, READER, d))
   assert.match(said, /^READY/)
   assert.match(said, /Today's paper is already in: edition SEEN01, printed 2026-09-25 02:56 UTC\. Print a fresh edition only if the reader asked for one\./)
+})
+
+// --- the reader's own paper: settings a person or their Claude can set -------
+
+function paperDeps () {
+  const calls = []
+  return {
+    calls,
+    store: memoryStore(),
+    now: () => 1790309349, // 2026-09-25
+    readiness: async () => ({ ready: true, state: 'ready', say: 'Ready.', do: '' }),
+    pull: async (reader, opts) => { calls.push(opts); return busyCorpus() },
+  }
+}
+
+test('a reader or their Claude sets the paper once; only a reader\'s own settings are taken, and the paper is founded that day', async () => {
+  const d = paperDeps()
+  const set = await callTool('set_paper', { place: '60614', teams: ['Chicago Cubs (Baseball)'], culture: true, recipe: true, topics: ['Nostr', 'AI agents'], name: 'The Morning Post', tape: true, brand: 'someone-else', imprint: { name: 'X', url: 'https://x.test', logo: 'x' } }, READER, d)
+  assert.equal(set.isError, undefined)
+  const saved = (await callTool('get_paper', {}, READER, d)).structuredContent
+  assert.deepEqual(saved, { name: 'The Morning Post', place: '60614', teams: ['Chicago Cubs (Baseball)'], culture: true, recipe: true, topics: ['nostr', 'ai agents'], founded: '2026-09-25' })
+  assert.match(text(await callTool('get_paper', {}, READER, d)), /Place: 60614[\s\S]*Teams: Chicago Cubs \(Baseball\)[\s\S]*Topics: nostr, ai agents/)
+
+  await callTool('set_paper', { teams: ['Chicago Cubs (Baseball)', 'Chicago Bulls (Basketball)'] }, READER, d)
+  const later = (await callTool('get_paper', {}, READER, d)).structuredContent
+  assert.equal(later.place, '60614', 'a change to one thing keeps the rest')
+  assert.deepEqual(later.teams, ['Chicago Cubs (Baseball)', 'Chicago Bulls (Basketball)'])
+  assert.equal(later.founded, '2026-09-25', 'founded once')
+  assert.equal((await callTool('set_paper', { stamp: 'ostrich' }, READER, d)).isError, true, 'nothing a reader may set')
+})
+
+test('each morning the digest uses the saved paper: its place, teams and pages, and its topics unless the reader names others', async () => {
+  const d = paperDeps()
+  await callTool('set_paper', { place: '60614', teams: ['Chicago Cubs (Baseball)'], culture: true, topics: ['nostr'] }, READER, d)
+  await callTool('get_digest', {}, READER, d)
+  assert.equal(d.calls[0].paper.wires.place, '60614')
+  assert.deepEqual(d.calls[0].paper.wires.teams, ['Chicago Cubs (Baseball)'])
+  assert.equal(d.calls[0].paper.founded, '2026-09-25', 'issue numbers count from the paper\'s own first day')
+  assert.deepEqual(d.calls[0].topics, ['nostr'])
+  await callTool('get_digest', { topics: ['sourdough'] }, READER, d)
+  assert.deepEqual(d.calls[1].topics, ['sourdough'], 'topics named today win')
 })

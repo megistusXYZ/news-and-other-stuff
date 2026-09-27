@@ -14,7 +14,11 @@ export function memoryStore () {
   const digests = new Map()
   const editions = new Map()
   const calls = new Map()
+  const papers = new Map()
   return {
+    // The reader's own paper settings, as the reader or their Claude set them.
+    paperOf (reader) { return papers.get(reader) || null },
+    savePaper (reader, settings) { papers.set(reader, settings) },
     keepCorpus (reader, corpus) { corpora.set(corpus.code, { reader, corpus }) },
     corpusFor (code) { return corpora.get(code) || null },
     keepDigest (code, parts) { digests.set(code, parts) },
@@ -61,5 +65,10 @@ export function fileStore (dir) {
       }).sort(newestFirst)
     },
     edition (reader, date, code) { return this.editions(reader).find((e) => e.date === date && (!code || e.code === code)) || null },
+    paperOf (reader) { try { return JSON.parse(read(reader, 'paper.json')) } catch { return null } },
+    savePaper (reader, settings) {
+      mkdirSync(folder(reader), { recursive: true })
+      writeFileSync(join(folder(reader), 'paper.json'), JSON.stringify(settings, null, 2))
+    },
   }
 }

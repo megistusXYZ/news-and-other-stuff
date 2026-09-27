@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from '../.claude/skills/nostr-observer/scripts/resolve.mjs'
 import { check } from '../.claude/skills/nostr-observer/scripts/validate.mjs'
 import { dress, loadAssets } from '../.claude/skills/nostr-observer/scripts/dress.mjs'
-import { digest, cleanTopics } from '../.claude/skills/nostr-observer/scripts/corpus.mjs'
+import { digest, cleanTopics, cleanPaper } from '../.claude/skills/nostr-observer/scripts/corpus.mjs'
 
 const EDITORIAL = readFileSync(new URL('../.claude/skills/nostr-observer/reference/editorial.md', import.meta.url), 'utf8')
 const HOUSE_CSS = readFileSync(new URL('../.claude/skills/nostr-observer/reference/house.css', import.meta.url), 'utf8')
@@ -91,7 +91,7 @@ few steps differ from the brief above:
 // the reader's prompt says a word: a short prompt is then enough, and an
 // unattended morning run still follows it.
 export const INSTRUCTIONS = `You print the reader's daily newspaper, News and Other Stuff, from what the people they trust on Nostr said in the last 24 hours. Each time:
-1. Call get_readiness. If the lens is not ready, stop and tell the reader exactly what it says to do.
+1. Call get_readiness. If the lens is not ready, stop and tell the reader exactly what it says to do. The first time, call get_paper too: if nothing is set, ask the reader where they live, which teams they follow and what they love reading about, and save it with set_paper.
 2. Call get_brief once and follow it: it is the house style and the rules.
 3. Call get_digest, passing the reader's favourite topics as short phrases if they named any, then fetch every part with the code it gives.
 4. Write the full paper the brief describes: the fold, a "Your topics" band when there are topics, a band or box for every desk worth printing, pictures by id. Quote only words the posts contain.
@@ -99,11 +99,71 @@ export const INSTRUCTIONS = `You print the reader's daily newspaper, News and Ot
 6. Finish by telling the reader what led, anything the printer changed, and the link to today's paper.
 If get_readiness says today's paper is already in, tell the reader and print a fresh edition only if they asked for one.`
 
+// --- the reader's own paper ---------------------------------------------------
+
+// What a reader (or their Claude) may set. The brand, stamps, imprint and The
+// Tape are the host's, not the reader's; the founding date is set on first save.
+const SWITCHES = ['almanac', 'cartoon', 'puzzle', 'five', 'recipe', 'picture', 'markets', 'world', 'sky', 'culture', 'tabloid', 'health', 'launches', 'feature']
+const READER_KEYS = ['name', 'motto', 'place', 'units', 'teams', 'feeds', 'topics', 'country', ...SWITCHES]
+const SWITCH_WORDS = { almanac: 'almanac', cartoon: 'cartoon', puzzle: 'sudoku', five: 'Five', recipe: 'recipe', picture: 'picture of the day', markets: 'markets', world: 'the world at a glance', sky: 'air and moon', culture: 'culture', tabloid: 'the Tabloid', health: 'health & safety', launches: 'launches', feature: 'the Feature' }
+
+// A cleaned paper, back in the plain shape a reader sets: only what is set.
+function settingsOf (paper) {
+  if (!paper) return {}
+  const w = paper.wires || {}
+  const out = {}
+  if (paper.name) out.name = paper.name
+  if (paper.motto) out.motto = paper.motto
+  if (w.place) out.place = w.place
+  if (w.units) out.units = w.units
+  if (w.country) out.country = w.country
+  if (w.teams && w.teams.length) out.teams = w.teams
+  if (w.feeds && w.feeds.length) out.feeds = w.feeds
+  for (const k of SWITCHES) if (w[k] === true) out[k] = true
+  if (paper.topics && paper.topics.length) out.topics = paper.topics
+  if (paper.founded) out.founded = paper.founded
+  return out
+}
+
+function describePaper (s) {
+  if (!s || !Object.keys(s).length) return 'No paper settings yet. Ask the reader where they live (a city or ZIP), which teams they follow and what they love reading about, then call set_paper.'
+  const lines = [`Your paper${s.name ? `: ${s.name}` : ''}${s.founded ? ` · founded ${s.founded}` : ''}`]
+  if (s.place) lines.push(`Place: ${s.place}${s.units ? ` (${s.units === 'us' ? '°F' : '°C'})` : ''}`)
+  if (s.teams) lines.push(`Teams: ${s.teams.join(', ')}`)
+  const pages = SWITCHES.filter((k) => s[k]).map((k) => SWITCH_WORDS[k])
+  if (pages.length) lines.push(`Pages: ${pages.join(', ')}`)
+  if (s.feeds) lines.push(`Feeds: ${s.feeds.length}`)
+  if (s.topics) lines.push(`Topics: ${s.topics.join(', ')}`)
+  lines.push('Change any of it with set_paper.')
+  return lines.join('\n')
+}
+
 export const TOOLS = [
   {
     name: 'get_readiness',
     description: 'Check whether the signed-in reader\'s web-of-trust lens is ready. Call this first; if it is not ready, stop and tell the reader what it says to do.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  {
+    name: 'get_paper',
+    description: 'The reader\'s own paper settings: their place for the weather, the teams they follow, the pages they want and their favourite topics. If there are none yet, ask the reader and call set_paper.',
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  {
+    name: 'set_paper',
+    description: 'Set or change the reader\'s paper. Pass only what changes; everything else is kept. Use it when the reader says where they live, which teams they follow, what to add or drop, or what they love reading about.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', maxLength: 60, description: 'A name for the paper, if the reader wants one.' },
+        place: { type: 'string', maxLength: 80, description: 'A city or a ZIP / postal code, for the weather.' },
+        units: { type: 'string', enum: ['us', 'metric'], description: 'Fahrenheit (us) or Celsius (metric); leave unset to follow the place.' },
+        teams: { type: 'array', items: { type: 'string', maxLength: 60 }, maxItems: 5, description: 'The whole list of teams, each as "Name (Sport)" when the name is shared, e.g. "Chicago Fire (Soccer)".' },
+        topics: { type: 'array', items: { type: 'string', maxLength: 60 }, maxItems: 5, description: 'The whole list of favourite topics, as short phrases.' },
+        ...Object.fromEntries(SWITCHES.map((k) => [k, { type: 'boolean', description: `Print ${SWITCH_WORDS[k]}.` }])),
+      },
+      additionalProperties: false,
+    },
   },
   {
     name: 'get_brief',
@@ -218,6 +278,20 @@ async function runTool (name, args, reader, deps) {
       const stamp = (ts) => new Date(ts * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC'
       return say(verdictText(await deps.readiness(reader)) + (done ? `\nToday's paper is already in: edition ${done.code}, printed ${stamp(done.printedAt)}. Print a fresh edition only if the reader asked for one.` : ''))
     }
+    case 'get_paper': {
+      const settings = deps.store.paperOf ? deps.store.paperOf(reader) : null
+      return say(describePaper(settings), { structuredContent: settings || {} })
+    }
+    case 'set_paper': {
+      const incoming = Object.fromEntries(Object.entries(args).filter(([k]) => READER_KEYS.includes(k)))
+      if (!Object.keys(incoming).length) return fail('Nothing a reader can set was given. Set place, units, teams, topics, name or which pages to print.')
+      const current = (deps.store.paperOf && deps.store.paperOf(reader)) || {}
+      const now = deps.now ? deps.now() : Math.floor(Date.now() / 1000)
+      const founded = current.founded || new Date(now * 1000).toISOString().slice(0, 10)
+      const settings = settingsOf(cleanPaper({ ...current, ...incoming, founded }))
+      deps.store.savePaper(reader, settings)
+      return say(`Saved.\n${describePaper(settings)}`, { structuredContent: settings })
+    }
     case 'get_brief':
       return say(EDITORIAL + CONNECTOR_NOTE)
     case 'get_digest': {
@@ -231,8 +305,14 @@ async function runTool (name, args, reader, deps) {
       }
       const verdict = await deps.readiness(reader)
       if (!verdict.ready) return fail(`Your lens is not ready, so there is no paper today.\n${verdictText(verdict)}`)
-      const topics = cleanTopics(args.topics)
-      const corpus = await deps.pull(reader, { topics })
+      // The reader's own paper: its place, teams and pages, and its topics
+      // unless the reader named others today. The host's defaults (its brand)
+      // sit under it.
+      const settings = deps.store.paperOf ? deps.store.paperOf(reader) : null
+      const paper = settings ? cleanPaper({ ...(deps.paperDefaults || {}), ...settings }) : null
+      const named = cleanTopics(args.topics)
+      const topics = named.length ? named : ((settings && settings.topics) || [])
+      const corpus = await deps.pull(reader, { topics, paper })
       deps.store.keepCorpus(reader, corpus)
       const parts = splitDigest(digest(corpus))
       deps.store.keepDigest(corpus.code, parts)

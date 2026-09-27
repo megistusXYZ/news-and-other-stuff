@@ -39,7 +39,7 @@ test('without a token there is no connector: 401, with a Bearer challenge', asyn
 test('a signed-in Claude sees the four tools and can call them', async () => {
   const client = await connect('token-a')
   const { tools } = await client.listTools()
-  assert.deepEqual(tools.map((t) => t.name), ['get_readiness', 'get_brief', 'get_digest', 'submit_edition'])
+  assert.deepEqual(tools.map((t) => t.name), ['get_readiness', 'get_paper', 'set_paper', 'get_brief', 'get_digest', 'submit_edition'])
   assert.deepEqual(tools.find((t) => t.name === 'submit_edition').inputSchema.required, ['code', 'html'])
   const ready = await client.callTool({ name: 'get_readiness', arguments: {} })
   assert.match(ready.content[0].text, /^READY/)

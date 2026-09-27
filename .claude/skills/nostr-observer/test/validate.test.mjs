@@ -525,3 +525,18 @@ test('a Sunday story keeps Gutenberg\'s italics as italics', () => {
   const dashed = resolve('<div class="feature-text"></div>', { ...corpus, wires: { feature: { ...feature, blocks: [{ type: 'p', text: 'a clock for his wife--without knowing, and "I wouldn\'t have--"' }] } } }).html
   assert.match(dashed, /wife—without knowing, and "I wouldn't have—"/, 'Gutenberg\'s double hyphen is set as a dash')
 })
+
+// --- credit lines are set by the printer, 2026-09-26 ------------------------------------
+
+test('resolve sets each credit line from the sources\' own attributions: name, licence, one style, escaped', () => {
+  const wires = { credits: {
+    weather: { source: 'Open-Meteo', url: 'https://open-meteo.com/', licence: { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } },
+    markets: [{ source: 'mempool.space & <ECB>', url: 'https://mempool.space/', licence: null }],
+    feature: { source: 'The Conversation', url: 'javascript:alert(1)', licence: { name: 'CC BY-ND 4.0', url: 'https://creativecommons.org/licenses/by-nd/4.0/' }, note: 'Read the original' },
+  } }
+  const html = resolve('<p class="credit" data-credit="weather markets nothing"></p><p class="credit" data-credit="feature"></p><p class="credit" data-credit="nothing"></p>', { ...corpus, wires }).html
+  assert.match(html, /<p class="credit" data-credit="weather markets nothing"><span class="credit-item" data-href="https:\/\/open-meteo\.com\/">Open-Meteo<\/span> <span class="credit-licence" data-href="https:\/\/creativecommons\.org\/licenses\/by\/4\.0\/">CC BY 4\.0<\/span> · <span class="credit-item" data-href="https:\/\/mempool\.space\/">mempool\.space &amp; &lt;ECB&gt;<\/span><\/p>/)
+  assert.match(html, /<p class="credit" data-credit="feature"><span class="credit-item">The Conversation<\/span> <span class="credit-licence" data-href="https:\/\/creativecommons\.org\/licenses\/by-nd\/4\.0\/">CC BY-ND 4\.0<\/span> · <span class="credit-note">Read the original<\/span><\/p>/, 'a link that is not https is left off')
+  assert.doesNotMatch(html, /data-credit="nothing"/, 'a credit with nothing to credit is removed, not left empty')
+  assert.deepEqual(check(html, { ...corpus, wires }).violations, [], 'plain text and data attributes: the boundary has nothing to refuse')
+})

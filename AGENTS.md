@@ -330,6 +330,24 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **Credit lines (2026-09-26).** Every source is credited the way its
+  provider asks, checked against each provider's own terms that day:
+  `creditsFor(wires)` in wires.mjs gives each a structured credit (source
+  wording, link, licence and licence deed, note), carried as `wires.credits`.
+  The writer never types a credit: it leaves `<p class="credit"
+  data-credit="weather">` (several keys allowed) and resolve.mjs sets the
+  line as plain text with `data-href`; living.js turns those into links in a
+  new tab. One quiet style: the source, the licence as a small tag, a note.
+  Findings worth remembering: Open-Meteo wants "Weather data by
+  Open-Meteo.com" and is free for non-commercial use only; The Conversation's
+  republishing rules require their per-article counter pixel when an article
+  is republished online (the paper takes text only, so this must be settled
+  before any public edition); Yahoo's terms bar automated collection without
+  permission (The Tape is a risk even kept personal); TheMealDB's test key is
+  for development and education; Project Gutenberg allows crediting it as the
+  source. On phones and tablets the folio is two rows: the issue number with
+  "Aa", then the date beneath it.
+
 - **Access and devices (2026-09-26).** Audited at 320, 375, 768, 1024 and
   1920 px, light and dark: no sideways scroll anywhere, 200% text zoom holds,
   the reader panel is a labelled modal that traps and returns focus. Fixed and

@@ -1815,6 +1815,7 @@ function recipeTabs () {
   const today = {
     src: img && img.getAttribute('src'), alt: img ? img.getAttribute('alt') || '' : '', href: img ? img.dataset.href || '' : '',
     name: name.cloneNode(true), note: note && note.cloneNode(true), items: items.cloneNode(true), method: method.cloneNode(true),
+    creditHref: (() => { const c = box.querySelector('p.credit [data-href], p.credit a.credit-item'); return c ? c.getAttribute('data-href') || c.getAttribute('href') : null })(),
   }
   const hold = () => { if (!box.style.minHeight) box.style.minHeight = `${Math.round(box.getBoundingClientRect().height)}px` }
 
@@ -1844,6 +1845,8 @@ function recipeTabs () {
       if (today.note) swap('.recipe-head .note', today.note.cloneNode(true))
       swap('.recipe-head ul', today.items.cloneNode(true))
       swap('.recipe-method', today.method.cloneNode(true))
+      const creditLink = box.querySelector('p.credit a.credit-item')
+      if (creditLink && today.creditHref) creditLink.href = today.creditHref
       return
     }
     const r = list[i - 1]
@@ -1866,6 +1869,8 @@ function recipeTabs () {
     const steps = el('div', 'recipe-method')
     for (const line of r.method) steps.append(el('p', '', line))
     swap('.recipe-method', steps)
+    const creditLink = box.querySelector('p.credit a.credit-item')
+    if (creditLink && r.link) creditLink.href = r.link
   }
   bar.addEventListener('keydown', (e) => {
     const at = tabs.findIndex((b) => b.getAttribute('aria-selected') === 'true')
@@ -1893,7 +1898,7 @@ function featureTabs () {
   const title = box.querySelector('.sub-head')
   const byline = box.querySelector('.byline')
   const text = box.querySelector('.feature-text')
-  const note = box.querySelector('.note')
+  const note = box.querySelector('p.credit, .note')
   if (!kicker || !title || !text) return
   const label = el('span', 'lv-kicker-text', kicker.textContent)
   kicker.replaceChildren(label)
@@ -1935,7 +1940,7 @@ function featureTabs () {
       title.textContent = lead.title
       if (byline) byline.textContent = lead.byline
       body.replaceWith(lead.text.cloneNode(true))
-      const n = box.querySelector('.note')
+      const n = box.querySelector('p.credit, .note')
       if (lead.note && n) n.replaceWith(lead.note.cloneNode(true))
     } else {
       const a = f.alt
@@ -1945,13 +1950,8 @@ function featureTabs () {
       const next = el('div', 'feature-text')
       for (const b of a.blocks) next.append(b.type === 'h' ? el('h3', 'feature-sub', b.text) : a.kind === 'story' ? storyLine(b.text) : el('p', '', b.text))
       body.replaceWith(next)
-      const credit = el('p', 'note', a.credit)
-      if (a.link) {
-        const link = el('a', '', a.link.replace(/^https:\/\//, ''))
-        link.href = a.link; link.target = '_blank'; link.rel = 'noopener noreferrer'
-        credit.append(' ', link)
-      }
-      const n = box.querySelector('.note')
+      const credit = creditLine(a.attribution) || el('p', 'note', a.credit)
+      const n = box.querySelector('p.credit, .note')
       if (n) n.replaceWith(credit); else box.append(credit)
     }
     if (box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: 'start' })
@@ -2028,6 +2028,39 @@ function readingPanel () {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) { open(false); button.focus() } })
   document.addEventListener('click', (e) => { if (!panel.hidden && !panel.contains(e.target) && e.target !== button) open(false) })
   folio.append(button, panel)
+}
+
+// --- credit lines link to their sources --------------------------------------------
+//
+// The printer set each credit as plain text with data-href (only https). Here
+// the source and its licence become links that open in a new tab, so the
+// people whose work fills the page get the visit.
+
+// A credit line built from a structured attribution, in the printer's style,
+// already linked (the living copy's own tabs use it).
+function creditLine (a) {
+  if (!a || !a.source) return null
+  const p = el('p', 'credit')
+  const part = (cls, text, url) => {
+    if (!url) return el('span', cls, text)
+    const link = el('a', cls, text)
+    link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'
+    return link
+  }
+  p.append(part('credit-item', a.source, a.url))
+  if (a.licence && a.licence.name) p.append(' ', part('credit-licence', a.licence.name, a.licence.url))
+  if (a.note) p.append(' · ', el('span', 'credit-note', a.note))
+  return p
+}
+
+function creditLinks () {
+  for (const span of $$('.credit [data-href]')) {
+    const a = el('a', span.className, span.textContent)
+    a.href = span.dataset.href
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    span.replaceWith(a)
+  }
 }
 
 // --- pictures open their post ---------------------------------------------------
@@ -2196,6 +2229,7 @@ if (data) {
   guard(cameos)
   guard(puzzle)
   guard(five)
+  guard(creditLinks)
   guard(cartoonTabs)
   guard(recipeTabs)
   guard(featureTabs)

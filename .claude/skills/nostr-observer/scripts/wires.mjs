@@ -828,5 +828,55 @@ export async function gatherWires (settings, { fetch = globalThis.fetch, now = M
       wires.notes.push(`Headlines: ${new URL(url).hostname} had no headlines to read`)
     }
   }
+  wires.credits = creditsFor(wires)
   return wires
+}
+
+// --- credits ------------------------------------------------------------------
+// Each source credited the way its provider asks (checked against their own
+// terms, 2026-09-26), with its licence and a link that sends readers to them.
+// The printer sets these into the page's credit lines; nothing here is typed
+// by the writer.
+const OPEN_METEO = { source: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', licence: { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } }
+const gutenberg = (id) => ({ source: 'Project Gutenberg', url: `https://www.gutenberg.org/ebooks/${id}`, note: 'public domain in the USA' })
+function ccLicence (name) {
+  const m = /^CC (BY(?:-(?:SA|NC|ND))*) (\d\.\d)$/i.exec(String(name || '').trim())
+  if (m) return { name: `CC ${m[1].toUpperCase()} ${m[2]}`, url: `https://creativecommons.org/licenses/${m[1].toLowerCase()}/${m[2]}/` }
+  if (/^CC0/i.test(String(name || ''))) return { name: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/' }
+  return name ? { name: String(name).slice(0, 40), url: null } : null
+}
+const https = (u) => (/^https:\/\/[^\s"'<>]{1,300}$/.test(String(u || '')) ? u : null)
+const featureCredit = (f) => (f.kind === 'story'
+  ? gutenberg(String(f.link || '').split('/').pop())
+  : { source: 'The Conversation', url: https(f.link) || 'https://theconversation.com/', licence: ccLicence('CC BY-ND 4.0'), note: 'republished under Creative Commons; read the original' })
+
+export function creditsFor (w) {
+  const c = {}
+  if (w.weather) c.weather = OPEN_METEO
+  if (w.health) {
+    c.health = [OPEN_METEO]
+    if (/National Weather Service/.test(w.health.source || '')) {
+      c.health.push({ source: 'National Weather Service', url: 'https://www.weather.gov/' },
+        { source: 'Data provided by the U.S. Food and Drug Administration', url: 'https://open.fda.gov/', licence: ccLicence('CC0') },
+        { source: 'U.S. Consumer Product Safety Commission', url: 'https://www.cpsc.gov/Recalls' })
+    }
+  }
+  if (w.markets) c.markets = [{ source: 'mempool.space', url: 'https://mempool.space/' }, { source: 'European Central Bank reference rates, via Frankfurter', url: 'https://frankfurter.dev/' }]
+  if (w.world && w.world.quakes) c.quakes = { source: 'U.S. Geological Survey', url: 'https://earthquake.usgs.gov/', licence: { name: 'Public domain', url: 'https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits' } }
+  if (w.world && w.world.holiday) c.holiday = { source: 'Nager.Date', url: 'https://date.nager.at/' }
+  if (w.launches) c.launches = { source: 'The Space Devs, Launch Library 2', url: 'https://thespacedevs.com/llapi' }
+  if (w.tape) c.tape = { source: 'Yahoo Finance', url: 'https://finance.yahoo.com/', note: 'delayed; not live, not advice' }
+  if (w.picture) c.picture = { source: `${w.picture.artist} / Wikimedia Commons`, url: https(w.picture.link) || 'https://commons.wikimedia.org/', licence: ccLicence(w.picture.licence) }
+  if (w.cartoon) c.cartoon = { source: 'xkcd', url: Number.isInteger(w.cartoon.number) ? `https://xkcd.com/${w.cartoon.number}/` : 'https://xkcd.com/', licence: ccLicence('CC BY-NC 2.5') }
+  if (w.archive) c.archive = { source: 'Library of Congress, Prints & Photographs Division', url: https(w.archive.link) || 'https://www.loc.gov/', note: 'no known restrictions on publication' }
+  if (w.recipe) c.recipe = { source: 'Recipe data and imagery: TheMealDB', url: https(w.recipe.link) || 'https://www.themealdb.com/' }
+  if (w.almanac) c.almanac = { source: 'Wikipedia', url: `https://en.wikipedia.org/wiki/${encodeURIComponent(String(w.almanac.date || '').replace(/ /g, '_'))}`, licence: ccLicence('CC BY-SA 4.0') }
+  if (w.lookedUp) c.lookedUp = { source: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/Wikipedia:Top_25_Report', licence: ccLicence('CC BY-SA 4.0') }
+  if (w.sports) c.sports = { source: 'TheSportsDB', url: 'https://www.thesportsdb.com/' }
+  if (w.tabloid && w.tabloid.searching) c.trends = { source: 'Data source: Google Trends', url: `https://trends.google.com/trending?geo=${encodeURIComponent(w.tabloid.searching.geo || 'US')}` }
+  if (w.tabloid && w.tabloid.saying) c.bluesky = { source: 'Bluesky trending topics', url: 'https://bsky.app/' }
+  if (w.feature) c.feature = featureCredit(w.feature)
+  if (w.featureAlt) c.featureAlt = featureCredit(w.featureAlt)
+  if (w.serial) c.serial = gutenberg(w.serial.id)
+  return c
 }

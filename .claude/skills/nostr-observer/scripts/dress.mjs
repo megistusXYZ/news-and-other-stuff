@@ -490,6 +490,16 @@ export function dress (html, corpus, assets) {
         credit: text(alt.credit, 300),
         link: https(alt.link),
         blocks: alt.blocks.slice(0, 200).map((b) => ({ type: b.type === 'h' ? 'h' : 'p', text: text(b.text, 4000) })).filter((b) => b.text),
+        attribution: (() => {
+          const a = (w.credits || {}).featureAlt
+          if (!a || !a.source) return null
+          return {
+            source: text(a.source, 120),
+            url: https(a.url),
+            ...(a.licence && a.licence.name ? { licence: { name: text(a.licence.name, 40), url: https(a.licence.url) } } : {}),
+            ...(a.note ? { note: text(a.note, 120) } : {}),
+          }
+        })(),
       },
     }
   })()

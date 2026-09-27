@@ -672,3 +672,57 @@ test('both pieces come every day: the day\'s lead as the Feature, the other as i
   const alone = await gatherWires({ ...off, feature: true }, { fetch: network([[/theconversation\.com/, ATOM]]).fetch, now: NOW })
   assert.equal(alone.featureAlt, null, 'no story to be had, no second tab')
 })
+
+// --- each wire carries its credit, 2026-09-26 -------------------------------------------
+
+test('every source is credited the way its provider asks, with its licence and a link to support it', async () => {
+  const { creditsFor } = await import('../scripts/wires.mjs')
+  const wires = {
+    weather: { place: 'Chicago' },
+    health: { source: 'Open-Meteo · National Weather Service · openFDA · CPSC' },
+    markets: { fx: { base: 'USD' } },
+    world: { quakes: { count: 3 }, holiday: { name: 'Columbus Day' } },
+    launches: { next: [] },
+    tape: { quotes: [] },
+    picture: { artist: 'Timothy A. Gonsalves', licence: 'CC BY-SA 4.0', link: 'https://commons.wikimedia.org/wiki/File:Gladiolus.jpg' },
+    cartoon: { number: 3303 },
+    archive: { link: 'https://www.loc.gov/item/2011647369/' },
+    recipe: { link: 'https://www.themealdb.com/meal/52943' },
+    almanac: { date: 'September 27' },
+    lookedUp: { items: [] },
+    sports: { teams: [] },
+    tabloid: { searching: { geo: 'US' }, saying: {} },
+    feature: { kind: 'conversation', link: 'https://theconversation.com/x-1' },
+    featureAlt: { kind: 'story', link: 'https://www.gutenberg.org/ebooks/28554' },
+    serial: { id: 1342 },
+  }
+  const c = creditsFor(wires)
+  const CC = (kind, v) => ({ name: `CC ${kind.toUpperCase()} ${v}`, url: `https://creativecommons.org/licenses/${kind}/${v}/` })
+  assert.deepEqual(c.weather, { source: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', licence: CC('by', '4.0') })
+  assert.deepEqual(c.health.map((a) => a.source), ['Weather data by Open-Meteo.com', 'National Weather Service', 'Data provided by the U.S. Food and Drug Administration', 'U.S. Consumer Product Safety Commission'])
+  assert.deepEqual(c.health[2].licence, { name: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/' })
+  assert.deepEqual(c.markets.map((a) => a.source), ['mempool.space', 'European Central Bank reference rates, via Frankfurter'])
+  assert.deepEqual(c.quakes, { source: 'U.S. Geological Survey', url: 'https://earthquake.usgs.gov/', licence: { name: 'Public domain', url: 'https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits' } })
+  assert.equal(c.holiday.source, 'Nager.Date')
+  assert.equal(c.launches.source, 'The Space Devs, Launch Library 2')
+  assert.deepEqual(c.tape, { source: 'Yahoo Finance', url: 'https://finance.yahoo.com/', note: 'delayed; not live, not advice' })
+  assert.deepEqual(c.picture, { source: 'Timothy A. Gonsalves / Wikimedia Commons', url: 'https://commons.wikimedia.org/wiki/File:Gladiolus.jpg', licence: CC('by-sa', '4.0') })
+  assert.deepEqual(c.cartoon, { source: 'xkcd', url: 'https://xkcd.com/3303/', licence: CC('by-nc', '2.5') })
+  assert.deepEqual(c.archive, { source: 'Library of Congress, Prints & Photographs Division', url: 'https://www.loc.gov/item/2011647369/', note: 'no known restrictions on publication' })
+  assert.deepEqual(c.recipe, { source: 'Recipe data and imagery: TheMealDB', url: 'https://www.themealdb.com/meal/52943' })
+  assert.deepEqual(c.almanac, { source: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/September_27', licence: CC('by-sa', '4.0') })
+  assert.equal(c.lookedUp.source, 'Wikipedia')
+  assert.equal(c.sports.source, 'TheSportsDB')
+  assert.deepEqual(c.trends, { source: 'Data source: Google Trends', url: 'https://trends.google.com/trending?geo=US' })
+  assert.equal(c.bluesky.source, 'Bluesky trending topics')
+  assert.deepEqual(c.feature, { source: 'The Conversation', url: 'https://theconversation.com/x-1', licence: CC('by-nd', '4.0'), note: 'republished under Creative Commons; read the original' })
+  assert.deepEqual(c.featureAlt, { source: 'Project Gutenberg', url: 'https://www.gutenberg.org/ebooks/28554', note: 'public domain in the USA' })
+  assert.deepEqual(c.serial, { source: 'Project Gutenberg', url: 'https://www.gutenberg.org/ebooks/1342', note: 'public domain in the USA' })
+  assert.deepEqual(creditsFor({ weather: null, feature: null }), {}, 'nothing fetched, nothing credited')
+})
+
+test('gatherWires hands over the credits with the wires', async () => {
+  const { fetch } = network([[/theconversation\.com/, ATOM]])
+  const wires = await gatherWires({ ...off, feature: true }, { fetch, now: NOW })
+  assert.equal(wires.credits.feature.source, 'The Conversation')
+})

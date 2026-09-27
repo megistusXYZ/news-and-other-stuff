@@ -949,9 +949,33 @@ html:root[data-lv-contrast="high"][data-theme="dark"] {
   .lv-cut { forced-color-adjust: none; }
   .lv-skip:focus, .lv-aa:focus-visible { outline: 2px solid Highlight; }
 }
-/* On a phone the date takes the first row of the folio; the issue number and
- * "Aa" share the second, one at each end. */
-@media (max-width: 480px) {
-  .sheet > .folio > :nth-child(2) { flex-basis: 100%; padding-right: 0; margin-bottom: 4px; }
-  .lv-aa { margin-left: auto; }
+/* On a phone or a tablet the folio is two rows: the issue number (and, where
+ * it fits, the window) with "Aa" at the far end, then the date beneath the
+ * number, set left. */
+@media (max-width: 1000px) {
+  .sheet > .folio > :nth-child(1) { order: 0; }
+  .lv-aa { order: 1; margin-left: auto; }
+  .sheet > .folio > :nth-child(2) { order: 2; flex-basis: 100%; padding-right: 0; margin: 4px 0 0; text-align: left; }
+  .lv-reading { order: 3; }
 }
+
+/* --- credit lines ------------------------------------------------------------- */
+/* One quiet style for every source: the name, its licence as a small tag, and
+ * a note when the source asks for one. Links only in the living copy. */
+p.credit { margin: 10px 0 0; font: 400 .74rem/1.5 var(--brand, var(--body)); color: var(--ink-3); letter-spacing: .01em; }
+/* Whatever cell it sits in (justified agate, italic notes), a credit line
+ * keeps its own face: left, unhyphenated, upright. */
+.sheet .credit.credit[data-credit] { margin: 10px 0 0; font: 400 .74rem/1.5 var(--brand, var(--body)); font-style: normal; color: var(--ink-3);
+  text-align: left; hyphens: none; letter-spacing: .01em; text-transform: none; }
+p.credit .credit-item { color: var(--ink-2); font-weight: 600; text-decoration: none; }
+p.credit .credit-licence { display: inline-block; margin-left: 2px; padding: 0 5px; border: 1px solid var(--rule); border-radius: 3px;
+  font: 500 .64rem/1.5 var(--mono); letter-spacing: .04em; color: var(--ink-3); text-decoration: none; vertical-align: 1px; }
+p.credit .credit-note { font-style: italic; }
+p.credit a:hover { color: var(--accent); border-color: var(--accent); }
+p.credit a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.box p.credit { margin-top: 6px; }
+.sheet .credit.credit[data-credit] .credit-item, .sheet .credit.credit[data-credit] .credit-note {
+  font-family: inherit; font-size: inherit; letter-spacing: inherit; text-transform: none; border: 0; }
+.sheet .credit.credit[data-credit] .credit-item { font-weight: 600; color: var(--ink-2); }
+.sheet .credit.credit[data-credit] .credit-note { font-style: italic; font-weight: 400; }
+.sheet .credit.credit[data-credit] .credit-licence { font-family: var(--mono); font-size: .64rem; font-weight: 500; }

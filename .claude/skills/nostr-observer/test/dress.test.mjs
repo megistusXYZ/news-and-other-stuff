@@ -670,7 +670,8 @@ test('the serial\'s Gutenberg _italics_ read as italics in the living copy, and 
 test('the living copy carries the other piece for the Feature\'s second tab, as text, headed and credited', () => {
   const story = { kind: 'story', title: 'Beyond the Door', authors: ['Philip K. Dick'], published: null, link: 'https://www.gutenberg.org/ebooks/28644', source: 'Project Gutenberg', credit: 'From Project Gutenberg. This story is in the public domain in the USA.', blocks: [{ type: 'p', text: 'Larry Thomas bought a cuckoo clock.' }] }
   const article = { kind: 'conversation', title: 'Trump frames unregulated AI <b>badly</b>', authors: ['Stephen Collins, Kennesaw State University'], published: '2026-09-25', link: 'javascript:alert(1)', source: 'The Conversation', credit: 'This article is republished from The Conversation under a Creative Commons license. Read the original article.', blocks: [{ type: 'p', text: 'Amid the chorus.' }, { type: 'h', text: 'A race?' }] }
-  const sunday = islandOf(dress(page, { ...corpus, wires: { feature: story, featureAlt: article } }, assets).html).feature
+  const credits = { featureAlt: { source: 'The Conversation', url: 'https://theconversation.com/x-1', licence: { name: 'CC BY-ND 4.0', url: 'https://creativecommons.org/licenses/by-nd/4.0/' }, note: 'read the original' } }
+  const sunday = islandOf(dress(page, { ...corpus, wires: { feature: story, featureAlt: article, credits } }, assets).html).feature
   assert.deepEqual(sunday, {
     lead: 'The Story',
     alt: {
@@ -682,8 +683,9 @@ test('the living copy carries the other piece for the Feature\'s second tab, as 
       credit: 'This article is republished from The Conversation under a Creative Commons license. Read the original article.',
       link: null,
       blocks: [{ type: 'p', text: 'Amid the chorus.' }, { type: 'h', text: 'A race?' }],
+      attribution: { source: 'The Conversation', url: 'https://theconversation.com/x-1', licence: { name: 'CC BY-ND 4.0', url: 'https://creativecommons.org/licenses/by-nd/4.0/' }, note: 'read the original' },
     },
-  }, 'plain text the page sets with textContent; a link that is not https is dropped')
+  }, 'plain text the page sets with textContent; a link that is not https is dropped; the second tab carries its own credit line')
   const weekday = islandOf(dress(page, { ...corpus, wires: { feature: article, featureAlt: story } }, assets).html).feature
   assert.equal(weekday.lead, 'The Feature')
   assert.equal(weekday.alt.tab, 'The Story')

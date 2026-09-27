@@ -269,6 +269,26 @@ export function resolve (html, corpus) {
     }
   }
 
+  // --- credit lines -------------------------------------------------------
+  // The writer leaves <p class="credit" data-credit="weather markets"></p>;
+  // the printer sets it from each wire's own attribution, in one style: the
+  // source, its licence, and a note when the source asks for one. Plain text
+  // with data-href for the living copy to link; a credit with nothing to
+  // credit is removed rather than left empty.
+  const wiresOf = (corpus.wires || {})
+  const escText = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const href = (u) => (/^https:\/\/[^\s"'<>]{1,300}$/.test(String(u || '')) ? ` data-href="${String(u).replace(/&/g, '&amp;')}"` : '')
+  const credits = wiresOf.credits || {}
+  out = out.replace(/<p class="credit" data-credit="([a-zA-Z\s]{1,200})">[\s\S]*?<\/p>/g, (whole, keys) => {
+    const items = keys.trim().split(/\s+/).flatMap((key) => (Object.prototype.hasOwnProperty.call(credits, key) ? [].concat(credits[key]) : []))
+      .filter((a) => a && a.source)
+    if (!items.length) { changes.push({ kind: 'credit', detail: `nothing to credit for ${keys}` }); return '' }
+    const line = items.map((a) => `<span class="credit-item"${href(a.url)}>${escText(a.source)}</span>`
+      + (a.licence && a.licence.name ? ` <span class="credit-licence"${href(a.licence.url)}>${escText(a.licence.name)}</span>` : '')
+      + (a.note ? ` · <span class="credit-note">${escText(a.note)}</span>` : '')).join(' · ')
+    return `<p class="credit" data-credit="${keys}">${line}</p>`
+  })
+
   return { html: out, changes }
 }
 
@@ -297,7 +317,7 @@ function main () {
     console.log('  CHANGES WORTH READING - each of these is the page trying to do something')
     console.log('  the paper does not do. Look at them before you ship:')
     console.log('')
-    for (const change of changes.filter((c) => c.kind !== 'resolved' && c.kind !== 'permalink' && c.kind !== 'article' && c.kind !== 'profile' && c.kind !== 'stream' && c.kind !== 'listing' && c.kind !== 'calendar' && c.kind !== 'feature')) {
+    for (const change of changes.filter((c) => c.kind !== 'resolved' && c.kind !== 'permalink' && c.kind !== 'article' && c.kind !== 'profile' && c.kind !== 'stream' && c.kind !== 'listing' && c.kind !== 'calendar' && c.kind !== 'feature' && c.kind !== 'credit')) {
       console.log(`  ${change.kind.toUpperCase()}: ${change.detail}`)
     }
   }

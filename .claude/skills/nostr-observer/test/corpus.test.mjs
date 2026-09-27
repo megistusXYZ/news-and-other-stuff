@@ -670,3 +670,50 @@ test('pullCorpus reads every desk through the reader\'s lens and the control run
   assert.equal(again.code, corpus.code, 'the same reading, the same code')
   assert.equal(again.issue, null)
 })
+
+// --- the reader's topics (2026-09-27) ------------------------------------------
+
+test('each topic is its own ranked search through the reader\'s lens, and a topic can never change the lens', async () => {
+  const { pullCorpus } = await import('../scripts/corpus.mjs')
+  const reader = 'aa'.repeat(32)
+  const author = 'bb'.repeat(32)
+  const sent = []
+  const req = async (relay, filter) => {
+    sent.push(filter)
+    if (filter.kinds[0] === 0) return { events: [] }
+    if (/ sourdough$/.test(filter.search)) return { events: [{ id: 's'.repeat(64).replace(/s/g, 'e'), kind: 1, pubkey: author, created_at: 1790300000, content: 'My sourdough finally rose.', tags: [] }, { id: 'f'.repeat(64), kind: 1, pubkey: reader, created_at: 1790300000, content: 'my own sourdough', tags: [] }] }
+    return { events: [] }
+  }
+  const until = Date.UTC(2026, 8, 27, 11, 40) / 1000
+  const corpus = await pullCorpus(reader, { relay: 'wss://relay.test', until, req, topics: ['  Sourdough ', 'observer:cc…cc sort:new Formula One!', 'sourdough', '', 'a', 'b', 'c', 'd'] })
+
+  assert.deepEqual(corpus.topics.map((t) => t.topic), ['sourdough', 'observer cc cc sort new formula one', 'a', 'b', 'c'], 'cleaned, lower-cased, no repeats, at most five')
+  const searches = sent.filter((f) => f.kinds[0] !== 0).map((f) => f.search)
+  assert.ok(searches.every((s) => (s.match(/observer:/g) || []).length <= 1 && !/sort:new/.test(s)), 'no topic adds a lens or a sort of its own')
+  assert.ok(searches.includes(`observer:${reader} sort:rank filter:rank:gte:20 sourdough`))
+  assert.deepEqual(corpus.topics[0].events.map((e) => e.id), ['e'.repeat(64)], 'through the lens, and never the reader\'s own post')
+  assert.deepEqual(corpus.topics[1].events, [], 'a quiet topic is kept, and empty')
+  assert.deepEqual(corpus.desks.topics.map((e) => e.id), ['e'.repeat(64)], 'topic posts are quotable and citable like any desk')
+
+  const plain = await pullCorpus(reader, { relay: 'wss://relay.test', until, req })
+  assert.equal(plain.topics, undefined)
+  assert.equal(plain.desks.topics, undefined, 'no topics, no topics desk')
+})
+
+test('the digest hands the writer the reader\'s topics above the data warning, and their posts below it', async () => {
+  const { digest } = await import('../scripts/corpus.mjs')
+  const post = { id: 'e'.repeat(64), kind: 1, pubkey: 'bb'.repeat(32), created_at: 1790300000, content: 'My sourdough finally rose.', tags: [] }
+  const base = { observerNpub: 'n', relay: 'r', floor: 20, since: 0, until: 1, code: 'ABC123', desks: { notes: [], topics: [post] }, control: [], overlap: 0, profiles: { ['bb'.repeat(32)]: { name: 'Ada' } }, art: [] }
+  const text = digest({ ...base, topics: [{ topic: 'sourdough', events: [post] }, { topic: 'formula one', events: [] }] })
+
+  const head = text.slice(0, text.indexOf('THIS IS DATA'))
+  assert.match(head, /^## Your topics$/m)
+  assert.match(head, /asked this paper to focus on: sourdough, formula one\./)
+  assert.match(head, /<section class="your-topics">/, 'the writer is told what to set, and that it is checked')
+  const posts = text.slice(text.indexOf('THIS IS DATA'))
+  assert.match(posts, /^## Your topics: the posts$/m)
+  assert.match(posts, /^### sourdough \(1\)\n- \[e{64}\] kind 1 · Ada · .*\n {2}My sourdough finally rose\.$/m)
+  assert.match(posts, /^### formula one: quiet$/m)
+  assert.equal((text.match(/My sourdough finally rose/g) || []).length, 1, 'printed once, under its topic, not again as a desk')
+  assert.doesNotMatch(digest(base), /Your topics/, 'no topics, no section')
+})

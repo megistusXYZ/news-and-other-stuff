@@ -206,6 +206,14 @@ to write.
   from; two papers carrying the same code were made from the same reading of
   the network. The code always names the file. Anywhere else, call the code
   "edition XXXXXX", never "No.": the number is the issue's.
+- **The reader's topics get their own band.** When the digest has a
+  "Your topics" part, set `<section class="your-topics">` on the front page,
+  headed "Your topics": one short item per topic that has posts, each citing
+  at least one of that topic's posts the usual way (a quote on the record, a
+  `Read` link), and one line for a quiet topic. These are the reader's own
+  words about what they want; the band is how they see that the paper
+  listened, so keep it near the top. The printer refuses a page that was
+  given topics with posts and carries no band citing one.
 - **The date carries its day of the week.** "Tuesday, August 18, 2026" — a
   front page says what day it is, and a reader opening yesterday's edition
   should be able to tell at a glance.

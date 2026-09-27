@@ -1403,9 +1403,11 @@ product on the Observer engine, published as the public GitHub fork
 and its `main` mirrors NosFabrica's untouched. In this clone, `origin` is the
 fork and `upstream` is NosFabrica, whose push address stays disabled. Engine
 improvements go back as small PRs, each cut fresh from `upstream/main`,
-brand-free, with tests, and reviewed by someone else, after a proposal issue on
-NosFabrica. Proposed order: accessibility, credits, issue numbers, Stop Press
-and the reader panel, then each new wire. These stay downstream: the Brainstorm
+brand-free, with tests, and reviewed by someone else. The proposal is
+NosFabrica/the-nostr-observer#8 (2026-09-26). NosFabrica's `main` has no living
+copy (no dress.mjs or living.js), no wires and no puzzles, so the order it
+offers is: validator and resolver fixes, the wires, the living copy with its
+accessibility, then the back page. No PR goes up until a maintainer answers. These stay downstream: the Brainstorm
 brand files, the Megistus imprint, the ostrich stamps, this decision log,
 `docs/QA-*` and The Tape. NOTICE records what the MIT licence does not cover.
 Stay current with `git fetch upstream && git merge upstream/main`.

@@ -330,6 +330,17 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **Pictures open their post (2026-09-26).** dress marks every picture that
+  came with a post the corpus holds (`data-ev`, from the art shortlist's
+  `eventId`) and every wire picture with its own page (`data-href`: the xkcd
+  strip by number, the Commons file page and the TheMealDB dish, both now kept
+  by wires.mjs as `link` and never printed). living.js makes them focusable
+  links: a post picture clicks the story's own "Read" link, so the panel,
+  history and arrows behave alike (an article's cover opens it by address); a
+  wire picture opens its page in a new tab; a modified click opens a new tab
+  either way. The cartoon and recipe tabs keep `data-href` current. Pointer and
+  a slight fade on hover; nothing drawn over the picture.
+
 - **What's On replaces the Diary (2026-09-26).** The calendar desk already
   pulled dozens of meetups a day (73 on 2026-09-25), nearly all on other
   continents; the Diary printed three at random. `scripts/whatson.mjs` sorts

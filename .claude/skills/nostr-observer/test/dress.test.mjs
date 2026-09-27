@@ -620,3 +620,35 @@ test('the living copy carries the recipe\'s other tabs: each dish as plain text,
     'no recipe of the day on the page, nothing to tab beside')
   assert.equal(islandOf(dress(page, corpus, assets).html).recipes, null)
 })
+
+// --- pictures open their post, 2026-09-26 -----------------------------------------------
+
+test('a picture from a post is marked with that post, a wire picture with its own page, and anything else with nothing', () => {
+  const pictured = {
+    ...corpus,
+    art: [
+      { id: 'art-1', url: 'https://img.example/garage.jpg', eventId: NOTE_ID },
+      { id: 'art-2', url: 'https://imgs.xkcd.com/comics/slab_graveyard.png' },
+      { id: 'art-3', url: 'https://img.example/orphan.jpg', eventId: 'f'.repeat(64) },
+      { id: 'art-4', url: 'https://upload.wikimedia.org/x/gladiolus.jpg' },
+      { id: 'art-5', url: 'https://www.themealdb.com/images/media/meals/oxtail.jpg' },
+    ],
+    wires: {
+      cartoon: { title: 'Slab Graveyard', number: 3303, art: 'art-2' },
+      picture: { art: 'art-4', link: 'https://commons.wikimedia.org/wiki/File:Gladiolus.jpg' },
+      recipe: { name: 'Oxtail', art: 'art-5', link: 'javascript:alert(1)' },
+    },
+  }
+  const withPictures = page.replace('</article>', '<figure><img src="https://img.example/garage.jpg" alt="a"></figure>'
+    + '<figure><img src="https://imgs.xkcd.com/comics/slab_graveyard.png" alt="b"></figure>'
+    + '<figure><img src="https://img.example/orphan.jpg" alt="c"></figure>'
+    + '<figure><img src="https://upload.wikimedia.org/x/gladiolus.jpg" alt="d"></figure>'
+    + '<figure><img src="https://www.themealdb.com/images/media/meals/oxtail.jpg" alt="e"></figure></article>')
+  const { html } = dress(withPictures, pictured, assets)
+  const img = (src) => new RegExp(`<img [^>]*src="${src.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}"[^>]*>`).exec(html)[0]
+  assert.match(img('https://img.example/garage.jpg'), new RegExp(`data-ev="${NOTE_ID}"`), 'opens the post it came with')
+  assert.match(img('https://imgs.xkcd.com/comics/slab_graveyard.png'), /data-href="https:\/\/xkcd\.com\/3303\/"/)
+  assert.match(img('https://upload.wikimedia.org/x/gladiolus.jpg'), /data-href="https:\/\/commons\.wikimedia\.org\/wiki\/File:Gladiolus\.jpg"/)
+  assert.doesNotMatch(img('https://www.themealdb.com/images/media/meals/oxtail.jpg'), /data-href|data-ev/, 'a link is https or nothing')
+  assert.doesNotMatch(img('https://img.example/orphan.jpg'), /data-href|data-ev/, 'a post the corpus does not hold is not opened')
+})

@@ -241,6 +241,14 @@ a.lv-cartoon-title:hover { color: var(--accent); }
 .band.tinted .band-head { border-bottom-color: var(--rule); }
 .band.tinted .credits { margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--rule); font-family: var(--mono); font-style: normal; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 
+/* A picture that opens something says so with the pointer and a slight fade,
+ * like a headline's hover; nothing is drawn over it. */
+img[data-ev], img[data-href] { cursor: pointer; transition: opacity .2s ease; }
+img[data-ev]:hover, img[data-href]:hover { opacity: .88; }
+img[data-ev]:focus-visible, img[data-href]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+img[data-href=""] { cursor: default; }
+img[data-href=""]:hover { opacity: 1; }
+
 /* Long Reads: the slow shelf. Each cover cropped to one shape so the four
  * columns start level; the kicker carries the author and the reading time. */
 .band.longreads .cell figure { margin: 0 0 10px; }

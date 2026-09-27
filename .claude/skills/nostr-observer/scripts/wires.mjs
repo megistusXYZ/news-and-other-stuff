@@ -388,7 +388,9 @@ async function picture (fetch, now, art, feed) {
   // to…"); the first sentence is the credit.
   const artist = String(img.artist?.text || 'Unknown').replace(/\s+/g, ' ').trim().split(/(?<=[a-z])\. (?=[A-Z])/)[0].slice(0, 80)
   const id = art.add(url, artist, caption)
-  return { caption, artist, licence: img.license?.type || 'see Commons', art: id, source: 'Wikimedia Commons' }
+  // Its Commons page, for the living copy: a click on the picture opens it.
+  const link = /^https:\/\/commons\.wikimedia\.org\/wiki\/File:[^\s"'<>]{1,300}$/.test(img.file_page || '') ? img.file_page : null
+  return { caption, artist, licence: img.license?.type || 'see Commons', art: id, source: 'Wikimedia Commons', link }
 }
 
 // The recipe of the day, from TheMealDB (the sports feed's sibling, same free
@@ -412,6 +414,8 @@ async function recipe (fetch, art) {
     method: String(m.strInstructions || '').replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 4000),
     art: thumb ? art.add(thumb, 'TheMealDB', String(m.strMeal)) : null,
     source: 'TheMealDB',
+    // The dish's own page, for the living copy's picture; never printed.
+    link: /^\d{1,10}$/.test(String(m.idMeal || '')) ? `https://www.themealdb.com/meal/${m.idMeal}` : null,
   }
 }
 

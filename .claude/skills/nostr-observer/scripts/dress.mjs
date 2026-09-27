@@ -376,11 +376,26 @@ export function dress (html, corpus, assets) {
   // a 4000px spread photograph to read the front. The first picture is the
   // lead and gets priority; every other one waits for the reader's scroll.
   // Cameos and sheet pictures are made by living.js, which lazies its own.
+  //
+  // A picture is also a way in. One that came with a post opens that post,
+  // like its "Read" (living.js finds the story's own link by data-ev); a wire
+  // picture opens its own page — the xkcd strip, the Commons file, the dish.
+  // A post the corpus does not hold, or a link that is not https, opens nothing.
   const pictures = tags(out, 'img')
+  const safe = (url) => (/^https:\/\/[^\s"'<>]{1,500}$/.test(String(url || '')) ? url : null)
+  const opens = new Map()
+  const w = corpus.wires || {}
+  const artUrl = (id) => ((corpus.art || []).find((a) => a.id === id) || {}).url
+  for (const a of corpus.art || []) if (a.eventId && byId.has(a.eventId)) opens.set(a.url, { ev: a.eventId })
+  if (w.cartoon && Number.isInteger(w.cartoon.number)) opens.set(artUrl(w.cartoon.art), { href: `https://xkcd.com/${w.cartoon.number}/` })
+  for (const wire of [w.picture, w.recipe]) if (wire && safe(wire.link)) opens.set(artUrl(wire.art), { href: wire.link })
   // Spliced from the end so earlier offsets stay valid; the lead is index 0.
   for (const [i, img] of [...pictures.entries()].reverse()) {
     const attrs = attributes(img.raw)
     const add = []
+    const open = opens.get(attrs.src)
+    if (open && open.ev && !('data-ev' in attrs)) add.push(`data-ev="${open.ev}"`)
+    if (open && open.href && !('data-href' in attrs)) add.push(`data-href="${open.href.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}"`)
     if (i === 0) {
       if (!('fetchpriority' in attrs)) add.push('fetchpriority="high"')
     } else {

@@ -1694,7 +1694,7 @@ function cartoonTabs () {
   const caption = figure.querySelector('figcaption')
   if (!head || !img || !caption) return
   const original = caption.cloneNode(true)
-  const originalImg = { src: img.getAttribute('src'), alt: img.getAttribute('alt') || '' }
+  const originalImg = { src: img.getAttribute('src'), alt: img.getAttribute('alt') || '', href: img.dataset.href || '' }
   figure.classList.add('lv-line-art')
 
   // Hold the box at the first cartoon's height once it has drawn.
@@ -1727,6 +1727,7 @@ function cartoonTabs () {
       img.onerror = null
       img.src = originalImg.src
       img.alt = originalImg.alt
+      img.dataset.href = originalImg.href
       caption.replaceWith(original.cloneNode(true))
       return
     }
@@ -1741,6 +1742,7 @@ function cartoonTabs () {
     }
     img.src = c.image
     img.alt = c.title ? `${c.tab}: ${c.title}` : c.tab
+    img.dataset.href = c.link || ''
     const next = el('figcaption')
     if (c.title) {
       const title = el('a', 'lv-cartoon-title', c.title)
@@ -1778,7 +1780,7 @@ function recipeTabs () {
   const method = box.querySelector('.recipe-method')
   if (!head || !name || !items || !method) return
   const today = {
-    src: img && img.getAttribute('src'), alt: img ? img.getAttribute('alt') || '' : '',
+    src: img && img.getAttribute('src'), alt: img ? img.getAttribute('alt') || '' : '', href: img ? img.dataset.href || '' : '',
     name: name.cloneNode(true), note: note && note.cloneNode(true), items: items.cloneNode(true), method: method.cloneNode(true),
   }
   const hold = () => { if (!box.style.minHeight) box.style.minHeight = `${Math.round(box.getBoundingClientRect().height)}px` }
@@ -1804,7 +1806,7 @@ function recipeTabs () {
     hold()
     tabs.forEach((b, j) => { b.setAttribute('aria-selected', String(i === j)); b.tabIndex = i === j ? 0 : -1 })
     if (i === 0) {
-      if (img) { img.src = today.src; img.alt = today.alt; img.hidden = false }
+      if (img) { img.src = today.src; img.alt = today.alt; img.dataset.href = today.href; img.hidden = false }
       swap('.recipe-head h3', today.name.cloneNode(true))
       if (today.note) swap('.recipe-head .note', today.note.cloneNode(true))
       swap('.recipe-head ul', today.items.cloneNode(true))
@@ -1815,6 +1817,7 @@ function recipeTabs () {
     if (img) {
       img.hidden = !r.image
       if (r.image) { img.src = r.image; img.alt = `The picture TheMealDB keeps for ${r.name}` }
+      img.dataset.href = r.link || ''
     }
     swap('.recipe-head h3', el('h3', 'small-head', r.name))
     const credit = el('p', 'note', r.kind ? `${r.kind} · ` : '')
@@ -1838,6 +1841,48 @@ function recipeTabs () {
     e.preventDefault()
     show(to)
     tabs[to].focus()
+  })
+}
+
+// --- pictures open their post ---------------------------------------------------
+//
+// dress marks a picture that came with a post (data-ev) and a wire picture with
+// its own page (data-href). A click on the first does what the story's "Read"
+// does — the same link is clicked, so the panel, the history and the arrows all
+// behave alike; a click on the second opens the page in a new tab. A modified
+// click opens a new tab either way, as a link would. Keyboard: each is a
+// focusable link. The cartoon and recipe tabs keep data-href current.
+
+function pictureLinks () {
+  const pictures = () => $$('img[data-ev], img[data-href]')
+  const label = (img) => (img.dataset.ev ? 'Open this post' : 'Open the source page')
+  for (const img of pictures()) {
+    img.tabIndex = 0
+    img.setAttribute('role', 'link')
+    img.setAttribute('aria-label', `${label(img)}: ${img.alt || ''}`.trim())
+  }
+  const go = (img, newTab) => {
+    if (img.dataset.ev) {
+      const story = document.querySelector(`a[data-ev="${img.dataset.ev}"]`)
+      const href = story ? story.href : `${BRAINSTORM}/e/${img.dataset.ev}`
+      if (newTab || !story) return newTab ? window.open(href, '_blank', 'noopener,noreferrer') : openReader(href)
+      return story.click()
+    }
+    const href = img.dataset.href
+    if (!href) return
+    if (!newTab && href.startsWith(BRAINSTORM + '/')) return openReader(href)
+    window.open(href, '_blank', 'noopener,noreferrer')
+  }
+  document.addEventListener('click', (e) => {
+    const img = e.target.closest && e.target.closest('img[data-ev], img[data-href]')
+    if (!img || e.button !== 0 || img.closest('a')) return
+    e.preventDefault()
+    go(img, e.metaKey || e.ctrlKey || e.shiftKey)
+  })
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || !e.target.matches || !e.target.matches('img[data-ev], img[data-href]')) return
+    e.preventDefault()
+    go(e.target, e.metaKey || e.ctrlKey || e.shiftKey)
   })
 }
 
@@ -1961,6 +2006,7 @@ if (data) {
   guard(five)
   guard(cartoonTabs)
   guard(recipeTabs)
+  guard(pictureLinks)
   guard(cards)
   guard(wireRows)
   guard(reader)

@@ -352,6 +352,8 @@ test('the picture of the day: Wikimedia\'s featured picture, as art the writer m
     licence: 'CC BY-SA 4.0',
     art: 'art-7',
     source: 'Wikimedia Commons',
+    // For the living copy only: a click on the picture opens its Commons page.
+    link: 'https://commons.wikimedia.org/wiki/File:NE_Lac_Bab_Louta.jpg',
   })
   assert.deepEqual(wires.art, [{ id: 'art-7', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Lac.jpg/640px-Lac.jpg', byline: 'Timothy A. Gonsalves', from: 'Lake Bab Louta in the Tazekka National Park, Morocco.' }],
     'the 640px thumbnail, not the full file: a page, not an archive')
@@ -374,7 +376,8 @@ test('the recipe of the day: a dish from TheMealDB with its ingredients paired t
     method: 'step 1\nNestle the fish fillets in a bowl.\nstep 2\nSteam for 12 minutes.',
     art: 'art-3',
     source: 'TheMealDB',
-  }, 'empty ingredient slots are dropped; the source URL stays out of the paper, which prints no links to the open web')
+    link: 'https://www.themealdb.com/meal/53202',
+  }, 'empty ingredient slots are dropped; the source URL stays out of the paper, which prints no links to the open web; the dish\'s own TheMealDB page is kept for the living copy\'s picture')
   assert.equal(wires.art[0].url, 'https://www.themealdb.com/images/media/meals/fish.jpg')
 })
 

@@ -837,7 +837,7 @@ export async function gatherWires (settings, { fetch = globalThis.fetch, now = M
 // terms, 2026-09-26), with its licence and a link that sends readers to them.
 // The printer sets these into the page's credit lines; nothing here is typed
 // by the writer.
-const OPEN_METEO = { source: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', licence: { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } }
+const OPEN_METEO = { source: 'Weather data by Open-Meteo.com', inline: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', licence: { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } }
 const gutenberg = (id) => ({ source: 'Project Gutenberg', url: `https://www.gutenberg.org/ebooks/${id}`, note: 'public domain in the USA' })
 function ccLicence (name) {
   const m = /^CC (BY(?:-(?:SA|NC|ND))*) (\d\.\d)$/i.exec(String(name || '').trim())

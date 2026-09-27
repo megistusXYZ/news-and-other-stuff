@@ -303,18 +303,15 @@ trust said, so:
   the tinted band of the construction. The weather goes in the rail, as a
   small box at the top of the left column, the way papers print it, still
   credited.
-- Credits are set by the printer, never typed. Where a source is shown, leave
-  an empty `<p class="credit" data-credit="KEY"></p>` naming the digest's
-  credit keys (several at once, space-separated), and the printer sets each
-  source's own wording, licence and link — the attribution its terms ask
-  for. Once per box or band, at its foot: the weather box `weather`, Health &
-  Safety `health`, Conditions `markets quakes launches`, The Tape `tape`, the
-  wires band `sports almanac lookedUp`, the Tabloid's two cells `trends` and
-  `bluesky`, the picture of the day `picture` (in its figcaption), the
-  cartoon `cartoon`, the archive cartoon `archive`, the recipe `recipe`, the
-  Feature `feature`, the serial `serial`. Headlines need none; each is
-  already under its outlet's name. Keep any "as of" stamp as its own short
-  `note`; never write a source's name, licence or address yourself.
+- Credits are set by the printer, never typed, and only three sit beside
+  the work, because their licences ask for it: leave an empty
+  `<p class="credit" data-credit="KEY"></p>` at the foot of the weather box
+  (`weather`), in the picture of the day's figcaption (`picture`) and after
+  the Feature's text (`feature`). No other box gets one: the printer adds a
+  single "Sources & licences" list at the foot of the paper naming every
+  source, its licence and its link. Headlines need none; each is already
+  under its outlet's name. Keep any "as of" stamp as its own short `note`;
+  never write a source's name, licence or address yourself.
 - Weather is a forecast table: today's high, low, rain and sky, sunrise and
   sunset, then the days ahead, one line each.
 - Sports is a results box: the last score and the next fixture per team.
@@ -331,23 +328,21 @@ trust said, so:
   Conditions, headed "The Tape": a table of ticker, close and the day's move,
   one row a share, in the order given — the move as the digest's percentage,
   with ▲ for up and ▼ for down ("▲ 1.53%") — then a `note` with the
-  digest's stamp ("Closes as of Friday 3:00 p.m. CDT") and the `tape`
-  credit line. No
+  digest's stamp ("Closes as of Friday 3:00 p.m. CDT"). No
   commentary on the moves: it is a table, not a tip.
 - Health & Safety is a small box, headed "Health & Safety" and the place:
   the UV index and its hours first, then any weather alert (the event in
   bold, the headline shortened, never reworded into advice), then a
   `<div class="health-lists">` of two `div`s — the food recalls (product and
   firm, the reason in a few words) and the product recalls, each a
-  `health-head` label over a list, one line each — then its `health`
-  credit line. A quiet day says so
+  `health-head` label over a list, one line each. A quiet day says so
   in one line ("No weather alerts in force."). These are facts to act on,
   not advice: add no warnings, tips or medical words of your own.
 - The picture of the day takes the last slot of the picture spread, captioned
   with its own words, with the `picture` credit line (maker, licence) in its
   figcaption.
 - The cartoon is a figure: the picture by id, the title as its caption, the
-  alt text as the second sentence, and the `cartoon` credit line. The puzzle is the nine lines
+  alt text as the second sentence. The puzzle is the nine lines
   the digest gives, verbatim, in `<pre class="sudoku">`, headed "Sudoku" and
   nothing else — the living copy reveals the solution. The recipe: name,
   kind, the picture by id, ingredients as a list, the method as paragraphs.

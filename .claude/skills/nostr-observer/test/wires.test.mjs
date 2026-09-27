@@ -698,7 +698,7 @@ test('every source is credited the way its provider asks, with its licence and a
   }
   const c = creditsFor(wires)
   const CC = (kind, v) => ({ name: `CC ${kind.toUpperCase()} ${v}`, url: `https://creativecommons.org/licenses/${kind}/${v}/` })
-  assert.deepEqual(c.weather, { source: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', licence: CC('by', '4.0') })
+  assert.deepEqual(c.weather, { source: 'Weather data by Open-Meteo.com', inline: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', licence: CC('by', '4.0') })
   assert.deepEqual(c.health.map((a) => a.source), ['Weather data by Open-Meteo.com', 'National Weather Service', 'Data provided by the U.S. Food and Drug Administration', 'U.S. Consumer Product Safety Commission'])
   assert.deepEqual(c.health[2].licence, { name: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/' })
   assert.deepEqual(c.markets.map((a) => a.source), ['mempool.space', 'European Central Bank reference rates, via Frankfurter'])

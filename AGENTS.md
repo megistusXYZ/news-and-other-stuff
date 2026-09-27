@@ -342,10 +342,16 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   provider asks, checked against each provider's own terms that day:
   `creditsFor(wires)` in wires.mjs gives each a structured credit (source
   wording, link, licence and licence deed, note), carried as `wires.credits`.
-  The writer never types a credit: it leaves `<p class="credit"
-  data-credit="weather">` (several keys allowed) and resolve.mjs sets the
-  line as plain text with `data-href`; living.js turns those into links in a
-  new tab. One quiet style: the source, the licence as a small tag, a note.
+  The writer never types a credit. Revised the same day, because tags and
+  links in every box read as clutter: only the three a licence wants beside
+  the work get a line (`data-credit="weather"`, `"picture"`, `"feature"`),
+  set as plain small italic text with no links (a source may carry an
+  `inline` short form: Open-Meteo's exact words). Every source, with its
+  link and licence, goes in one `<details class="sources">` list that
+  resolve.mjs sets at the foot of the sheet (grouped by section, replaced on
+  each run, never appended twice); living.js links only inside that list,
+  opening a new tab. No footnote numbers: a paper's small print, not an
+  encyclopaedia's.
   Findings worth remembering: Open-Meteo wants "Weather data by
   Open-Meteo.com" and is free for non-commercial use only; The Conversation's
   republishing rules require their per-article counter pixel when an article

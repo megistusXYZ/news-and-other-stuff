@@ -673,7 +673,7 @@ export function dress (html, corpus, assets) {
   // not seen (it also keeps the headings from jumping h1 to h3).
   const fold = tags(out, 'section').find((t) => /\bfold\b/.test(attributes(t.raw).class || ''))
   if (fold) {
-    out = out.slice(0, fold.end) + '<h2 class="lv-sr" id="lv-front" tabindex="-1">Front page</h2>' + out.slice(fold.end)
+    out = out.slice(0, fold.start) + '<h2 class="lv-sr" id="lv-front" tabindex="-1">Front page</h2>' + out.slice(fold.start)
     out = out.replace(/<body\b[^>]*>/i, (open) => `${open}\n<a class="lv-skip" href="#lv-front">Skip to the front page</a>`)
   }
   out = indexRow(out)

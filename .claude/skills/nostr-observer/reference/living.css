@@ -959,26 +959,27 @@ html:root[data-lv-contrast="high"][data-theme="dark"] {
   .lv-reading { order: 3; }
 }
 
-/* --- credit lines ------------------------------------------------------------- */
-/* One quiet style for every source: the name, its licence as a small tag, and
- * a note when the source asks for one. Links only in the living copy. */
-p.credit { margin: 10px 0 0; font: 400 .74rem/1.5 var(--brand, var(--body)); color: var(--ink-3); letter-spacing: .01em; }
-/* Whatever cell it sits in (justified agate, italic notes), a credit line
- * keeps its own face: left, unhyphenated, upright. */
-.sheet .credit.credit[data-credit] { margin: 10px 0 0; font: 400 .74rem/1.5 var(--brand, var(--body)); font-style: normal; color: var(--ink-3);
+/* --- credits ------------------------------------------------------------------ */
+/* Beside the work, only what a licence asks for, as a quiet italic line: no
+ * links, no tags. Every source, with its link and licence, is in one list at
+ * the foot, folded shut like a paper's small print. */
+.sheet .credit.credit[data-credit] { margin: 8px 0 0; font: italic 400 .72rem/1.45 var(--brand, var(--body)); color: var(--ink-3);
   text-align: left; hyphens: none; letter-spacing: .01em; text-transform: none; }
-p.credit .credit-item { color: var(--ink-2); font-weight: 600; text-decoration: none; }
-p.credit .credit-licence { display: inline-block; margin-left: 2px; padding: 0 5px; border: 1px solid var(--rule); border-radius: 3px;
-  font: 500 .64rem/1.5 var(--mono); letter-spacing: .04em; color: var(--ink-3); text-decoration: none; vertical-align: 1px; }
-p.credit .credit-note { font-style: italic; }
-p.credit a:hover { color: var(--accent); border-color: var(--accent); }
-p.credit a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.box p.credit { margin-top: 6px; }
-.sheet .credit.credit[data-credit] .credit-item, .sheet .credit.credit[data-credit] .credit-note {
-  font-family: inherit; font-size: inherit; letter-spacing: inherit; text-transform: none; border: 0; }
-.sheet .credit.credit[data-credit] .credit-item { font-weight: 600; color: var(--ink-2); }
-.sheet .credit.credit[data-credit] .credit-note { font-style: italic; font-weight: 400; }
-.sheet .credit.credit[data-credit] .credit-licence { font-family: var(--mono); font-size: .64rem; font-weight: 500; }
+
+.sheet details.sources { margin: 28px 0 0; padding: 10px 0 0; border-top: 1px solid var(--rule); font: 400 .74rem/1.5 var(--brand, var(--body)); color: var(--ink-3); }
+.sheet details.sources > summary { display: inline-block; cursor: pointer; list-style: none; font: 600 .68rem/1.4 var(--brand, var(--body));
+  letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.sheet details.sources > summary::-webkit-details-marker { display: none; }
+.sheet details.sources > summary::after { content: " +"; font-weight: 400; }
+.sheet details.sources[open] > summary::after { content: " \2212"; }
+.sheet details.sources > summary:hover { color: var(--accent); }
+.sheet details.sources > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.sheet details.sources ul { margin: 10px 0 0; padding: 0; list-style: none; columns: 2 22rem; column-gap: 32px; }
+.sheet details.sources li { margin: 0 0 6px; break-inside: avoid; text-align: left; hyphens: none; }
+.sheet details.sources .sources-section { display: block; font-weight: 600; color: var(--ink-2); }
+.sheet details.sources a { color: inherit; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 2px; }
+.sheet details.sources a:hover { color: var(--accent); text-decoration-color: currentColor; }
+.sheet details.sources a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* --- the nameplate's rules: a broadsheet's, one of each ---------------------- */
 /* A fine rule above the name; below it the Oxford rule, heavy then a hairline

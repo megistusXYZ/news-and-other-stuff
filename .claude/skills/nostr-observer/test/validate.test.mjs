@@ -528,15 +528,35 @@ test('a Sunday story keeps Gutenberg\'s italics as italics', () => {
 
 // --- credit lines are set by the printer, 2026-09-26 ------------------------------------
 
-test('resolve sets each credit line from the sources\' own attributions: name, licence, one style, escaped', () => {
+test('resolve sets the few credits a licence wants beside the work as plain text: no tags, no links', () => {
   const wires = { credits: {
-    weather: { source: 'Open-Meteo', url: 'https://open-meteo.com/', licence: { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } },
-    markets: [{ source: 'mempool.space & <ECB>', url: 'https://mempool.space/', licence: null }],
-    feature: { source: 'The Conversation', url: 'javascript:alert(1)', licence: { name: 'CC BY-ND 4.0', url: 'https://creativecommons.org/licenses/by-nd/4.0/' }, note: 'Read the original' },
+    weather: { source: 'Weather data by Open-Meteo.com', inline: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', licence: { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } },
+    picture: { source: 'Timothy A. Gonsalves / Wikimedia Commons & <co>', url: 'https://commons.wikimedia.org/wiki/File:X.jpg', licence: { name: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/' } },
+    feature: { source: 'The Conversation', url: 'https://theconversation.com/x-1', licence: { name: 'CC BY-ND 4.0', url: 'https://creativecommons.org/licenses/by-nd/4.0/' }, note: 'republished under Creative Commons; read the original' },
   } }
-  const html = resolve('<p class="credit" data-credit="weather markets nothing"></p><p class="credit" data-credit="feature"></p><p class="credit" data-credit="nothing"></p>', { ...corpus, wires }).html
-  assert.match(html, /<p class="credit" data-credit="weather markets nothing"><span class="credit-item" data-href="https:\/\/open-meteo\.com\/">Open-Meteo<\/span> <span class="credit-licence" data-href="https:\/\/creativecommons\.org\/licenses\/by\/4\.0\/">CC BY 4\.0<\/span> · <span class="credit-item" data-href="https:\/\/mempool\.space\/">mempool\.space &amp; &lt;ECB&gt;<\/span><\/p>/)
-  assert.match(html, /<p class="credit" data-credit="feature"><span class="credit-item">The Conversation<\/span> <span class="credit-licence" data-href="https:\/\/creativecommons\.org\/licenses\/by-nd\/4\.0\/">CC BY-ND 4\.0<\/span> · <span class="credit-note">Read the original<\/span><\/p>/, 'a link that is not https is left off')
-  assert.doesNotMatch(html, /data-credit="nothing"/, 'a credit with nothing to credit is removed, not left empty')
-  assert.deepEqual(check(html, { ...corpus, wires }).violations, [], 'plain text and data attributes: the boundary has nothing to refuse')
+  const html = resolve('<p class="credit" data-credit="weather"></p><p class="credit" data-credit="picture"></p><p class="credit" data-credit="feature"></p><p class="credit" data-credit="nothing"></p>', { ...corpus, wires }).html
+  assert.match(html, /<p class="credit" data-credit="weather">Weather data by Open-Meteo\.com<\/p>/, 'the wording Open-Meteo asks for, and nothing else')
+  assert.match(html, /<p class="credit" data-credit="picture">Timothy A\. Gonsalves \/ Wikimedia Commons &amp; &lt;co&gt; · CC BY-SA 4\.0<\/p>/)
+  assert.match(html, /<p class="credit" data-credit="feature">The Conversation · CC BY-ND 4\.0 · republished under Creative Commons; read the original<\/p>/)
+  assert.doesNotMatch(html, /data-href|credit-licence|data-credit="nothing"/)
+})
+
+test('resolve adds one "Sources & licences" list at the foot, grouped by section, each source and licence ready to link', () => {
+  const wires = { credits: {
+    weather: { source: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', licence: { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' } },
+    markets: [{ source: 'mempool.space', url: 'https://mempool.space/' }, { source: 'ECB reference rates, via Frankfurter', url: 'javascript:alert(1)' }],
+    quakes: { source: 'U.S. Geological Survey', url: 'https://earthquake.usgs.gov/', licence: { name: 'Public domain', url: null } },
+    tape: { source: 'Yahoo Finance', url: 'https://finance.yahoo.com/', note: 'delayed; not live, not advice' },
+  } }
+  const html = resolve('<main class="sheet"><p>The paper.</p></main>', { ...corpus, wires }).html
+  const list = /<details class="sources">([\s\S]*?)<\/details>\s*<\/main>/.exec(html)
+  assert.ok(list, 'the last thing on the sheet, closed until asked for')
+  assert.match(list[1], /^\s*<summary>Sources &amp; licences<\/summary>/)
+  assert.match(list[1], /<li><span class="sources-section">The network<\/span> Posts from Nostr, ranked by <span data-href="https:\/\/brainstorm\.world\/">Brainstorm<\/span><\/li>/)
+  assert.match(list[1], /<li><span class="sources-section">Weather<\/span> <span data-href="https:\/\/open-meteo\.com\/">Weather data by Open-Meteo\.com<\/span> \(<span data-href="https:\/\/creativecommons\.org\/licenses\/by\/4\.0\/">CC BY 4\.0<\/span>\)<\/li>/)
+  assert.match(list[1], /<li><span class="sources-section">Conditions<\/span> <span data-href="https:\/\/mempool\.space\/">mempool\.space<\/span>; ECB reference rates, via Frankfurter; <span data-href="https:\/\/earthquake\.usgs\.gov\/">U\.S\. Geological Survey<\/span> \(Public domain\)<\/li>/, 'a source without an https link is named, not linked')
+  assert.match(list[1], /<li><span class="sources-section">The Tape<\/span> <span data-href="https:\/\/finance\.yahoo\.com\/">Yahoo Finance<\/span>, delayed; not live, not advice<\/li>/)
+  assert.deepEqual(check(html, { ...corpus, wires }).violations, [], 'plain text and data attributes: nothing for the boundary to refuse')
+  assert.doesNotMatch(resolve('<main class="sheet"></main>', corpus).html, /class="sources"/, 'no wires, no list')
+  assert.equal(resolve(html, { ...corpus, wires }).html.match(/<details class="sources">/g).length, 1, 'resolving again sets the list afresh, not twice')
 })

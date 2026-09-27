@@ -1815,7 +1815,6 @@ function recipeTabs () {
   const today = {
     src: img && img.getAttribute('src'), alt: img ? img.getAttribute('alt') || '' : '', href: img ? img.dataset.href || '' : '',
     name: name.cloneNode(true), note: note && note.cloneNode(true), items: items.cloneNode(true), method: method.cloneNode(true),
-    creditHref: (() => { const c = box.querySelector('p.credit [data-href], p.credit a.credit-item'); return c ? c.getAttribute('data-href') || c.getAttribute('href') : null })(),
   }
   const hold = () => { if (!box.style.minHeight) box.style.minHeight = `${Math.round(box.getBoundingClientRect().height)}px` }
 
@@ -1845,8 +1844,6 @@ function recipeTabs () {
       if (today.note) swap('.recipe-head .note', today.note.cloneNode(true))
       swap('.recipe-head ul', today.items.cloneNode(true))
       swap('.recipe-method', today.method.cloneNode(true))
-      const creditLink = box.querySelector('p.credit a.credit-item')
-      if (creditLink && today.creditHref) creditLink.href = today.creditHref
       return
     }
     const r = list[i - 1]
@@ -1869,8 +1866,6 @@ function recipeTabs () {
     const steps = el('div', 'recipe-method')
     for (const line of r.method) steps.append(el('p', '', line))
     swap('.recipe-method', steps)
-    const creditLink = box.querySelector('p.credit a.credit-item')
-    if (creditLink && r.link) creditLink.href = r.link
   }
   bar.addEventListener('keydown', (e) => {
     const at = tabs.findIndex((b) => b.getAttribute('aria-selected') === 'true')
@@ -2032,29 +2027,20 @@ function readingPanel () {
 
 // --- credit lines link to their sources --------------------------------------------
 //
-// The printer set each credit as plain text with data-href (only https). Here
-// the source and its licence become links that open in a new tab, so the
-// people whose work fills the page get the visit.
+// Beside the work a credit is plain text, the few words its licence asks for.
+// The links live in one place: the "Sources & licences" list at the foot, where
+// the printer set each source and licence as text with data-href (only https).
+// Here those become links that open in a new tab.
 
-// A credit line built from a structured attribution, in the printer's style,
-// already linked (the living copy's own tabs use it).
+// A credit line from a structured attribution, in the printer's plain style
+// (the Feature's second tab uses it).
 function creditLine (a) {
   if (!a || !a.source) return null
-  const p = el('p', 'credit')
-  const part = (cls, text, url) => {
-    if (!url) return el('span', cls, text)
-    const link = el('a', cls, text)
-    link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'
-    return link
-  }
-  p.append(part('credit-item', a.source, a.url))
-  if (a.licence && a.licence.name) p.append(' ', part('credit-licence', a.licence.name, a.licence.url))
-  if (a.note) p.append(' · ', el('span', 'credit-note', a.note))
-  return p
+  return el('p', 'credit', [a.source, a.licence && a.licence.name, a.note].filter(Boolean).join(' · '))
 }
 
 function creditLinks () {
-  for (const span of $$('.credit [data-href]')) {
+  for (const span of $$('.sources [data-href]')) {
     const a = el('a', span.className, span.textContent)
     a.href = span.dataset.href
     a.target = '_blank'

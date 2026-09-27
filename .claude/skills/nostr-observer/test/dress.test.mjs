@@ -701,7 +701,7 @@ test('the living copy opens with a skip link to a front-page heading that screen
   const fronted = page.replace('<article class="story">', '<section class="fold"><article class="story"><h2 class="lead-head">A</h2>').replace('</article>', '</article></section>')
   const { html } = dress(fronted, corpus, assets)
   assert.match(html, /<body>\n?<a class="lv-skip" href="#lv-front">Skip to the front page<\/a>/, 'the first thing a keyboard reaches')
-  assert.match(html, /<section class="fold"><h2 class="lv-sr" id="lv-front" tabindex="-1">Front page<\/h2><article/, 'so the headings run h1, h2, h3 without a gap')
+  assert.match(html, /<h2 class="lv-sr" id="lv-front" tabindex="-1">Front page<\/h2><section class="fold"><article/, 'so the headings run h1, h2, h3 without a gap, and just before the front page, so its first column stays the first')
   assert.doesNotMatch(dress(page, corpus, assets).html, /lv-skip/, 'no front page, nothing to skip to')
 })
 

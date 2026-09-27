@@ -169,7 +169,12 @@ test('a reader or their Claude sets the paper once; only a reader\'s own setting
   const set = await callTool('set_paper', { place: '60614', teams: ['Chicago Cubs (Baseball)'], culture: true, recipe: true, topics: ['Nostr', 'AI agents'], name: 'The Morning Post', tape: true, brand: 'someone-else', imprint: { name: 'X', url: 'https://x.test', logo: 'x' } }, READER, d)
   assert.equal(set.isError, undefined)
   const saved = (await callTool('get_paper', {}, READER, d)).structuredContent
-  assert.deepEqual(saved, { name: 'The Morning Post', place: '60614', teams: ['Chicago Cubs (Baseball)'], culture: true, recipe: true, topics: ['nostr', 'ai agents'], founded: '2026-09-25' })
+  assert.equal(saved.name, 'The Morning Post')
+  assert.equal(saved.place, '60614')
+  assert.deepEqual(saved.teams, ['Chicago Cubs (Baseball)'])
+  assert.deepEqual(saved.topics, ['nostr', 'ai agents'])
+  assert.equal(saved.founded, '2026-09-25')
+  for (const k of ['tape', 'brand', 'imprint', 'stamp']) assert.equal(saved[k], undefined, `${k} is not a reader's to set`)
   assert.match(text(await callTool('get_paper', {}, READER, d)), /Place: 60614[\s\S]*Teams: Chicago Cubs \(Baseball\)[\s\S]*Topics: nostr, ai agents/)
 
   await callTool('set_paper', { teams: ['Chicago Cubs (Baseball)', 'Chicago Bulls (Basketball)'] }, READER, d)
@@ -190,4 +195,17 @@ test('each morning the digest uses the saved paper: its place, teams and pages, 
   assert.deepEqual(d.calls[0].topics, ['nostr'])
   await callTool('get_digest', { topics: ['sourdough'] }, READER, d)
   assert.deepEqual(d.calls[1].topics, ['sourdough'], 'topics named today win')
+})
+
+test('a first save starts from the whole paper, so "I live in 60614" alone still gets a full paper; a reader can then turn pages off', async () => {
+  const d = paperDeps()
+  await callTool('set_paper', { place: '60614' }, READER, d)
+  const first = (await callTool('get_paper', {}, READER, d)).structuredContent
+  for (const k of ['culture', 'world', 'markets', 'almanac', 'picture', 'feature', 'cartoon', 'puzzle', 'five', 'recipe', 'health', 'launches', 'sky', 'tabloid']) assert.equal(first[k], true, k)
+  assert.ok(first.feeds.some((f) => f.url === 'https://feeds.bbci.co.uk/news/world/rss.xml'), 'world news headlines come with it')
+  await callTool('set_paper', { recipe: false, five: false }, READER, d)
+  const later = (await callTool('get_paper', {}, READER, d)).structuredContent
+  assert.equal(later.recipe, undefined)
+  assert.equal(later.five, undefined)
+  assert.equal(later.cartoon, true)
 })

@@ -42,6 +42,11 @@ const FONTS = new URL('../.claude/skills/nostr-observer/reference/fonts/', impor
 
 const send = (res, status, type, body) => { res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body) }
 const json = (res, status, value) => send(res, status, 'application/json; charset=utf-8', JSON.stringify(value))
+async function readBody (req, max = 20_000) {
+  let body = ''
+  for await (const chunk of req) { body += chunk; if (body.length > max) throw new Error('too large') }
+  return body
+}
 const readerOf = (npub) => { try { return toHex(String(npub || '')) } catch { return null } }
 
 /**
@@ -58,7 +63,22 @@ async function page (req, res, url, deps, readers) {
     if (!/^[a-z0-9-]+\.woff2$/.test(name)) return send(res, 404, 'text/plain', 'not found')
     return send(res, 200, 'font/woff2', readFileSync(new URL(name, FONTS)))
   }
+  if (path === '/api/place' || path === '/api/team') {
+    const q = String(url.searchParams.get('q') || '').trim()
+    if (q.length < 2 || q.length > 80) return json(res, 400, { error: 'type at least two letters' })
+    return json(res, 200, await (path === '/api/place' ? deps.geocode(q) : deps.findTeams(q)))
+  }
   const reader = readerOf(url.searchParams.get('npub'))
+  if (path === '/api/paper') {
+    if (!reader || !readers.has(reader)) return json(res, 404, { error: 'no paper for that npub here' })
+    if (req.method !== 'POST') return json(res, 200, (deps.store.paperOf && deps.store.paperOf(reader)) || {})
+    // The form saves exactly as the reader's Claude would, through set_paper.
+    let body
+    try { body = JSON.parse(await readBody(req)) } catch { return json(res, 400, { error: 'send the settings as JSON' }) }
+    const out = await callTool('set_paper', body, reader, deps)
+    if (out.isError) return json(res, 400, { error: out.content[0].text })
+    return json(res, 200, out.structuredContent)
+  }
   if (path === '/api/readiness') {
     if (!reader) return json(res, 400, { error: 'give an npub' })
     return json(res, 200, await deps.readiness(reader))
@@ -93,7 +113,7 @@ export function createConnector ({ authenticate, deps, readers = new Set() }) {
   return createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost')
     if (url.pathname !== '/mcp') {
-      if (req.method !== 'GET') return send(res, 405, 'text/plain', 'method not allowed')
+      if (req.method !== 'GET' && !(req.method === 'POST' && url.pathname === '/api/paper')) return send(res, 405, 'text/plain', 'method not allowed')
       try { return await page(req, res, url, deps, readers) } catch (error) { console.error(error); return send(res, 500, 'text/plain', 'error') }
     }
     const reader = authenticate(req)
@@ -127,6 +147,18 @@ export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paper
       const verdict = assess(await gather(reader, relay, until - 86400))
       const remedy = REMEDY[verdict.state] || { say: verdict.state, do: null }
       return { ready: verdict.ready, state: verdict.state, say: remedy.say, do: remedy.do || '' }
+    },
+    // For the setup form: a city or ZIP to a place the weather will find, and
+    // a team name to the teams TheSportsDB knows, both keyless.
+    geocode: async (q) => {
+      const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`)
+      const found = r.ok ? ((await r.json()).results || []) : []
+      return found.map((p) => ({ label: [p.name, p.admin1, p.country].filter(Boolean).join(', '), place: q, units: p.country_code === 'US' ? 'us' : 'metric', country: p.country_code || null }))
+    },
+    findTeams: async (q) => {
+      const r = await fetch(`https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=${encodeURIComponent(q)}`)
+      const found = r.ok ? ((await r.json()).teams || []) : []
+      return found.slice(0, 6).map((t) => ({ label: `${t.strTeam} (${t.strSport})`, league: t.strLeague || null }))
     },
     pull: (reader, { topics, paper }) => pullCorpus(reader, { relay, topics, paper: paper || paperFor(reader) }),
   }

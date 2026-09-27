@@ -21,6 +21,8 @@ const deps = {
   pull: async () => ({ observer: READER, observerNpub: 'npub1reader', relay: 'wss://relay.test', floor: 20, since: 1790222949, until: 1790309349, code: 'PROG01', control: [], overlap: 0, profiles: {}, art: [], paper: null, wires: null, issue: null, desks: { notes: [{ id: '1'.repeat(64), kind: 1, pubkey: 'bb'.repeat(32), created_at: 1790300000, content: 'Noon bread.', tags: [] }] } }),
   paperUrl: (reader, date, code) => `http://paper.test/${date}-${code}`,
   now: () => 1790309349, // 2026-09-25 04:09 UTC
+  geocode: async (q) => (q === '60614' ? [{ label: 'Chicago, Illinois, United States', place: '60614', units: 'us' }] : []),
+  findTeams: async (q) => (/cubs/i.test(q) ? [{ label: 'Chicago Cubs (Baseball)', league: 'Major League Baseball' }] : []),
 }
 const server = createConnector({ authenticate: tokenAuth(new Map([['t', READER]])), deps, readers: new Set([READER]) })
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -91,4 +93,24 @@ test('the papers list says whether today\'s paper is in', async () => {
   const now = await (await get(`/api/today?npub=${toNpub(READER)}`)).json()
   assert.equal(now.in, true)
   assert.equal(now.code, 'TODAY1')
+})
+
+test('the form finds a place from a city or a ZIP, and a team by name, to confirm before saving', async () => {
+  assert.deepEqual(await (await get('/api/place?q=60614')).json(), [{ label: 'Chicago, Illinois, United States', place: '60614', units: 'us' }])
+  assert.deepEqual(await (await get('/api/place?q=Nowhere%20Town')).json(), [])
+  assert.equal((await get('/api/place?q=a')).status, 400, 'too short to look up')
+  assert.deepEqual(await (await get('/api/team?q=cubs')).json(), [{ label: 'Chicago Cubs (Baseball)', league: 'Major League Baseball' }])
+})
+
+test('the form saves the reader\'s paper the same way their Claude would, and reads it back', async () => {
+  deps.now = () => 1790395749 // 2026-09-26
+  const url = `/api/paper?npub=${toNpub(READER)}`
+  const post = (body, path = url) => fetch(base + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+  const saved = await post(JSON.stringify({ place: '60614', teams: ['Chicago Cubs (Baseball)'], culture: true, topics: ['Nostr'] }))
+  assert.equal(saved.status, 200)
+  const back = await (await get(url)).json()
+  assert.deepEqual([back.place, back.teams, back.topics, back.founded, back.culture], ['60614', ['Chicago Cubs (Baseball)'], ['nostr'], '2026-09-26', true])
+  assert.equal((await post('{not json')).status, 400)
+  assert.equal((await post(JSON.stringify({ stamp: 'x' }))).status, 400, 'nothing a reader may set')
+  assert.equal((await post('{}', `/api/paper?npub=${toNpub(STRANGER)}`)).status, 404, 'only the readers this connector serves')
 })

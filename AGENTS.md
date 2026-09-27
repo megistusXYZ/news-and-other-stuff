@@ -892,6 +892,29 @@ paper lands on the reader's Observer page in brainstorm.world.
       `/api/today`);
     - topic chips fill the topics box;
     - the Observer page says when today's paper isn't in yet.
+- **Every reader's own paper (2026-09-27).** Settings are kept with the
+  reader. This reverses "topics ride in the prompt, nothing stored", because
+  a prompt cannot carry a whole paper and a reader cannot edit it by talking
+  to their agent.
+  - **Who can set them:**
+    - the setup page's "Your paper" form (step 1): place by city or ZIP,
+      confirmed; teams by search; topics with chips; tick-boxes for the
+      pages; an optional name;
+    - the reader's Claude, through `get_paper` and `set_paper`.
+  - **Rules.** Both go through `set_paper` and `cleanPaper` (readPaper's
+    rules on a plain object).
+  - **Merging.** Settings merge a change at a time. The first save starts
+    from the whole paper: every page, plus the house world and culture
+    feeds. `founded` is set that day, so each reader's paper starts at
+    Vol. I · No. 1.
+  - **Not a reader's to set:** the brand, stamps, imprint and The Tape.
+    Share prices stay out until there is a licensed feed.
+  - **Each morning.** `get_digest` prints from the saved settings, and topics
+    named that day win. Verified with a ZIP (a Chicago ZIP gave Chicago weather),
+    a team's fixtures, and a recipe left out when it was unticked.
+  - **Routes:** `/api/place`, `/api/team`, and `/api/paper` (GET and POST,
+    local readers only).
+  - **The prompt.** The daily prompt is now a single line.
 
 ## Conventions
 

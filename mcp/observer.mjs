@@ -107,6 +107,19 @@ const SWITCHES = ['almanac', 'cartoon', 'puzzle', 'five', 'recipe', 'picture', '
 const READER_KEYS = ['name', 'motto', 'place', 'units', 'teams', 'feeds', 'topics', 'country', ...SWITCHES]
 const SWITCH_WORDS = { almanac: 'almanac', cartoon: 'cartoon', puzzle: 'sudoku', five: 'Five', recipe: 'recipe', picture: 'picture of the day', markets: 'markets', world: 'the world at a glance', sky: 'air and moon', culture: 'culture', tabloid: 'the Tabloid', health: 'health & safety', launches: 'launches', feature: 'the Feature' }
 
+// A first save starts from the whole paper: every page on, and the house's
+// world and culture headlines. "All of it, unless you say otherwise."
+const HOUSE_FEEDS = [
+  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', section: 'Wider World' },
+  { url: 'https://www.theguardian.com/world/rss', section: 'Wider World' },
+  { url: 'https://feeds.npr.org/1001/rss.xml', section: 'Wider World' },
+  { url: 'https://www.aljazeera.com/xml/rss/all.xml', section: 'Wider World' },
+  { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', section: 'Culture' },
+  { url: 'https://variety.com/feed/', section: 'Culture' },
+  { url: 'https://pitchfork.com/rss/news/', section: 'Culture' },
+]
+const WHOLE_PAPER = { ...Object.fromEntries(SWITCHES.map((k) => [k, true])), feeds: HOUSE_FEEDS }
+
 // A cleaned paper, back in the plain shape a reader sets: only what is set.
 function settingsOf (paper) {
   if (!paper) return {}
@@ -285,7 +298,7 @@ async function runTool (name, args, reader, deps) {
     case 'set_paper': {
       const incoming = Object.fromEntries(Object.entries(args).filter(([k]) => READER_KEYS.includes(k)))
       if (!Object.keys(incoming).length) return fail('Nothing a reader can set was given. Set place, units, teams, topics, name or which pages to print.')
-      const current = (deps.store.paperOf && deps.store.paperOf(reader)) || {}
+      const current = (deps.store.paperOf && deps.store.paperOf(reader)) || WHOLE_PAPER
       const now = deps.now ? deps.now() : Math.floor(Date.now() / 1000)
       const founded = current.founded || new Date(now * 1000).toISOString().slice(0, 10)
       const settings = settingsOf(cleanPaper({ ...current, ...incoming, founded }))

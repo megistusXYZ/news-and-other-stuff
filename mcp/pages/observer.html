@@ -59,6 +59,8 @@ a:hover { text-decoration-color: currentColor; }
 .paper { padding-right: 24px; }
 .paper iframe { display: block; width: 100%; height: calc(100vh - 150px); min-height: 560px; border: 1px solid var(--ink); background: #F2F3F0; }
 .fill { margin: 8px 0 0; color: var(--ink-3); }
+.today { margin: 0 0 12px; padding: 8px 0 8px 14px; border-left: 3px solid var(--teal); font-style: italic; color: var(--ink-2); }
+.today[hidden] { display: none; }
 .empty { padding: 36px 0; font-style: italic; color: var(--ink-2); }
 .week { border-left: 1px solid var(--hair); padding-left: 22px; }
 .week h3 { margin: 0 0 4px; padding-bottom: 8px; border-bottom: 3px solid var(--rule); }
@@ -116,6 +118,7 @@ a:hover { text-decoration-color: currentColor; }
 
   <div class="layout">
     <section class="paper" aria-label="The paper">
+      <p class="today" id="today-note" hidden></p>
       <p class="empty" id="empty" hidden></p>
       <iframe id="frame" title="Your paper" hidden></iframe>
       <p class="fill mono" id="fill" hidden></p>
@@ -149,6 +152,13 @@ a:hover { text-decoration-color: currentColor; }
     $('empty').textContent = 'No reader named. On Brainstorm this page knows you from your sign-in.'
     return
   }
+
+  // Today's paper not in yet: say so, and when it usually comes.
+  fetch('/api/today?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : null).then((t) => {
+    if (!t || t.in) return
+    $('today-note').hidden = false
+    $('today-note').textContent = 'Today\'s paper isn\'t in yet. Your Claude usually prints it around seven; or print a fresh edition now. Below is your latest.'
+  }).catch(() => {})
 
   fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).then((editions) => {
     if (!editions.length) {

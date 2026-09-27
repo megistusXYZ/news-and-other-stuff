@@ -25,8 +25,11 @@ export function memoryStore () {
     },
     editions (reader) { return [...(editions.get(reader) || [])].sort(newestFirst) },
     edition (reader, date, code) { return this.editions(reader).find((e) => e.date === date && (!code || e.code === code)) || null },
-    touch (reader) { calls.set(reader, Math.floor(Date.now() / 1000)) },
-    lastCall (reader) { return calls.get(reader) || null },
+    touch (reader) { calls.set(reader, { ...(calls.get(reader) || {}), at: Math.floor(Date.now() / 1000) }) },
+    lastCall (reader) { return calls.get(reader)?.at || null },
+    // The last step the reader's Claude took, for the setup page's progress.
+    record (reader, step) { calls.set(reader, { at: Math.floor(Date.now() / 1000), step }) },
+    lastStep (reader) { return calls.get(reader)?.step || null },
   }
 }
 

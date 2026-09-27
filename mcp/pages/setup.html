@@ -71,6 +71,16 @@ textarea.field { font: 400 .98rem/1.5 var(--serif); min-height: 88px; resize: ve
 .status.ok { color: var(--teal); }
 .prompt { margin: 14px 0 0; padding: 2px 0 2px 14px; border-left: 3px solid var(--ink); font-style: italic; white-space: pre-wrap; }
 label.small { display: block; margin: 0 0 6px; color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+.chip { font: 400 .8rem/1 var(--serif); padding: 6px 9px; border: 1px solid var(--hair); background: transparent; color: var(--ink-2); cursor: pointer; border-radius: 0; }
+.chip:hover { border-color: var(--ink); color: var(--ink); }
+.gate { margin: 18px 0 0; padding: 12px 0 12px 16px; border-left: 3px solid var(--no); }
+.gate[hidden] { display: none; }
+.gate p { margin: 4px 0 0; }
+.steps.blocked { opacity: .45; }
+.first { margin: 14px 0 0; padding: 10px 0 0; border-top: 1px solid var(--hair); font-size: .93rem; }
+.first[hidden] { display: none; }
+.status a { color: inherit; }
 .where { margin: 14px 0 0; font-size: .9rem; color: var(--ink-2); }
 .where ul { margin: 4px 0 0; padding-left: 18px; }
 
@@ -114,7 +124,14 @@ label.small { display: block; margin: 0 0 6px; color: var(--ink-2); }
     <button class="btn" id="npub-go" type="button">Check</button>
   </div>
 
-  <div class="steps">
+  <div class="gate" id="gate" role="note" hidden>
+    <p class="mono" style="color:var(--no)">Before anything else: your lens</p>
+    <p id="gate-say"></p>
+    <p id="gate-do"></p>
+    <p><a href="https://brainstorm.world/" target="_blank" rel="noopener noreferrer">Ask for your lens at brainstorm.world ↗</a> · this page updates by itself once it is ready.</p>
+  </div>
+
+  <div class="steps" id="steps">
     <section class="step" aria-labelledby="s1">
       <div class="n" aria-hidden="true">1</div>
       <h2 id="s1">Connect your Claude</h2>
@@ -126,6 +143,9 @@ label.small { display: block; margin: 0 0 6px; color: var(--ink-2); }
         <a class="btn" href="https://claude.ai/" target="_blank" rel="noopener noreferrer">Open Claude ↗</a>
       </div>
       <p class="status mono" id="connected" role="status" aria-live="polite"><span>Waiting for Claude to connect…</span></p>
+      <div class="first" id="first" hidden>
+        <b>Your first paper, now.</b> No need to wait for tomorrow: paste the instructions from step three into a Claude chat. It takes about ten minutes, and you can watch it here.
+      </div>
     </section>
 
     <section class="step" aria-labelledby="s2">
@@ -140,6 +160,9 @@ label.small { display: block; margin: 0 0 6px; color: var(--ink-2); }
       <h2 id="s3">Schedule the daily print</h2>
       <label class="small mono" for="topics">Your favourite topics, in your own words</label>
       <textarea class="field" id="topics" placeholder="Nostr apps and relays, Bitcoin and Lightning, and AI agents"></textarea>
+      <div class="chips" id="chips" aria-label="Add a topic">
+        <button class="chip" type="button">Nostr</button><button class="chip" type="button">Bitcoin</button><button class="chip" type="button">Lightning</button><button class="chip" type="button">AI agents</button><button class="chip" type="button">Open source</button><button class="chip" type="button">Design</button><button class="chip" type="button">Science</button><button class="chip" type="button">Music</button>
+      </div>
       <p class="prompt" id="prompt">Print today's Nostr Observer with the Brainstorm connector. If my lens isn't ready, stop and tell me why.</p>
       <div class="buttons"><button class="btn solid" type="button" data-copy="prompt">Copy the instructions</button></div>
       <div class="where">
@@ -203,6 +226,14 @@ label.small { display: block; margin: 0 0 6px; color: var(--ink-2); }
   }
   $('topics').addEventListener('input', paint)
   paint()
+  // A topic chip adds its word to the box, once.
+  $('chips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip'); if (!chip) return
+    const box = $('topics')
+    const have = box.value.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
+    if (!have.includes(chip.textContent.toLowerCase())) box.value = [box.value.trim().replace(/,$/, ''), chip.textContent].filter(Boolean).join(', ')
+    paint()
+  })
 
   // Who you are: on Brainstorm, your sign-in; here, ?npub=.
   if (!npub) {
@@ -213,19 +244,45 @@ label.small { display: block; margin: 0 0 6px; color: var(--ink-2); }
     $('npub').addEventListener('keydown', (e) => { if (e.key === 'Enter') go() })
     return
   }
-  fetch('/api/readiness?npub=' + encodeURIComponent(npub)).then((r) => r.json()).then((v) => {
+  // The lens comes first: without it there is no paper, so the steps wait.
+  const lens = () => fetch('/api/readiness?npub=' + encodeURIComponent(npub)).then((r) => r.json()).then((v) => {
     const b = $('lens')
-    if (v.ready) { b.className = 'lens mono ok'; b.textContent = 'Your lens · ready ✓' } else {
-      b.className = 'lens mono no'; b.textContent = 'Your lens · not ready: ' + (v.do || v.say || v.state || 'unknown')
-    }
-  }).catch(() => { $('lens').textContent = 'Could not check your lens' })
+    $('gate').hidden = !!v.ready
+    $('steps').classList.toggle('blocked', !v.ready)
+    if (v.ready) { b.className = 'lens mono ok'; b.textContent = 'Your lens · ready ✓'; return true }
+    b.className = 'lens mono no'; b.textContent = 'Your lens · not ready yet'
+    $('gate-say').textContent = v.say || ''
+    $('gate-do').textContent = v.do || ''
+    return false
+  }).catch(() => { $('lens').textContent = 'Could not check your lens'; return true })
+  lens().then((ready) => { if (!ready) { const again = setInterval(() => lens().then((ok) => { if (ok) clearInterval(again) }), 30000) } })
 
+  // The status follows the reader's Claude step by step, ending on the paper.
   const connected = $('connected')
-  const poll = () => fetch('/api/status?npub=' + encodeURIComponent(npub)).then((r) => r.json()).then((s) => {
+  const words = (step) => {
+    if (!step) return 'Connected ✓'
+    if (step.tool === 'get_readiness') return 'Connected ✓ · checking your lens'
+    if (step.tool === 'get_brief') return 'Reading the brief'
+    if (step.tool === 'get_digest') return step.parts ? `Reading your digest · part ${step.part} of ${step.parts}` : 'Your lens stopped the digest'
+    if (step.tool === 'submit_edition' && step.outcome === 'refused') return `Handed in · fixing ${step.problems} problem${step.problems === 1 ? '' : 's'}`
+    if (step.tool === 'submit_edition') return 'Accepted ✓ · '
+    return 'Connected ✓'
+  }
+  const poll = () => Promise.all([
+    fetch('/api/status?npub=' + encodeURIComponent(npub)).then((r) => r.json()),
+    fetch('/api/today?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : null).catch(() => null),
+  ]).then(([s, today]) => {
     if (!s.connected) return
     connected.className = 'status mono ok'
-    const when = new Date(s.lastCall * 1000).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
-    connected.firstElementChild.textContent = 'Connected ✓ · last call ' + when
+    const when = new Date(s.lastCall * 1000).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' })
+    const line = connected.firstElementChild
+    line.textContent = words(s.step) + (s.step && s.step.outcome === 'accepted' ? '' : ' · ' + when)
+    if (s.step && s.step.outcome === 'accepted') {
+      const a = document.createElement('a')
+      a.href = '/observer?npub=' + encodeURIComponent(npub); a.textContent = 'read today\'s paper →'
+      line.append(a)
+    }
+    $('first').hidden = !(today && !today.in)
   }).catch(() => {})
   poll()
   setInterval(poll, 5000)

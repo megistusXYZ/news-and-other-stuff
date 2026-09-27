@@ -18,7 +18,9 @@ store.putEdition(READER, { date: '2026-09-27', code: 'ABC123', html: '<p>page</p
 const deps = {
   store,
   readiness: async (reader) => (reader === READER ? { ready: true, state: 'ready', say: 'Ready.', do: '' } : { ready: false, state: 'no-score-list', say: 'No lens yet.', do: 'Ask Brainstorm.' }),
-  pull: async () => { throw new Error('not in these tests') },
+  pull: async () => ({ observer: READER, observerNpub: 'npub1reader', relay: 'wss://relay.test', floor: 20, since: 1790222949, until: 1790309349, code: 'PROG01', control: [], overlap: 0, profiles: {}, art: [], paper: null, wires: null, issue: null, desks: { notes: [{ id: '1'.repeat(64), kind: 1, pubkey: 'bb'.repeat(32), created_at: 1790300000, content: 'Noon bread.', tags: [] }] } }),
+  paperUrl: (reader, date, code) => `http://paper.test/${date}-${code}`,
+  now: () => 1790309349, // 2026-09-25 04:09 UTC
 }
 const server = createConnector({ authenticate: tokenAuth(new Map([['t', READER]])), deps, readers: new Set([READER]) })
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -64,4 +66,29 @@ test('the setup page can tell when the reader\'s Claude has connected: the first
   const status = await (await get(`/api/status?npub=${toNpub(READER)}`)).json()
   assert.equal(status.connected, true)
   assert.ok(status.lastCall > 0)
+})
+
+test('the status follows the reader\'s Claude step by step, ending on the paper\'s link', async () => {
+  const status = async () => (await (await get(`/api/status?npub=${toNpub(READER)}`)).json()).step
+  await callTool('get_digest', {}, READER, deps)
+  assert.deepEqual(await status(), { tool: 'get_digest', part: 1, parts: 1 })
+  const page = (quote) => '<!doctype html><html><head><title>The Nostr Observer — Friday</title></head><body><main class="sheet"><section class="fold"><article><h2 class="lead-head">Bread</h2>'
+    + `<p><q>${quote}</q> <a href="https://brainstorm.world/e/${'1'.repeat(64)}">Read</a></p></article></section></main></body></html>`
+  await callTool('submit_edition', { code: 'PROG01', html: page('Best bread in town.') }, READER, deps)
+  assert.deepEqual(await status(), { tool: 'submit_edition', outcome: 'refused', problems: 1 })
+  await callTool('submit_edition', { code: 'PROG01', html: page('Noon bread.') }, READER, deps)
+  assert.deepEqual(await status(), { tool: 'submit_edition', outcome: 'accepted', edition: 'PROG01', url: 'http://paper.test/2026-09-25-PROG01' })
+})
+
+test('the papers list says whether today\'s paper is in', async () => {
+  deps.now = () => 1790395749 // a day of its own: 2026-09-26 04:09 UTC
+  const today = '2026-09-26'
+  const res = await (await get(`/api/editions?npub=${toNpub(READER)}`)).json()
+  assert.ok(Array.isArray(res))
+  const head = await get(`/api/today?npub=${toNpub(READER)}`)
+  assert.deepEqual(await head.json(), { date: today, in: false })
+  store.putEdition(READER, { date: today, code: 'TODAY1', html: '<p></p>', living: '<p></p>' })
+  const now = await (await get(`/api/today?npub=${toNpub(READER)}`)).json()
+  assert.equal(now.in, true)
+  assert.equal(now.code, 'TODAY1')
 })

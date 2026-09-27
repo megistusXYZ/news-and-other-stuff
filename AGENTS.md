@@ -875,6 +875,23 @@ paper lands on the reader's Observer page in brainstorm.world.
     `/observer/<npub>/<date>-<code>`.
   - On Brainstorm these sit behind its own sign-in; locally `?npub=` stands
     in.
+- **Making adoption easy (2026-09-27).**
+  - **For the reader's Claude:**
+    - the routine is sent as MCP `instructions` when Claude connects, so a
+      short prompt is enough;
+    - every refusal carries a "How to fix" line for its kind;
+    - an accepted page returns its link, from `OBSERVER_PUBLIC_URL`;
+    - `get_readiness` says when today's paper is already in, so a second
+      run does not print a duplicate unasked.
+  - **For the reader:**
+    - `/api/status` reports the last step, which the setup page shows as
+      live progress ending on "read today's paper";
+    - the lens is a gate: the steps dim, and the page says what to do and
+      rechecks itself;
+    - "Your first paper, now" shows while today's paper is not in (from
+      `/api/today`);
+    - topic chips fill the topics box;
+    - the Observer page says when today's paper isn't in yet.
 
 ## Conventions
 

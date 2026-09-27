@@ -190,9 +190,25 @@ const verdictText = (v) => (v.ready ? `READY\n${v.say || 'Your lens is ready.'}`
  * comes from sign-in, never from the arguments.
  */
 export async function callTool (name, args, reader, deps) {
-  args = args && typeof args === 'object' ? args : {}
-  // The setup page's "connected" comes from this: the reader's Claude called.
+  // The setup page's "connected" and its progress come from this: the reader's
+  // Claude called, and this is where it got to.
   if (deps.store.touch) deps.store.touch(reader)
+  const result = await runTool(name, args && typeof args === 'object' ? args : {}, reader, deps)
+  if (deps.store.record && TOOLS.some((t) => t.name === name)) deps.store.record(reader, stepOf(name, result))
+  return result
+}
+
+function stepOf (tool, result) {
+  const s = result.structuredContent || {}
+  if (tool === 'get_digest') return result.isError ? { tool, outcome: 'refused' } : { tool, part: s.part, parts: s.parts }
+  if (tool === 'submit_edition') {
+    if (!result.isError) return { tool, outcome: 'accepted', edition: s.edition, ...(s.url ? { url: s.url } : {}) }
+    return { tool, outcome: 'refused', problems: (result.content[0].text.match(/^- /gm) || []).length }
+  }
+  return { tool }
+}
+
+async function runTool (name, args, reader, deps) {
   switch (name) {
     case 'get_readiness': {
       // Today's paper, by the same UTC date an edition is filed under.

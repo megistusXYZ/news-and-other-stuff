@@ -66,7 +66,13 @@ async function page (req, res, url, deps, readers) {
   if (path === '/api/status') {
     if (!reader) return json(res, 400, { error: 'give an npub' })
     const lastCall = deps.store.lastCall ? deps.store.lastCall(reader) : null
-    return json(res, 200, { connected: !!lastCall, lastCall })
+    return json(res, 200, { connected: !!lastCall, lastCall, step: deps.store.lastStep ? deps.store.lastStep(reader) : null })
+  }
+  if (path === '/api/today') {
+    if (!reader || !readers.has(reader)) return json(res, 404, { error: 'no papers for that npub here' })
+    const date = new Date((deps.now ? deps.now() : Math.floor(Date.now() / 1000)) * 1000).toISOString().slice(0, 10)
+    const e = deps.store.editions(reader).find((x) => x.date === date)
+    return json(res, 200, e ? { date, in: true, code: e.code, printedAt: e.printedAt, url: `/observer/${toNpub(reader)}/${date}-${e.code}` } : { date, in: false })
   }
   if (path === '/api/editions') {
     if (!reader || !readers.has(reader)) return json(res, 404, { error: 'no papers for that npub here' })

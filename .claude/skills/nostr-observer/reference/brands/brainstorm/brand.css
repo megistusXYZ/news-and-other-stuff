@@ -61,8 +61,11 @@
 
 /* --- nameplate: a newspaper's, with the brand in the ear ---------------- */
 /* The one gradient, as a hairline under the top rule — never under text. */
+/* The brand's one gradient IS the rule above the name: a single fine line,
+ * not a hairline with a coloured line stacked under it. */
+[data-brand="brainstorm"] .sheet > .masthead { border-top: 0; }
 [data-brand="brainstorm"] .masthead::before {
-  content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 2px; background: var(--bs-aurora);
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--bs-aurora);
 }
 /* The folio strip, below 1000px, carries the hairline at its top too. On a
  * desk the folio sits inside the header, which already has it. */

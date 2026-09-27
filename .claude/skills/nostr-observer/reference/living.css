@@ -979,3 +979,21 @@ p.credit a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px
 .sheet .credit.credit[data-credit] .credit-item { font-weight: 600; color: var(--ink-2); }
 .sheet .credit.credit[data-credit] .credit-note { font-style: italic; font-weight: 400; }
 .sheet .credit.credit[data-credit] .credit-licence { font-family: var(--mono); font-size: .64rem; font-weight: 500; }
+
+/* --- the nameplate's rules: a broadsheet's, one of each ---------------------- */
+/* A fine rule above the name; below it the Oxford rule, heavy then a hairline
+ * a breath apart; the section row between that hairline and one more. */
+.sheet > .masthead { border-bottom: 3px solid var(--ink); }
+.sheet > .lv-index { margin-top: 2px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+/* On a phone the row sticks to the top and its paper runs to the screen's
+ * edges, but its rules stay the width of the type, like every rule above. */
+@media (max-width: 720px) {
+  .sheet > .lv-index {
+    border-top: 0; border-bottom: 0;
+    background:
+      linear-gradient(var(--ink), var(--ink)) 15px 0 / calc(100% - 30px) 1px no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 15px 100% / calc(100% - 30px) 1px no-repeat,
+      var(--paper);
+  }
+  .lv-since-slot { border-top-color: var(--rule); }
+}

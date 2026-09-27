@@ -330,6 +330,14 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **The nameplate's rules (2026-09-26).** Benjamin found the stacked lines
+  awkward (a black hairline with the brand gradient two pixels under it). Now
+  a broadsheet's set, one of each: a single fine rule above the name (for the
+  Brainstorm brand, the gradient itself); below it the Oxford rule (3px ink,
+  a 2px breath, 1px hairline, which is the section row's top); one hairline
+  under the row. On a phone the sticky row's paper runs edge to edge but its
+  rules are drawn the width of the type, like the rules above.
+
 - **Credit lines (2026-09-26).** Every source is credited the way its
   provider asks, checked against each provider's own terms that day:
   `creditsFor(wires)` in wires.mjs gives each a structured credit (source

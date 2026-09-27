@@ -469,6 +469,31 @@ export function dress (html, corpus, assets) {
     return out.length ? out : null
   })()
 
+  // The Feature, in tabs: the page carries the day's lead piece, set by the
+  // printer; the other piece rides here as plain text for the second tab,
+  // headed and credited the same way. Only when there are two.
+  const feature = (() => {
+    const w = corpus.wires || {}
+    const lead = w.feature
+    const alt = w.featureAlt
+    if (!lead || !alt || !Array.isArray(alt.blocks) || !alt.blocks.length) return null
+    const text = (v, n) => String(v || '').replace(/\s+/g, ' ').trim().slice(0, n)
+    const tabOf = (f) => (f.kind === 'story' ? 'The Story' : 'The Feature')
+    return {
+      lead: tabOf(lead),
+      alt: {
+        tab: tabOf(alt),
+        kind: alt.kind === 'story' ? 'story' : 'conversation',
+        kicker: alt.kind === 'story' ? "This Week's Story" : `The Feature · ${text(alt.source, 40) || 'The Conversation'} · Technology`,
+        title: text(alt.title, 200),
+        byline: [(alt.authors || []).map((a) => text(a, 160)).join('; '), alt.published ? text(alt.published, 10) : ''].filter(Boolean).join(' · '),
+        credit: text(alt.credit, 300),
+        link: https(alt.link),
+        blocks: alt.blocks.slice(0, 200).map((b) => ({ type: b.type === 'h' ? 'h' : 'p', text: text(b.text, 4000) })).filter((b) => b.text),
+      },
+    }
+  })()
+
   // The cartoon, in tabs: today's xkcd (the one the writer set), a
   // public-domain cartoon from the archive, then comics people in the
   // reader's network posted — tagged comic or meme, with an https picture.
@@ -572,6 +597,7 @@ export function dress (html, corpus, assets) {
     sequence,
     cartoons,
     recipes,
+    feature,
     // The reader's clock, for the page's own times ("since 11:09 p.m. CDT"):
     // their place's zone from the weather, 12 hours for a US paper.
     clock: corpus.wires && corpus.wires.weather && /^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)*$/.test(String(corpus.wires.weather.timezone || ''))

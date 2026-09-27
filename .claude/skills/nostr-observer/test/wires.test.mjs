@@ -610,7 +610,7 @@ test('the Feature skips a piece that is not licensed for republishing', async ()
 test('the Feature on a Sunday: a complete public-domain science-fiction story, front matter and transcriber\'s note stripped', async () => {
   const { fetch, asked } = network([[/gutenberg\.org\/cache\/epub\/\d+\/pg\d+\.txt/, STORY], [/theconversation\.com/, ATOM]])
   const wires = await gatherWires({ ...off, feature: true }, { fetch, now: SUNDAY })
-  assert.ok(asked.some((u) => /gutenberg\.org\/cache\/epub/.test(u)) && !asked.some((u) => /theconversation/.test(u)), 'Sunday is the story')
+  assert.ok(asked.some((u) => /gutenberg\.org\/cache\/epub/.test(u)), 'Sunday leads with the story')
   const f = wires.feature
   assert.equal(f.kind, 'story')
   assert.equal(f.title, 'Beyond the Door')
@@ -657,4 +657,18 @@ test('The Tape: each ticker\'s last close and its change on the day before, from
     ],
   }, 'a missing close is skipped; a ticker the service does not know is left out')
   assert.ok(wires.notes.some((n) => /NOPE/.test(n)), 'and noted')
+})
+
+test('both pieces come every day: the day\'s lead as the Feature, the other as its alternate for the living copy\'s tabs', async () => {
+  const { fetch } = network([[/gutenberg\.org\/cache\/epub\/\d+\/pg\d+\.txt/, STORY], [/theconversation\.com/, ATOM]])
+  const weekday = await gatherWires({ ...off, feature: true }, { fetch, now: NOW })
+  assert.equal(weekday.feature.kind, 'conversation')
+  assert.equal(weekday.featureAlt.kind, 'story', 'this week\'s story, one tab away')
+  const sunday = await gatherWires({ ...off, feature: true }, { fetch, now: SUNDAY })
+  assert.equal(sunday.feature.kind, 'story')
+  assert.equal(sunday.featureAlt.kind, 'conversation')
+  const monday = await gatherWires({ ...off, feature: true }, { fetch, now: SUNDAY + 86400 })
+  assert.equal(monday.featureAlt.link, sunday.feature.link, 'the story holds all week')
+  const alone = await gatherWires({ ...off, feature: true }, { fetch: network([[/theconversation\.com/, ATOM]]).fetch, now: NOW })
+  assert.equal(alone.featureAlt, null, 'no story to be had, no second tab')
 })

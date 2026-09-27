@@ -543,6 +543,11 @@ table.sudoku td.lv-revealed { color: var(--ink-3); }
  * it, small, as the licence asks. */
 .feature { grid-column: 1 / -1; border-top: 1px solid var(--ink); padding-top: 14px; }
 .feature .kicker { margin-bottom: 4px; }
+.feature .kicker.lv-with-tabs { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+/* Switching tabs from deep in a long piece brings its top back into view;
+ * on a phone that leaves room for the section row that sticks there. */
+.feature { scroll-margin-top: 16px; }
+@media (max-width: 900px) { .feature { scroll-margin-top: 84px; } }
 .feature .sub-head { margin: 0 0 4px; font-size: 1.5rem; line-height: 1.15; }
 .feature .byline { margin-bottom: 12px; }
 .feature .feature-text { columns: 3; column-gap: 26px; column-rule: 1px solid var(--rule-soft); }

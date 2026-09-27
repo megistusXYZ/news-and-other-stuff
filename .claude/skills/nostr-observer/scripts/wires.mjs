@@ -359,7 +359,9 @@ async function conversation (fetch) {
 }
 
 async function sundayStory (fetch, now) {
-  const week = Math.floor(now / 86400 / 7)
+  // Weeks start on Sunday (the epoch was a Thursday): the story changes on
+  // Sunday, when it leads, and stays a tab away until Saturday.
+  const week = Math.floor((Math.floor(now / 86400) + 4) / 7)
   const id = SUNDAY_STORIES[week % SUNDAY_STORIES.length]
   const raw = (await getText(fetch, `https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`)).replace(/\r/g, '')
   const head = raw.split(/\*\*\* ?START OF/i)[0]
@@ -693,7 +695,7 @@ async function saying (fetch) {
  */
 export async function gatherWires (settings, { fetch = globalThis.fetch, now = Math.floor(Date.now() / 1000), nextArt = 1 } = {}) {
   if (!settings) return null
-  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, feature: null, tape: null, markets: null, world: null, picture: null, recipe: null, recipes: [], health: null, launches: null, lookedUp: null, tabloid: null, art: [], notes: [] }
+  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, feature: null, featureAlt: null, tape: null, markets: null, world: null, picture: null, recipe: null, recipes: [], health: null, launches: null, lookedUp: null, tabloid: null, art: [], notes: [] }
   const reason = (error) => String(error && error.message ? error.message : error).slice(0, 120)
   // Pictures the wires bring, numbered after the corpus's own shortlist.
   let artN = nextArt
@@ -758,16 +760,18 @@ export async function gatherWires (settings, { fetch = globalThis.fetch, now = M
     }
   }
   if (settings.feature) {
+    // Both pieces every day: the day's lead is the Feature the writer heads
+    // (the story on Sunday, the article otherwise); the other rides along as
+    // the alternate the living copy offers on a second tab.
     const sunday = new Date(now * 1000).getUTCDay() === 0
-    try {
-      wires.feature = sunday ? await sundayStory(fetch, now) : await conversation(fetch)
-    } catch (error) {
-      try {
-        wires.feature = await conversation(fetch)
-      } catch {
-        wires.notes.push(`Feature: could not reach ${sunday ? 'Project Gutenberg or ' : ''}The Conversation (${reason(error)})`)
-      }
-    }
+    const attempt = async (get) => { try { return await get() } catch (error) { return { error } } }
+    const story = await attempt(() => sundayStory(fetch, now))
+    const article = await attempt(() => conversation(fetch))
+    const [lead, other] = sunday ? [story, article] : [article, story]
+    const ok = (x) => (x && !x.error ? x : null)
+    wires.feature = ok(lead) || ok(other)
+    wires.featureAlt = ok(lead) && ok(other) ? other : null
+    if (!wires.feature) wires.notes.push(`Feature: could not reach Project Gutenberg or The Conversation (${reason(article.error || story.error)})`)
   }
   if (settings.picture || settings.culture) {
     let feed = null

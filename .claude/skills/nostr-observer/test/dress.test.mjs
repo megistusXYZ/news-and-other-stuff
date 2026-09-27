@@ -659,3 +659,31 @@ test('the serial\'s Gutenberg _italics_ read as italics in the living copy, and 
   assert.match(html, /If you do <em class="lv-gutenberg">not<\/em> marry Mr\. Collins, and snake_case stays\./)
   assert.ok(html.replace(/<em class="lv-gutenberg">([^<]*)<\/em>/g, '_$1_').includes('If you do _not_ marry'))
 })
+
+// --- the Feature's second tab, 2026-09-26 ------------------------------------------------
+
+test('the living copy carries the other piece for the Feature\'s second tab, as text, headed and credited', () => {
+  const story = { kind: 'story', title: 'Beyond the Door', authors: ['Philip K. Dick'], published: null, link: 'https://www.gutenberg.org/ebooks/28644', source: 'Project Gutenberg', credit: 'From Project Gutenberg. This story is in the public domain in the USA.', blocks: [{ type: 'p', text: 'Larry Thomas bought a cuckoo clock.' }] }
+  const article = { kind: 'conversation', title: 'Trump frames unregulated AI <b>badly</b>', authors: ['Stephen Collins, Kennesaw State University'], published: '2026-09-25', link: 'javascript:alert(1)', source: 'The Conversation', credit: 'This article is republished from The Conversation under a Creative Commons license. Read the original article.', blocks: [{ type: 'p', text: 'Amid the chorus.' }, { type: 'h', text: 'A race?' }] }
+  const sunday = islandOf(dress(page, { ...corpus, wires: { feature: story, featureAlt: article } }, assets).html).feature
+  assert.deepEqual(sunday, {
+    lead: 'The Story',
+    alt: {
+      tab: 'The Feature',
+      kind: 'conversation',
+      kicker: 'The Feature · The Conversation · Technology',
+      title: 'Trump frames unregulated AI <b>badly</b>',
+      byline: 'Stephen Collins, Kennesaw State University · 2026-09-25',
+      credit: 'This article is republished from The Conversation under a Creative Commons license. Read the original article.',
+      link: null,
+      blocks: [{ type: 'p', text: 'Amid the chorus.' }, { type: 'h', text: 'A race?' }],
+    },
+  }, 'plain text the page sets with textContent; a link that is not https is dropped')
+  const weekday = islandOf(dress(page, { ...corpus, wires: { feature: article, featureAlt: story } }, assets).html).feature
+  assert.equal(weekday.lead, 'The Feature')
+  assert.equal(weekday.alt.tab, 'The Story')
+  assert.equal(weekday.alt.kicker, 'This Week\'s Story')
+  assert.equal(weekday.alt.byline, 'Philip K. Dick')
+  assert.equal(weekday.alt.link, 'https://www.gutenberg.org/ebooks/28644')
+  assert.equal(islandOf(dress(page, { ...corpus, wires: { feature: article } }, assets).html).feature, null, 'one piece, no tabs')
+})

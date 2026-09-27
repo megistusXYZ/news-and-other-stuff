@@ -330,6 +330,16 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **The Feature in two tabs (2026-09-26).** Both pieces arrive every day:
+  the day's lead (the story on Sunday, the article otherwise) is what the
+  writer heads and the printer sets; the other is `wires.featureAlt`, carried
+  in the island as plain text (`feature.alt`: tab, kicker, title, byline,
+  credit, https link, blocks) and swapped in by living.js with textContent
+  only ("The Story · The Feature" on the kicker line). The story now changes
+  on Sunday and holds through Saturday (weeks counted from Sunday, not the
+  epoch's Thursday), so a weekday reader has "This Week's Story" a tab away.
+  Switching from deep in a long piece brings its top back into view.
+
 - **The Tape (2026-09-26).** A few share prices in The Wire, just before
   Conditions. `tape: true` gives the defaults (NVDA, AAPL, TSLA, MSTR: an AI
   maker, two household names, and the bitcoin-treasury company this network

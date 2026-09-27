@@ -1844,6 +1844,95 @@ function recipeTabs () {
   })
 }
 
+// --- the Feature, in tabs ----------------------------------------------------
+//
+// The page carries the day's lead piece (set by the printer, word for word);
+// the island carries the other, as plain text. Two tabs on the kicker line
+// swap heading, byline, text and credit in place. Text is set with
+// textContent only; a story's Gutenberg _italics_ become <em>, and -- a dash.
+// Switching while deep in a long piece brings its top back into view.
+
+function featureTabs () {
+  const box = document.querySelector('.band.back article.feature')
+  const f = data.feature
+  if (!box || !f || !f.alt) return
+  const kicker = box.querySelector('.kicker')
+  const title = box.querySelector('.sub-head')
+  const byline = box.querySelector('.byline')
+  const text = box.querySelector('.feature-text')
+  const note = box.querySelector('.note')
+  if (!kicker || !title || !text) return
+  const label = el('span', 'lv-kicker-text', kicker.textContent)
+  kicker.replaceChildren(label)
+  const lead = {
+    kicker: label.textContent, title: title.textContent, byline: byline ? byline.textContent : '',
+    text: text.cloneNode(true), note: note ? note.cloneNode(true) : null,
+  }
+  const storyLine = (line) => {
+    const p = el('p')
+    const parts = line.replace(/--/g, '—').split(/(^|[^\w])_([^_]+?)_(?=[^\w]|$)/)
+    // split with two groups yields: text, lead char, italic, text, …
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 3 === 2) p.append(el('em', '', parts[i]))
+      else if (parts[i]) p.append(parts[i])
+    }
+    return p
+  }
+  const bar = el('span', 'lv-tabs')
+  bar.setAttribute('role', 'tablist')
+  bar.setAttribute('aria-label', 'Feature')
+  const tabs = [f.lead, f.alt.tab].map((name, i) => {
+    const b = el('button', 'lv-tab', name)
+    b.type = 'button'
+    b.setAttribute('role', 'tab')
+    b.setAttribute('aria-selected', i === 0 ? 'true' : 'false')
+    b.tabIndex = i === 0 ? 0 : -1
+    b.addEventListener('click', () => show(i))
+    bar.append(b)
+    return b
+  })
+  kicker.classList.add('lv-with-tabs')
+  kicker.append(bar)
+
+  function show (i) {
+    tabs.forEach((b, j) => { b.setAttribute('aria-selected', String(i === j)); b.tabIndex = i === j ? 0 : -1 })
+    const body = box.querySelector('.feature-text')
+    if (i === 0) {
+      label.textContent = lead.kicker
+      title.textContent = lead.title
+      if (byline) byline.textContent = lead.byline
+      body.replaceWith(lead.text.cloneNode(true))
+      const n = box.querySelector('.note')
+      if (lead.note && n) n.replaceWith(lead.note.cloneNode(true))
+    } else {
+      const a = f.alt
+      label.textContent = a.kicker
+      title.textContent = a.title
+      if (byline) byline.textContent = a.byline
+      const next = el('div', 'feature-text')
+      for (const b of a.blocks) next.append(b.type === 'h' ? el('h3', 'feature-sub', b.text) : a.kind === 'story' ? storyLine(b.text) : el('p', '', b.text))
+      body.replaceWith(next)
+      const credit = el('p', 'note', a.credit)
+      if (a.link) {
+        const link = el('a', '', a.link.replace(/^https:\/\//, ''))
+        link.href = a.link; link.target = '_blank'; link.rel = 'noopener noreferrer'
+        credit.append(' ', link)
+      }
+      const n = box.querySelector('.note')
+      if (n) n.replaceWith(credit); else box.append(credit)
+    }
+    if (box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: 'start' })
+  }
+  bar.addEventListener('keydown', (e) => {
+    const at = tabs.findIndex((b) => b.getAttribute('aria-selected') === 'true')
+    const to = e.key === 'ArrowRight' ? (at + 1) % tabs.length : e.key === 'ArrowLeft' ? (at - 1 + tabs.length) % tabs.length : -1
+    if (to < 0) return
+    e.preventDefault()
+    show(to)
+    tabs[to].focus()
+  })
+}
+
 // --- pictures open their post ---------------------------------------------------
 //
 // dress marks a picture that came with a post (data-ev) and a wire picture with
@@ -2006,6 +2095,7 @@ if (data) {
   guard(five)
   guard(cartoonTabs)
   guard(recipeTabs)
+  guard(featureTabs)
   guard(pictureLinks)
   guard(cards)
   guard(wireRows)

@@ -789,25 +789,48 @@ a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72
 .lv-has-new .lv-since-button[aria-expanded="true"] .lv-since-label::after { content: "  ↑"; }
 
 .lv-drawer[hidden] { display: none; }
-.lv-drawer { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; padding: 4px 0 14px; }
-.lv-drawer-item, .lv-drawer-all {
-  text-align: left; font: inherit; cursor: pointer; border: 1px solid var(--rule); background: var(--paper-2, #fff);
-  border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; color: var(--ink);
-  transition: border-color .2s ease, transform .2s ease;
+/* Stop Press: what came in after the paper closed, set as late news — a head,
+ * a lead with a small headline, then briefs in ruled columns with their wire
+ * times. Type and rules, no cards; the paper's own agate is the model. */
+.lv-drawer { padding: 12px 0 16px; }
+.lv-press-head { display: flex; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; margin-bottom: 12px; }
+.lv-press-title { font-family: var(--util); font-size: .74rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--ink); }
+.lv-press-since { font-family: var(--mono); font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.lv-press-body { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 0 22px; }
+.lv-press-body.lv-press-alone { grid-template-columns: minmax(0, 1fr); max-width: 44rem; }
+.lv-press-lead, .lv-press-brief {
+  display: block; width: 100%; text-align: left; font: inherit; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer;
 }
-.lv-drawer-item:hover, .lv-drawer-all:hover { border-color: var(--accent); transform: translateY(-2px); }
-.lv-drawer-meta { display: flex; justify-content: space-between; gap: 8px; }
-.lv-drawer-name { font-family: var(--serif); font-weight: 700; font-size: .86rem; }
-.lv-drawer-ago { color: var(--ink-3); }
-.lv-drawer-text { font-family: var(--body); font-size: .82rem; line-height: 1.4; color: var(--ink-2);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
-.lv-drawer-all { justify-content: center; font-weight: 600; letter-spacing: .06em; color: var(--accent); background: var(--accent-soft); }
+.lv-press-lead { align-self: start; }
+.lv-press-briefs { padding-left: 22px; border-left: 1px solid var(--rule); }
+.lv-press-by { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0 0 4px; font-family: var(--mono); font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.lv-press-time { color: var(--ink-2); font-weight: 600; }
+.lv-press-name { color: var(--ink); font-weight: 600; }
+.lv-press-count::before { content: "·"; margin-right: 8px; }
+.lv-press-headline { margin: 2px 0 6px; font-family: var(--serif); font-weight: 800; font-size: 1.28rem; line-height: 1.15; letter-spacing: -0.005em; }
+.lv-press-text { margin: 0; font-family: var(--body); font-size: .84rem; line-height: 1.45; color: var(--ink-2); overflow-wrap: anywhere; }
+.lv-press-briefs { columns: 2; column-gap: 22px; column-rule: 1px solid var(--rule); }
+.lv-press-brief { break-inside: avoid; padding: 0 0 9px; margin: 0 0 9px; border-bottom: 1px dotted var(--rule); }
+.lv-press-brief[hidden] { display: none; }
+.lv-press-lead:hover .lv-press-headline, .lv-press-brief:hover .lv-press-name { color: var(--accent); }
+.lv-press-lead:focus-visible, .lv-press-brief:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.lv-press-more { display: block; margin: 4px 0 0 auto; font: 600 .62rem/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+.lv-press-quiet { margin: 0; font-family: var(--body); font-style: italic; font-size: .84rem; color: var(--ink-3); }
+.lv-press-foot { display: block; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--rule-soft, var(--rule)); font: .62rem/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); text-decoration: none; }
+.lv-press-foot:hover { color: var(--accent); }
+@media (max-width: 1000px) { .lv-press-briefs { columns: 1; } }
+@media (max-width: 700px) {
+  .lv-press-body { grid-template-columns: minmax(0, 1fr); }
+  .lv-press-lead { padding: 0 0 12px; margin-bottom: 12px; border-bottom: 1px solid var(--rule); }
+  .lv-press-briefs { padding-left: 0; border-left: 0; }
+  .lv-press-headline { font-size: 1.12rem; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   :root { transition: none; }
   .lv-pre { opacity: 1; transform: none; }
   .lv-in, .lv-card, a[data-ev], a[data-pk],
-  .sheet, .lv-scrim, .lv-panel, .lv-panel-frame, .lv-drawer-item, .lv-drawer-all { transition: none; }
+  .sheet, .lv-scrim, .lv-panel, .lv-panel-frame { transition: none; }
 }
 
 @media print {

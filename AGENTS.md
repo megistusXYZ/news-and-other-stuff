@@ -330,6 +330,20 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **Stop Press (2026-09-26).** The strip's drawer is edited like late news,
+  not dealt out as cards: `scripts/press.mjs` (`pressText`, `headlineOf`,
+  `stopPress`, copied into living.js byte for byte and tested) leaves out
+  small talk (under five words), replies the page cannot place (an `e` tag not
+  marked `mention`) and a trailing run of hashtags; keeps one line per person
+  (their latest, "3 posts"); sets the wordiest as the lead with its first
+  sentence as a headline (a long one is cut at a word and carries on beneath);
+  and sets the rest as briefs in ruled columns with wire times, eight shown and
+  the rest folded. The button counts stories that made the cut. The foot is
+  plain brainstorm.world: the old "See everything" link opened a search of a
+  dozen raw `from:npub` terms that Brainstorm printed in its search bar. The
+  island's `since.seeAll` stays unused until Brainstorm gives a short link for
+  a view (team request #8).
+
 - **The page is set as a newspaper, not an app (2026-09-25).** Tried and
   taken out the same day, at the reader's request, as too distracting: a
   Three.js "voices constellation" behind the nameplate (then shrunk to a still

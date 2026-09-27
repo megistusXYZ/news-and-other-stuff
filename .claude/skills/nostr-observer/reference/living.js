@@ -1011,6 +1011,61 @@ async function stationStatus () {
   }
 }
 
+// --- stop press ---------------------------------------------------------
+//
+// Byte for byte from scripts/press.mjs (test/press.test.mjs holds it to that).
+
+// A post as it reads: no nostr: references, no links, whitespace closed up.
+function pressText (content) {
+  return String(content || '').replace(/nostr:[a-z0-9]+/gi, '').replace(/https?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim()
+    .replace(/(?:\s*#[\p{L}\p{N}_]+)+$/u, '').trim()
+}
+
+// The first sentence as the headline, the rest as its text. A first sentence
+// that runs long is cut at a word, and the story carries on beneath it.
+function headlineOf (text) {
+  const max = 90
+  const first = /^(.+?[.!?])(?:\s+|$)/.exec(text)
+  if (first && first[1].length <= max) return { headline: first[1], text: text.slice(first[0].length).trim() }
+  if (text.length <= max) return { headline: text, text: '' }
+  const word = text.slice(0, max - 1).lastIndexOf(' ')
+  const at = word > 40 ? word : max - 1
+  return { headline: text.slice(0, at).replace(/[\s,;:–—-]+$/, '') + '…', text: '…' + text.slice(at).trim() }
+}
+
+// Small talk (under five words), and replies the page cannot place (an e tag
+// marked reply or root, or unmarked in the old positional way), are left out.
+// One line per person, their latest, with how many they posted. The line with
+// the most words leads; the rest are briefs, newest first, all of them (the
+// page shows eight and folds the rest).
+function stopPress (events) {
+  const words = (text) => text.split(' ').filter((w) => /\p{L}/u.test(w)).length
+  const reply = (e) => (e.tags || []).some((t) => t[0] === 'e' && t[3] !== 'mention')
+  const clip = (text, max) => {
+    if (text.length <= max) return text
+    const cut = text.slice(0, max - 1)
+    const word = cut.lastIndexOf(' ')
+    return (word > max / 2 ? cut.slice(0, word) : cut).replace(/[\s,;:–—-]+$/, '') + '…'
+  }
+  const people = new Map()
+  for (const e of [...events].sort((a, b) => b.created_at - a.created_at)) {
+    const text = pressText(e.content)
+    if (words(text) < 5 || reply(e)) continue
+    const seen = people.get(e.pubkey)
+    if (seen) seen.count += 1
+    else people.set(e.pubkey, { event: e, text, count: 1 })
+  }
+  const lines = [...people.values()]
+  if (!lines.length) return { lead: null, briefs: [], stories: 0 }
+  const lead = lines.reduce((best, line) => (words(line.text) > words(best.text) ? line : best))
+  const told = headlineOf(lead.text)
+  return {
+    lead: { event: lead.event, count: lead.count, headline: told.headline, text: clip(told.text, 280) },
+    briefs: lines.filter((line) => line !== lead).map((line) => ({ event: line.event, count: line.count, text: clip(line.text, 160) })),
+    stories: lines.length,
+  }
+}
+
 // --- since this edition ----------------------------------------------------
 //
 // The paper's own lens, picked up where the window closed: the same ranked
@@ -1059,30 +1114,69 @@ function sinceStrip () {
       button.disabled = true
       return
     }
-    const names = await namesFor(since.relay, [...new Set(fresh.slice(0, 8).map((e) => e.pubkey))])
-    label.textContent = `${fresh.length}${fresh.length >= since.filter.limit ? '+' : ''} new ranked post${fresh.length === 1 ? '' : 's'} since ${closed}`
-    strip.classList.add('lv-has-new')
+    const press = stopPress(fresh)
+    const shown = press.lead ? [press.lead, ...press.briefs] : []
+    const names = shown.length ? await namesFor(since.relay, shown.map((s) => s.event.pubkey)) : {}
+    const plural = press.stories === 1 ? 'story' : 'stories'
+    label.textContent = press.stories ? `${press.stories} new ${plural} since ${closed}` : `No new stories since ${closed}`
+    strip.classList.toggle('lv-has-new', press.stories > 0)
     button.disabled = false
-    drawer.replaceChildren(...fresh.slice(0, 8).map((e) => item(e, names)), seeAll())
+    drawer.replaceChildren(...column(press, names, fresh.length))
   }
 
-  function item (e, names) {
-    const row = el('button', 'lv-drawer-item')
-    row.type = 'button'
-    const meta = el('div', 'lv-drawer-meta')
-    meta.append(el('span', 'lv-drawer-name', names[e.pubkey] || (data.people[e.pubkey] && data.people[e.pubkey].name) || 'Someone you trust'), el('span', 'lv-drawer-ago', ago(e.created_at)))
-    const text = String(e.content || '').replace(/nostr:[a-z0-9]+/gi, '').replace(/https?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim()
-    row.append(meta, el('div', 'lv-drawer-text', text.length > 180 ? text.slice(0, 179) + '…' : text || '(a post with no text)'))
-    // Brainstorm's /e/ takes a bare event id; no encoding needed here.
-    row.addEventListener('click', () => openReader(`${BRAINSTORM}/e/${e.id}`))
-    return row
+  // The column: a head, the lead set as a small story, the briefs in ruled
+  // columns with their wire times, eight shown and the rest folded under a
+  // line, and a quiet foot. Every line opens in the reader's panel.
+  const nameOf = (pk, names) => names[pk] || (data.people[pk] && data.people[pk].name) || 'Someone you trust'
+  const wireTime = (s) => clockTime(s).replace(/\s+\S+$/, '')
+  const open = (node, e) => {
+    node.addEventListener('click', () => openReader(`${BRAINSTORM}/e/${e.id}`))
+    return node
   }
-
-  function seeAll () {
-    const link = el('button', 'lv-drawer-all', `See everything since ${closed} on Brainstorm →`)
-    link.type = 'button'
-    link.addEventListener('click', () => openReader(since.seeAll))
-    return link
+  const byline = (line, names) => {
+    const by = el('p', 'lv-press-by')
+    by.append(el('span', 'lv-press-time', wireTime(line.event.created_at)), el('span', 'lv-press-name', nameOf(line.event.pubkey, names)))
+    if (line.count > 1) by.append(el('span', 'lv-press-count', `${line.count} posts`))
+    return by
+  }
+  function column (press, names, posts) {
+    const head = el('div', 'lv-press-head')
+    head.append(el('span', 'lv-press-title', 'Stop Press'), el('span', 'lv-press-since', `since ${closed}`))
+    const out = [head]
+    if (press.lead) {
+      const lead = open(el('button', 'lv-press-lead'), press.lead.event)
+      lead.type = 'button'
+      lead.append(byline(press.lead, names), el('h3', 'lv-press-headline', press.lead.headline))
+      if (press.lead.text) lead.append(el('p', 'lv-press-text', press.lead.text))
+      const briefs = el('div', 'lv-press-briefs')
+      press.briefs.forEach((b, i) => {
+        const brief = open(el('button', 'lv-press-brief'), b.event)
+        brief.type = 'button'
+        brief.hidden = i >= 8
+        brief.append(byline(b, names), el('p', 'lv-press-text', b.text))
+        briefs.append(brief)
+      })
+      const body = el('div', 'lv-press-body')
+      body.classList.toggle('lv-press-alone', !press.briefs.length)
+      body.append(lead)
+      if (press.briefs.length) body.append(briefs)
+      out.push(body)
+      if (press.briefs.length > 8) {
+        const more = el('button', 'lv-press-more', `${press.briefs.length - 8} more ${press.briefs.length - 8 === 1 ? 'story' : 'stories'} ↓`)
+        more.type = 'button'
+        more.addEventListener('click', () => { for (const b of briefs.children) b.hidden = false; more.remove() })
+        out.push(more)
+      }
+    } else {
+      out.push(el('p', 'lv-press-quiet', `${posts} post${posts === 1 ? '' : 's'} since, all small talk or replies.`))
+    }
+    // The foot is Brainstorm itself, not a search built of raw npubs.
+    const foot = el('a', 'lv-press-foot', 'Everything else is on Brainstorm ↗')
+    foot.href = BRAINSTORM
+    foot.target = '_blank'
+    foot.rel = 'noopener noreferrer'
+    out.push(foot)
+    return out
   }
 
   check()

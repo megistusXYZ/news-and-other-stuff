@@ -228,6 +228,16 @@ a.lv-cartoon-title:hover { color: var(--accent); }
 .spread figure .note { margin: 0; }
 
 .agate { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 3px double var(--ink); padding-top: 14px; }
+/* The agate fits the day: four, five or six cells, never an empty column.
+ * Desktop only; the tablet and phone grids below keep their own counts. */
+@media (min-width: 1001px) {
+  .agate:has(> .cell:nth-child(6)) { grid-template-columns: repeat(6, 1fr); }
+  .agate:not(:has(> .cell:nth-child(5))) { grid-template-columns: repeat(4, 1fr); }
+}
+/* The Tape: ticker, close, change; the move in the paper's quiet colours. */
+.agate .tape td:first-child { font-family: var(--mono); font-weight: 600; letter-spacing: .04em; }
+.agate .tape .up { color: var(--ink); }
+.agate .tape .down { color: var(--ink-2); }
 .agate .cell { padding: 0 14px; border-left: 1px solid var(--rule-soft); }
 .agate .cell:first-child { padding-left: 0; border-left: 0; }
 .agate .cell:last-child { padding-right: 0; }

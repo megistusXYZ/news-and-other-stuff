@@ -183,7 +183,7 @@ test('readPaper takes the reader\'s place, teams and feeds, and nothing it shoul
     teams: ['FC Barcelona', 'Arsenal', 'a', 'b', 'c'],
     feeds: [{ url: 'https://feeds.bbci.co.uk/news/world/rss.xml', section: 'Wider World' }],
     almanac: true,
-    cartoon: false, puzzle: false, recipe: false, serial: null, picture: false, markets: false, world: false, sky: false, culture: false, tabloid: false, five: false, health: false, launches: false, feature: false, country: null,
+    cartoon: false, puzzle: false, recipe: false, serial: null, picture: false, markets: false, world: false, sky: false, culture: false, tabloid: false, five: false, health: false, launches: false, feature: false, tape: [], country: null,
   }, 'markup refused, at most five teams, https feeds only; the back page and readings off unless asked for')
 
   writeFileSync(file, JSON.stringify({ name: 'Plain' }))
@@ -550,4 +550,33 @@ test('the digest hands the writer the Feature: what it is and how to credit it, 
   const story = digest({ ...corpus, wires: { ...corpus.wires, feature: { ...feature, kind: 'story', title: 'Beyond the Door', authors: ['Philip K. Dick'], published: null, summary: null, source: 'Project Gutenberg', licence: 'public domain in the USA', credit: 'From Project Gutenberg. This story is in the public domain in the USA.', link: 'https://www.gutenberg.org/ebooks/28644' } } })
   assert.match(story, /^The Sunday Story: Beyond the Door$/m)
   assert.match(story, /^By Philip K\. Dick · about 13 words$/m)
+})
+
+test('readPaper takes The Tape as the defaults, or as up to six tickers, and nothing that is not a ticker', async () => {
+  const { readPaper } = await import('../scripts/corpus.mjs')
+  const { writeFileSync, mkdtempSync } = await import('node:fs')
+  const { join } = await import('node:path')
+  const { tmpdir } = await import('node:os')
+  const file = join(mkdtempSync(join(tmpdir(), 'tape-')), 'observer.config.json')
+  const tapeOf = (value) => { writeFileSync(file, JSON.stringify({ place: 'Chicago', tape: value })); return (readPaper(file).wires || {}).tape }
+  assert.deepEqual(tapeOf(true), ['NVDA', 'AAPL', 'TSLA', 'MSTR'])
+  assert.deepEqual(tapeOf(['pltr', 'BRK-B', 'nvda', 'NVDA']), ['PLTR', 'BRK-B', 'NVDA'], 'upper-cased, each once')
+  assert.deepEqual(tapeOf(['A', 'B', 'C', 'D', 'E', 'F', 'G']), ['A', 'B', 'C', 'D', 'E', 'F'], 'six at most')
+  assert.deepEqual(tapeOf(['https://evil.example', '<b>', '']), [], 'a ticker is letters, digits and a dot or dash')
+  assert.deepEqual(tapeOf(undefined), [])
+})
+
+test('the digest prints The Tape: each close and its change, stamped in the reader\'s clock, delayed and credited', async () => {
+  const { digest } = await import('../scripts/corpus.mjs')
+  const chicago = { place: 'Chicago', unit: '°F', timezone: 'America/Chicago', source: 'x', now: { temp: 1, words: 'x' }, today: { date: '2026-09-25', high: 1, low: 1, rain: 0, words: 'x', sunrise: '07:21', sunset: '19:23' }, ahead: [] }
+  const tape = { source: 'Yahoo Finance, delayed', quotes: [
+    { symbol: 'NVDA', name: 'NVIDIA Corporation', price: 225.07, change: 0.49, pct: 0.22, currency: 'USD', at: 1790366400 },
+    { symbol: 'MSTR', name: 'Strategy Inc', price: 158.61, change: -3, pct: -1.86, currency: 'USD', at: 1790366400 },
+  ] }
+  const corpus = { code: 'ABC123', since: 1790222949, until: 1790309349, desks: {}, control: [], profiles: {}, art: [], wires: { asOf: 1790342880, weather: chicago, sports: null, almanac: null, headlines: [], notes: [], tape } }
+  const out = digest(corpus)
+  assert.match(out, /^### The Tape$/m)
+  assert.match(out, /^Credit: Yahoo Finance, delayed\. Closes as of 2026-09-25 3:00 p\.m\. CDT; not live, and not advice\.$/m)
+  assert.match(out, /^- NVDA \(NVIDIA Corporation\): \$225\.07, up 0\.49 \(\+0\.22%\)$/m)
+  assert.match(out, /^- MSTR \(Strategy Inc\): \$158\.61, down 3\.00 \(−1\.86%\)$/m)
 })

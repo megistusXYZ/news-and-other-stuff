@@ -17,7 +17,7 @@ import { req, toHex, toNpub, shortNpub, streamWriterUrl, classifiedWriterUrl, ca
 import { writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { createHash } from 'node:crypto'
-import { gatherWires } from './wires.mjs'
+import { gatherWires, TAPE_DEFAULTS } from './wires.mjs'
 import { whatsOn } from './whatson.mjs'
 import { sudoku } from './puzzle.mjs'
 import { dailyWord, dayNumber } from './five.mjs'
@@ -483,6 +483,17 @@ function printWires (p, wires) {
     }
     p('')
   }
+  if (wires.tape && wires.tape.quotes.length) {
+    const at = Math.max(...wires.tape.quotes.map((q) => q.at || 0))
+    p('### The Tape')
+    p(`Credit: ${wires.tape.source}.${at ? ` Closes as of ${clockOf(wires.weather)(at)};` : ''} not live, and not advice.`)
+    for (const q of wires.tape.quotes) {
+      const money = q.currency === 'USD' ? `$${q.price.toFixed(2)}` : `${q.price.toFixed(2)}${q.currency ? ` ${q.currency}` : ''}`
+      const move = q.change === 0 ? 'unchanged' : `${q.change > 0 ? 'up' : 'down'} ${Math.abs(q.change).toFixed(2)} (${q.pct >= 0 ? '+' : '−'}${Math.abs(q.pct).toFixed(2)}%)`
+      p(`- ${q.symbol} (${q.name}): ${money}, ${move}`)
+    }
+    p('')
+  }
   if (wires.feature) {
     // The text is not here, on purpose: a no-derivatives article must be
     // printed exactly, so resolve.mjs sets it from the corpus. The writer
@@ -749,10 +760,14 @@ export function readPaper (path = 'observer.config.json') {
     health: raw.health === true,
     launches: raw.launches === true,
     feature: raw.feature === true,
+    // The Tape: `true` for the defaults, or up to six tickers of the reader's.
+    tape: raw.tape === true ? [...TAPE_DEFAULTS]
+      : Array.isArray(raw.tape) ? [...new Set(raw.tape.map((t) => String(t || '').trim().toUpperCase()).filter((t) => /^[A-Z0-9][A-Z0-9.-]{0,9}$/.test(t)))].slice(0, 6)
+        : [],
     country: typeof raw.country === 'string' && /^[A-Z]{2}$/.test(raw.country) ? raw.country : null,
   }
   const asked = ['place', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'sky', 'culture', 'tabloid', 'five', 'health', 'launches', 'feature']
-  paper.wires = wires.teams.length || wires.feeds.length || asked.some((k) => wires[k]) ? wires : null
+  paper.wires = wires.teams.length || wires.feeds.length || wires.tape.length || asked.some((k) => wires[k]) ? wires : null
   return paper.name || paper.brand || paper.wires ? paper : null
 }
 
@@ -852,7 +867,7 @@ async function main () {
       wires.five = { name: 'Five', day: dayNumber(until), answer: dailyWord(until, answers) }
     }
     art.push(...wires.art)
-    const got = ['weather', 'sports', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'tabloid', 'five', 'health', 'launches', 'feature'].filter((k) => wires[k]).concat(wires.headlines.length ? ['headlines'] : [])
+    const got = ['weather', 'sports', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'tabloid', 'five', 'health', 'launches', 'feature', 'tape'].filter((k) => wires[k]).concat(wires.headlines.length ? ['headlines'] : [])
     process.stderr.write(`  Wires: ${got.join(', ') || 'nothing'}${wires.notes.length ? ` (${wires.notes.length} note(s))` : ''}.\n`)
   }
 

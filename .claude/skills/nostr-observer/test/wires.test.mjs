@@ -632,3 +632,29 @@ test('on a Sunday with Gutenberg down, the Feature falls back to the weekday pie
   const wires = await gatherWires({ ...off, feature: true }, { fetch, now: SUNDAY })
   assert.equal(wires.feature.kind, 'conversation')
 })
+
+// --- The Tape, 2026-09-26 ---------------------------------------------------------
+
+const chart = (symbol, name, closes, price, time = 1790366400) => ({ chart: { result: [{
+  meta: { symbol, shortName: name, currency: 'USD', regularMarketPrice: price, chartPreviousClose: 1, regularMarketTime: time, exchangeTimezoneName: 'America/New_York' },
+  timestamp: closes.map((_, i) => 1790170200 + i * 86400),
+  indicators: { quote: [{ close: closes }] },
+}], error: null } })
+
+test('The Tape: each ticker\'s last close and its change on the day before, from the daily closes, not the window\'s start', async () => {
+  const { fetch, asked } = network([
+    [/finance\/chart\/NVDA\?/, chart('NVDA', 'NVIDIA Corporation', [225.51, 224.58, 225.07], 225.07)],
+    [/finance\/chart\/MSTR\?/, chart('MSTR', 'Strategy Inc', [162.2, 161.61, null, 158.61], 158.61)],
+    [/finance\/chart\/NOPE\?/, { chart: { result: null, error: { code: 'Not Found' } } }],
+  ])
+  const wires = await gatherWires({ ...off, tape: ['NVDA', 'MSTR', 'NOPE'] }, { fetch, now: NOW })
+  assert.ok(asked.every((u) => !/finance\/chart/.test(u) || /range=5d&interval=1d/.test(u)))
+  assert.deepEqual(wires.tape, {
+    source: 'Yahoo Finance, delayed',
+    quotes: [
+      { symbol: 'NVDA', name: 'NVIDIA Corporation', price: 225.07, change: 0.49, pct: 0.22, currency: 'USD', at: 1790366400 },
+      { symbol: 'MSTR', name: 'Strategy Inc', price: 158.61, change: -3, pct: -1.86, currency: 'USD', at: 1790366400 },
+    ],
+  }, 'a missing close is skipped; a ticker the service does not know is left out')
+  assert.ok(wires.notes.some((n) => /NOPE/.test(n)), 'and noted')
+})

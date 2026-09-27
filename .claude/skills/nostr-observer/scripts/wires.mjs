@@ -390,6 +390,41 @@ async function sundayStory (fetch, now) {
   }
 }
 
+// The Tape: a handful of share prices the reader chose, as of the last close.
+// There is no openly licensed source of share prices; Yahoo's chart feed is
+// free, keyless and fine for a paper read on the reader's own machine, and the
+// page says it is delayed. The day's change is the last close against the one
+// before it — the feed's "previous close" is the start of its window, not
+// yesterday. A ticker the feed does not know is left out and noted.
+export const TAPE_DEFAULTS = ['NVDA', 'AAPL', 'TSLA', 'MSTR']
+async function tape (fetch, symbols, notes) {
+  const round = (n) => Math.round(n * 100) / 100
+  const quotes = []
+  for (const symbol of symbols) {
+    try {
+      const found = await getJson(fetch, `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`)
+      const r = found && found.chart && found.chart.result && found.chart.result[0]
+      const closes = ((r && r.indicators && r.indicators.quote && r.indicators.quote[0].close) || []).filter((c) => Number.isFinite(c))
+      const price = r && r.meta && r.meta.regularMarketPrice
+      if (!Number.isFinite(price) || closes.length < 2) throw new Error('no quote')
+      const before = closes[closes.length - 2]
+      quotes.push({
+        symbol: String(r.meta.symbol || symbol).slice(0, 12),
+        name: String(r.meta.shortName || r.meta.longName || symbol).slice(0, 60),
+        price: round(price),
+        change: round(price - before),
+        pct: round(((price - before) / before) * 100),
+        currency: r.meta.currency || null,
+        at: Number.isFinite(r.meta.regularMarketTime) ? r.meta.regularMarketTime : null,
+      })
+    } catch (error) {
+      notes.push(`The Tape: no quote for ${symbol} (${String((error && error.message) || error).slice(0, 80)})`)
+    }
+  }
+  if (!quotes.length) throw new Error('no quotes at all')
+  return { source: 'Yahoo Finance, delayed', quotes }
+}
+
 // Markets: bitcoin in three currencies, the fee to get into the next block,
 // the block height, and the ECB's reference rates. Readings as of the fetch,
 // stamped by the digest — a paper prints the close, not a ticker.
@@ -658,7 +693,7 @@ async function saying (fetch) {
  */
 export async function gatherWires (settings, { fetch = globalThis.fetch, now = Math.floor(Date.now() / 1000), nextArt = 1 } = {}) {
   if (!settings) return null
-  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, feature: null, markets: null, world: null, picture: null, recipe: null, recipes: [], health: null, launches: null, lookedUp: null, tabloid: null, art: [], notes: [] }
+  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, feature: null, tape: null, markets: null, world: null, picture: null, recipe: null, recipes: [], health: null, launches: null, lookedUp: null, tabloid: null, art: [], notes: [] }
   const reason = (error) => String(error && error.message ? error.message : error).slice(0, 120)
   // Pictures the wires bring, numbered after the corpus's own shortlist.
   let artN = nextArt
@@ -713,6 +748,13 @@ export async function gatherWires (settings, { fetch = globalThis.fetch, now = M
       wires.serial = await serial(fetch, settings.serial, now)
     } catch (error) {
       wires.notes.push(`Serial: could not reach Project Gutenberg (${reason(error)})`)
+    }
+  }
+  if (Array.isArray(settings.tape) && settings.tape.length) {
+    try {
+      wires.tape = await tape(fetch, settings.tape, wires.notes)
+    } catch (error) {
+      wires.notes.push(`The Tape: could not reach Yahoo Finance (${reason(error)})`)
     }
   }
   if (settings.feature) {

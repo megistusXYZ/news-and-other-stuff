@@ -330,6 +330,19 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **The Tape (2026-09-26).** A few share prices in The Wire, just before
+  Conditions. `tape: true` gives the defaults (NVDA, AAPL, TSLA, MSTR: an AI
+  maker, two household names, and the bitcoin-treasury company this network
+  watches), or a list of up to six tickers. There is no openly licensed source
+  of share prices; Yahoo's chart feed is free and keyless, fine for a paper on
+  the reader's own machine, and the page says delayed, not live, not advice.
+  Swap it for a licensed feed before the paper is ever published. The day's
+  move is the last close against the one before (the feed's own "previous
+  close" is the start of its five-day window). The page prints ticker, close
+  and the percentage with ▲/▼ — points wrapped in a fifth of the page. The
+  agate now sizes itself to four, five or six cells on a desk, so a day
+  without classifieds leaves no empty column.
+
 - **The Feature replaces the serial (2026-09-26).** Benjamin found a novel in
   204 slices a hard sell. `feature: true` prints one thoughtful piece a day,
   whole: on weekdays the newest article on The Conversation's technology feed

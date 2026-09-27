@@ -68,8 +68,9 @@ all photographs — and say why in the `<!-- restyle: ... -->` comment.
    reader's network, every edition.
 6. **The picture spread**: a band whose body is `<div class="spread">` with
    four figures, the first — a landscape — largest.
-7. **The agate**: a band whose body is `<div class="agate">` of five `cell`s —
-   Headlines, Broadcasting, Classifieds, What's On, Conditions — in small type.
+7. **The agate**: a band whose body is `<div class="agate">` of `cell`s —
+   Headlines, Broadcasting, Classifieds, What's On, The Tape, Conditions — in
+   small type. Drop a cell the digest has nothing for; the grid fits the rest.
 8. **From the Wires**, when the digest carries them: `<section class="band
    tinted">` with a `cols4`: Sports, Culture, Almanac, Wider World — drop a
    cell the digest has nothing for and use `cols3`. The weather is in the
@@ -282,6 +283,13 @@ trust said, so:
   What's On; air and moon as one short line at the foot of the weather box;
   the launches as the last rows of Conditions, rocket and mission, the
   provider, the place and the time as the digest gives it.
+- The Tape, when the digest carries it, is its own agate cell just before
+  Conditions, headed "The Tape": a table of ticker, close and the day's move,
+  one row a share, in the order given — the move as the digest's percentage,
+  with ▲ for up and ▼ for down ("▲ 1.53%") — then one `note` with the
+  digest's stamp and credit
+  ("Closes as of … · Yahoo Finance, delayed; not live, and not advice"). No
+  commentary on the moves: it is a table, not a tip.
 - Health & Safety is a small box, headed "Health & Safety" and the place:
   the UV index and its hours first, then any weather alert (the event in
   bold, the headline shortened, never reworded into advice), then a

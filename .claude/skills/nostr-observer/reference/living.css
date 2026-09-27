@@ -881,3 +881,77 @@ a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72
   .lv-pre { opacity: 1 !important; transform: none !important; }
   .lv-card, .lv-panel, .lv-scrim, .lv-since { display: none !important; }
 }
+
+/* --- access: skip link, reading settings, contrast, motion ------------------ */
+
+/* A keyboard user's first stop; out of sight until it has focus. */
+.lv-skip { position: absolute; left: 16px; top: -80px; z-index: 200; padding: 10px 14px; border-radius: 6px;
+  background: var(--ink); color: var(--paper); font: 600 .9rem/1.2 var(--body); text-decoration: none; }
+.lv-skip:focus { top: 12px; outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Heard by screen readers, never seen. */
+.lv-sr { position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* Text size: the page is set in rem, so one number on the root scales it all
+ * and the columns reflow at every width. */
+:root[data-lv-size="112"] { font-size: 112%; }
+:root[data-lv-size="125"] { font-size: 125%; }
+:root[data-lv-size="150"] { font-size: 150%; }
+
+/* "Aa" on the date line, and its panel. */
+.sheet > .folio { position: relative; }
+.lv-aa { flex: none; margin-left: 12px; min-height: 28px; min-width: 36px; padding: 3px 10px; border: 1px solid var(--rule);
+  border-radius: 999px; background: var(--paper-2); color: var(--ink); font: 700 .78rem/1 var(--serif); letter-spacing: 0;
+  text-transform: none; cursor: pointer; }
+.lv-aa:hover, .lv-aa[aria-expanded="true"] { border-color: var(--ink); }
+.lv-aa:focus-visible, .lv-reading button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lv-reading { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(320px, calc(100vw - 32px));
+  display: grid; gap: 12px; padding: 14px 16px; background: var(--paper-2); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 10px; box-shadow: 0 12px 30px rgba(10, 14, 24, .14); text-transform: none; letter-spacing: 0; }
+.lv-reading[hidden] { display: none; }
+.lv-reading-label { margin: 0 0 6px; font: 600 .68rem/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.lv-reading-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.lv-reading-options button { min-height: 34px; min-width: 48px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 6px;
+  background: transparent; color: var(--ink); font: .84rem/1.1 var(--body); cursor: pointer; }
+.lv-reading-options button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+@media (pointer: coarse) { .lv-aa { min-height: 36px; min-width: 44px; } .lv-reading-options button { min-height: 44px; } }
+
+/* Tap targets: the small controls reach at least 24px, WCAG 2.2's floor. */
+.lv-tab { min-height: 24px; }
+.lv-issue-mark, .lv-imprint { position: relative; }
+.lv-issue-mark::after, .lv-imprint::after { content: ""; position: absolute; inset: -7px; }
+
+/* High contrast: the greys become ink, the rules darken, links are underlined.
+ * The brand's sheet comes after this one, so these reach a little further. */
+html:root[data-lv-contrast="high"]:not([data-theme="dark"]) {
+  --ink-2: #0A0E18; --ink-3: #1F2733; --rule: #4F5763; --rule-soft: #7B838E; --bs-teal: #174F56; --accent: #4A1CC4; --spot: #4A1CC4;
+}
+html:root[data-lv-contrast="high"][data-theme="dark"] {
+  --ink-2: #FFFFFF; --ink-3: #E4E6EA; --rule: #9AA3B0; --rule-soft: #5E6877; --bs-teal: #6FEAF5; --accent: #CDBBFF; --spot: #CDBBFF;
+}
+:root[data-lv-contrast="high"] .sheet a[data-ev], :root[data-lv-contrast="high"] .sheet a[data-pk] {
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px;
+}
+:root[data-lv-contrast="high"] .box, :root[data-lv-contrast="high"] figure img { border-color: var(--ink-3); }
+
+/* Reduced motion, when the reader asks for it here (the device's own setting
+ * is honoured above): nothing moves, nothing waits to appear. */
+:root[data-lv-motion="reduced"] *, :root[data-lv-motion="reduced"] *::before, :root[data-lv-motion="reduced"] *::after {
+  animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important; scroll-behavior: auto !important;
+}
+:root[data-lv-motion="reduced"] .lv-pre { opacity: 1 !important; transform: none !important; }
+
+/* Windows high-contrast and other forced palettes: keep state visible where
+ * it was carried by colour alone. */
+@media (forced-colors: active) {
+  .lv-tab[aria-selected="true"], .lv-reading-options button[aria-pressed="true"] { outline: 2px solid Highlight; }
+  .lv-cut { forced-color-adjust: none; }
+  .lv-skip:focus, .lv-aa:focus-visible { outline: 2px solid Highlight; }
+}
+/* On a phone the date takes the first row of the folio; the issue number and
+ * "Aa" share the second, one at each end. */
+@media (max-width: 480px) {
+  .sheet > .folio > :nth-child(2) { flex-basis: 100%; padding-right: 0; margin-bottom: 4px; }
+  .lv-aa { margin-left: auto; }
+}

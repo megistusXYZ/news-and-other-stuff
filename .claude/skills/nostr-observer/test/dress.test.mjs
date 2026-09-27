@@ -81,6 +81,7 @@ test('undressing gives back the validated edition exactly', () => {
   const { html } = dress(page, corpus, assets)
   const undressed = html
     .replace(/<footer class="lv-colophon">[\s\S]*?<\/footer>\n/, '')
+    .replace(/<meta name="theme-color"[^>]*>\n/g, '')
     .replace(/<style id="living-fonts">[\s\S]*?<\/style>\n<style id="living-css">[\s\S]*?<\/style>\n/, '')
     .replace(/<script type="application\/json" id="observer-data">[\s\S]*?<\/script>\n<script type="module" id="living-js">[\s\S]*?<\/script>\n/, '')
     .replace(/ ?data-(ev|t|pk)="[^"]*"/g, '')
@@ -132,6 +133,7 @@ test('the brand adds no script and still undresses to the checked edition', () =
   const { html } = dress(brandPage, brandCorpus, branded)
   assert.equal((html.match(/<script\b/g) || []).length, 2)
   const undressed = html
+    .replace(/<meta name="theme-color"[^>]*>\n/g, '')
     .replace(/<style id="living-fonts">[\s\S]*?<\/style>\n<style id="living-css">[\s\S]*?<\/style>\n/, '')
     .replace(/<style id="brand-css">[\s\S]*?<\/style>\n/, '')
     .replace(' data-brand="brainstorm"', '')
@@ -432,6 +434,7 @@ test('a paper with a stamp carries it as its own inlined picture, and still undr
   assert.match(html, /<html data-stamp="ostrich">/)
   assert.match(html, /<style id="living-stamp">:root\{--lv-stamp:url\("data:image\/webp;base64,UklGRg=="\)\}<\/style>\n/)
   const undressed = html
+    .replace(/<meta name="theme-color"[^>]*>\n/g, '')
     .replace(/<style id="living-fonts">[\s\S]*?<\/style>\n<style id="living-css">[\s\S]*?<\/style>\n/, '')
     .replace(/<style id="living-stamp">[\s\S]*?<\/style>\n/, '')
     .replace(' data-stamp="ostrich"', '')
@@ -458,6 +461,7 @@ test('the stamp is set as a cut before the nameplate, the name untouched, and un
   assert.match(html, /<header class="masthead"><span class="lv-cut" aria-hidden="true"><\/span><h1>News and Other Stuff<\/h1>/,
     'first in the header, so it stands to the left of the name and the motto')
   const undressed = html
+    .replace(/<meta name="theme-color"[^>]*>\n/g, '')
     .replace(/<style id="living-fonts">[\s\S]*?<\/style>\n<style id="living-css">[\s\S]*?<\/style>\n/, '')
     .replace(/<style id="living-stamp">[\s\S]*?<\/style>\n/, '')
     .replace(' data-stamp="ostrich"', '')
@@ -480,6 +484,7 @@ test('a paper with a dark stamp carries both pictures and both shapes, refuses a
   assert.match(style, /--lv-stamp-dark:url\("data:image\/webp;base64,[A-Za-z0-9+/]+=*"\);--lv-stamp-dark-ratio:298 \/ 280/)
   assert.throws(() => dress(page, { ...corpus, paper: { ...paper, stampDark: 'pelican' } }, real), /Unknown stamp "pelican"/)
   const undressed = html
+    .replace(/<meta name="theme-color"[^>]*>\n/g, '')
     .replace(/<style id="living-fonts">[\s\S]*?<\/style>\n<style id="living-css">[\s\S]*?<\/style>\n/, '')
     .replace(/<style id="living-stamp">[\s\S]*?<\/style>\n/, '')
     .replace(' data-stamp="ostrich-portrait"', '')
@@ -686,4 +691,30 @@ test('the living copy carries the other piece for the Feature\'s second tab, as 
   assert.equal(weekday.alt.byline, 'Philip K. Dick')
   assert.equal(weekday.alt.link, 'https://www.gutenberg.org/ebooks/28644')
   assert.equal(islandOf(dress(page, { ...corpus, wires: { feature: article } }, assets).html).feature, null, 'one piece, no tabs')
+})
+
+// --- accessibility and the device, 2026-09-26 ------------------------------------------
+
+test('the living copy opens with a skip link to a front-page heading that screen readers hear', () => {
+  const fronted = page.replace('<article class="story">', '<section class="fold"><article class="story"><h2 class="lead-head">A</h2>').replace('</article>', '</article></section>')
+  const { html } = dress(fronted, corpus, assets)
+  assert.match(html, /<body>\n?<a class="lv-skip" href="#lv-front">Skip to the front page<\/a>/, 'the first thing a keyboard reaches')
+  assert.match(html, /<section class="fold"><h2 class="lv-sr" id="lv-front" tabindex="-1">Front page<\/h2><article/, 'so the headings run h1, h2, h3 without a gap')
+  assert.doesNotMatch(dress(page, corpus, assets).html, /lv-skip/, 'no front page, nothing to skip to')
+})
+
+test('the browser\'s own toolbar takes the paper\'s colour, light and dark, from the brand when it has one', () => {
+  const house = dress(page, corpus, assets).html
+  assert.match(house, /<meta name="theme-color" content="#FAF8F3" media="\(prefers-color-scheme: light\)">/)
+  assert.match(house, /<meta name="theme-color" content="#131017" media="\(prefers-color-scheme: dark\)">/)
+  const toned = { ...assets, brands: { brainstorm: { css: ':root[data-brand="brainstorm"] {\n  --paper: #F2F3F0;\n}\n:root[data-brand="brainstorm"][data-theme="dark"] {\n  --paper: #0A0E18;\n}', mark: MARK } } }
+  const branded = dress(brandPage, brandCorpus, toned).html
+  assert.match(branded, /<meta name="theme-color" content="#F2F3F0" media="\(prefers-color-scheme: light\)">/)
+  assert.match(branded, /<meta name="theme-color" content="#0A0E18" media="\(prefers-color-scheme: dark\)">/)
+})
+
+test('the Brainstorm colophon names its wordmark link, which is a picture of a word', async () => {
+  const { readFileSync } = await import('node:fs')
+  const footer = readFileSync(new URL('../reference/brands/brainstorm/footer.html', import.meta.url), 'utf8')
+  assert.match(footer, /<a class="lv-colophon-wordmark"[^>]*aria-label="Brainstorm"/)
 })

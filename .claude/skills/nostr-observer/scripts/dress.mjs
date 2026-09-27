@@ -607,7 +607,17 @@ export function dress (html, corpus, assets) {
     people: peopleOut,
   }
 
-  const head = `<style id="living-fonts">\n${assets.fonts}\n</style>\n<style id="living-css">\n${assets.css}</style>\n`
+  // The browser's own toolbar takes the paper's colour, light and dark: the
+  // brand's --paper when it declares one, the house's otherwise.
+  const paperOf = (css, dark) => {
+    const block = dark ? /\[data-theme="dark"\]\s*\{([^}]*)\}/.exec(css || '') : /^:root[^{]*\{([^}]*)\}/m.exec(css || '')
+    return ((block && /--paper:\s*(#[0-9a-f]{6})/i.exec(block[1])) || [])[1] || null
+  }
+  const brandCss = brand && brand.css
+  const toolbar = { light: paperOf(brandCss, false) || '#FAF8F3', dark: paperOf(brandCss, true) || '#131017' }
+  const head = `<meta name="theme-color" content="${toolbar.light}" media="(prefers-color-scheme: light)">\n`
+    + `<meta name="theme-color" content="${toolbar.dark}" media="(prefers-color-scheme: dark)">\n`
+    + `<style id="living-fonts">\n${assets.fonts}\n</style>\n<style id="living-css">\n${assets.css}</style>\n`
     + (brand ? `<style id="brand-css">\n${brand.css}</style>\n` : '')
     + (imprintLogo ? `<style id="living-imprint">:root{--lv-imprint:url("data:image/webp;base64,${imprintLogo}")${imprintSize ? `;--lv-imprint-ratio:${imprintSize.w} / ${imprintSize.h}` : ''}}</style>\n` : '')
     + (stamp ? `<style id="living-stamp">:root{--lv-stamp:url("data:image/webp;base64,${stamp}")${stampRatio}${darkStamp}}</style>\n` : '')
@@ -648,6 +658,14 @@ export function dress (html, corpus, assets) {
   // italics. Only inside the serial's text, never a word like snake_case.
   out = out.replace(/(<div class="serial-text">)([\s\S]*?)(<\/div>)/, (_, open, text, close) =>
     open + text.replace(/(^|[^\w])_([^_<>]+?)_(?=[^\w]|$)/g, '$1<em class="lv-gutenberg">$2</em>') + close)
+  // A keyboard or screen-reader user can skip the masthead and the section
+  // row: a skip link first in the body, to a "Front page" heading heard but
+  // not seen (it also keeps the headings from jumping h1 to h3).
+  const fold = tags(out, 'section').find((t) => /\bfold\b/.test(attributes(t.raw).class || ''))
+  if (fold) {
+    out = out.slice(0, fold.end) + '<h2 class="lv-sr" id="lv-front" tabindex="-1">Front page</h2>' + out.slice(fold.end)
+    out = out.replace(/<body\b[^>]*>/i, (open) => `${open}\n<a class="lv-skip" href="#lv-front">Skip to the front page</a>`)
+  }
   out = indexRow(out)
 
   // The colophon is the last thing on the sheet, inside its margins; with no

@@ -13,7 +13,40 @@
 
 const island = document.getElementById('observer-data')
 const data = island ? JSON.parse(island.textContent) : null
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+// --- reading settings: size, contrast, motion --------------------------------
+//
+// Byte for byte from scripts/settings.mjs (test/settings.test.mjs holds it to
+// that). Applied here, before anything is drawn, so the first paint is already
+// the reader's size and contrast.
+
+const READING_SIZES = [100, 112, 125, 150]
+
+// What was saved is untrusted: only our own keys, own properties and known
+// values count. What the reader has not chosen follows the device.
+function readingSettings (saved, device) {
+  const ok = saved && typeof saved === 'object' && !Array.isArray(saved)
+  const own = (key) => (ok && Object.prototype.hasOwnProperty.call(saved, key) ? saved[key] : undefined)
+  const size = READING_SIZES.includes(own('size')) ? own('size') : 100
+  const contrast = own('contrast') === 'high' || own('contrast') === 'standard' ? own('contrast') : device && device.moreContrast ? 'high' : 'standard'
+  const motion = own('motion') === 'reduced' || own('motion') === 'full' ? own('motion') : device && device.reducedMotion ? 'reduced' : 'full'
+  return { size, contrast, motion }
+}
+
+const READING_KEY = 'lv-reading'
+const savedReading = () => { try { return JSON.parse(localStorage.getItem(READING_KEY) || 'null') } catch { return null } }
+const deviceReading = () => ({
+  moreContrast: matchMedia('(prefers-contrast: more)').matches || matchMedia('(forced-colors: active)').matches,
+  reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+})
+function applyReading (s) {
+  const root = document.documentElement
+  root.setAttribute('data-lv-size', String(s.size))
+  root.setAttribute('data-lv-contrast', s.contrast)
+  root.setAttribute('data-lv-motion', s.motion)
+}
+const reading = readingSettings(savedReading(), deviceReading())
+applyReading(reading)
+const reduce = reading.motion === 'reduced'
 
 const counted = new Map()
 
@@ -1933,6 +1966,70 @@ function featureTabs () {
   })
 }
 
+// --- the reading settings panel -------------------------------------------------
+//
+// "Aa" on the date line opens a small panel: text size in four steps, standard
+// or high contrast, motion on or reduced. Each choice is a toggle button that
+// says whether it is on; the choice is kept on this device and applied at once.
+// Escape or a click elsewhere closes it and gives focus back to "Aa".
+
+function readingPanel () {
+  const folio = document.querySelector('.sheet > .folio')
+  if (!folio) return
+  const button = el('button', 'lv-aa', 'Aa')
+  button.type = 'button'
+  button.setAttribute('aria-label', 'Reading settings: text size, contrast and motion')
+  button.setAttribute('aria-expanded', 'false')
+  button.setAttribute('aria-controls', 'lv-reading')
+  const panel = el('div', 'lv-reading')
+  panel.id = 'lv-reading'
+  panel.setAttribute('role', 'group')
+  panel.setAttribute('aria-label', 'Reading settings')
+  panel.hidden = true
+  const rows = [
+    ['Text size', 'size', READING_SIZES.map((n) => [n, n === 100 ? 'Normal' : `${n}%`])],
+    ['Contrast', 'contrast', [['standard', 'Standard'], ['high', 'High']]],
+    ['Motion', 'motion', [['full', 'On'], ['reduced', 'Reduced']]],
+  ]
+  const choices = []
+  for (const [title, key, options] of rows) {
+    const row = el('div', 'lv-reading-row')
+    const head = el('p', 'lv-reading-label', title)
+    head.id = `lv-reading-${key}`
+    const set = el('div', 'lv-reading-options')
+    set.setAttribute('role', 'group')
+    set.setAttribute('aria-labelledby', head.id)
+    for (const [value, text] of options) {
+      const b = el('button', '', text)
+      b.type = 'button'
+      b.addEventListener('click', () => {
+        const saved = savedReading()
+        const next = { ...(saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {}), [key]: value }
+        try { localStorage.setItem(READING_KEY, JSON.stringify(next)) } catch {}
+        applyReading(readingSettings(next, deviceReading()))
+        paint()
+      })
+      choices.push({ b, key, value })
+      set.append(b)
+    }
+    row.append(head, set)
+    panel.append(row)
+  }
+  const paint = () => {
+    const now = readingSettings(savedReading(), deviceReading())
+    for (const c of choices) c.b.setAttribute('aria-pressed', String(now[c.key] === c.value))
+  }
+  const open = (yes) => {
+    panel.hidden = !yes
+    button.setAttribute('aria-expanded', String(yes))
+    if (yes) { paint(); (choices.find((c) => c.b.getAttribute('aria-pressed') === 'true') || choices[0]).b.focus() }
+  }
+  button.addEventListener('click', () => open(panel.hidden))
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) { open(false); button.focus() } })
+  document.addEventListener('click', (e) => { if (!panel.hidden && !panel.contains(e.target) && e.target !== button) open(false) })
+  folio.append(button, panel)
+}
+
 // --- pictures open their post ---------------------------------------------------
 //
 // dress marks a picture that came with a post (data-ev) and a wire picture with
@@ -1987,7 +2084,12 @@ function theme () {
   const root = document.documentElement
   const system = matchMedia('(prefers-color-scheme: dark)')
   const chosen = store.get(THEME_KEY)
-  const apply = (mode) => root.setAttribute('data-theme', mode)
+  // The browser's own toolbar follows the paper's colour, chosen or not.
+  const apply = (mode) => {
+    root.setAttribute('data-theme', mode)
+    const paper = getComputedStyle(root).getPropertyValue('--paper').trim()
+    if (paper) for (const meta of $$('meta[name="theme-color"]')) meta.setAttribute('content', paper)
+  }
   apply(chosen === 'dark' || chosen === 'light' ? chosen : system.matches ? 'dark' : 'light')
   if (!chosen) system.addEventListener('change', (e) => { if (!store.get(THEME_KEY)) apply(e.matches ? 'dark' : 'light'); label() })
 
@@ -2075,6 +2177,7 @@ function sectionBar () {
 if (data) {
   document.documentElement.classList.add('lv')
   guard(theme)
+  guard(readingPanel)
   // Open the line to Brainstorm while the reader is still on the front page.
   for (const origin of [BRAINSTORM, 'https://api.brainstorm.world']) {
     const link = document.createElement('link')

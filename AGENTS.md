@@ -330,6 +330,24 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **Access and devices (2026-09-26).** Audited at 320, 375, 768, 1024 and
+  1920 px, light and dark: no sideways scroll anywhere, 200% text zoom holds,
+  the reader panel is a labelled modal that traps and returns focus. Fixed and
+  held by tests: colour contrast is a rule (`test/contrast.test.mjs` checks
+  every text token on its ground at 4.5:1, light and dark, brand and house;
+  the brand teal went #287E89 → #267882 for 4.61 on the paper); the living
+  copy opens with a skip link to a "Front page" heading that screen readers
+  hear (and that keeps headings from jumping h1 → h3); the wordmark link is
+  named; the browser toolbar takes the paper's colour (`theme-color`, light
+  and dark, following the ostrich too). Reader settings on "Aa" by the date:
+  text size 100/112/125/150% (the page is in rem, so the root scales it),
+  high contrast (7:1 AAA tokens, links underlined; on by itself when the
+  device asks for more contrast or forced colours), and motion on/reduced.
+  `scripts/settings.mjs` (`readingSettings`) takes only known values and
+  follows the device for anything not chosen; living.js carries it byte for
+  byte and applies it before the first paint. No libraries: about 3 KB. On a
+  phone the folio is two rows: the date, then the issue number and "Aa".
+
 - **The Feature in two tabs (2026-09-26).** Both pieces arrive every day:
   the day's lead (the story on Sunday, the article otherwise) is what the
   writer heads and the printer sets; the other is `wires.featureAlt`, carried

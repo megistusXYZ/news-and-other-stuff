@@ -16,7 +16,7 @@
   --bs-purple: #7237FF;
   --bs-purple-hover: #612FD9;
   --bs-cyan: #13D2E5;
-  --bs-teal: #287E89;        /* cyan's approved darker shade: small cyan text on white fails contrast */
+  --bs-teal: #267882;        /* cyan's darker shade, a touch deeper than #287E89 so small labels clear 4.5:1 on the paper (4.61) */
   --bs-deep: #2B174F;
   --bs-aurora: linear-gradient(90deg, #7237FF, #13D2E5);
   --brand: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;

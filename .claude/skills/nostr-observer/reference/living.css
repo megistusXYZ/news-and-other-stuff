@@ -923,7 +923,7 @@ a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72
 
 /* The issue number's arrows: yesterday's paper and tomorrow's, one either
  * side, quiet as the folio. A dim one waits for an issue not yet printed. */
-.lv-step { display: inline-block; position: relative; padding: 0 .5em; font: 400 1.05em/1 var(--body); color: var(--ink-3); text-decoration: none; }
+.lv-step { display: inline-block; position: relative; padding: 0 .5em; font: 400 1.05em/1 var(--body); color: var(--ink-3); text-decoration: none; border: 0; }
 .lv-step.lv-prev { padding-left: 0; }
 a.lv-step::after { content: ""; position: absolute; inset: -8px -7px; }
 a.lv-step:hover { color: var(--accent); }

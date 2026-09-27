@@ -18,6 +18,7 @@ import { writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { createHash } from 'node:crypto'
 import { gatherWires } from './wires.mjs'
+import { whatsOn } from './whatson.mjs'
 import { sudoku } from './puzzle.mjs'
 import { dailyWord, dayNumber } from './five.mjs'
 import { fileURLToPath } from 'node:url'
@@ -264,6 +265,43 @@ function clockOf (weather) {
     const time = us ? `${part.hour}:${part.minute} ${/p/i.test(part.dayPeriod) ? 'p.m.' : 'a.m.'}` : `${part.hour.padStart(2, '0')}:${part.minute}`
     return `${part.year}-${part.month}-${part.day} ${time} ${part.timeZoneName}`
   }
+}
+
+/**
+ * What's On, for the writer: the calendar events the network posted, sorted
+ * for this reader — near their town first, then online, then a few farther
+ * away — each with the day and time in their clock, the distance in their
+ * units, and the calendar link to cite. It replaces the Diary.
+ */
+function printWhatsOn (p, corpus) {
+  const events = (corpus.desks && corpus.desks.calendar) || []
+  if (!events.length) return
+  const w = (corpus.wires && corpus.wires.weather) || {}
+  const on = whatsOn(events, { lat: w.lat, lon: w.lon, place: w.place, now: corpus.until })
+  if (!on.near.length && !on.online.length && !on.elsewhere.length) return
+  const clock = clockOf(w.timezone ? w : null)
+  let weekday
+  try {
+    weekday = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: w.timezone || 'UTC' })
+  } catch {
+    weekday = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'UTC' })
+  }
+  const us = w.unit === '°F'
+  const far = (km) => (km == null ? null : us ? `${Math.round(km * 0.621371).toLocaleString('en-US')} mi` : `${km.toLocaleString('en-US')} km`)
+  const line = (x) => {
+    p(`- [${x.event.id}] ${x.title} · ${weekday.format(new Date(x.start * 1000))} ${clock(x.start)}${x.location ? ` · ${x.location}` : ''}${far(x.km) ? ` · ${far(x.km)}` : ''}`)
+    p(`  calendar: ${calendarWriterUrl(x.event.id)}`)
+  }
+  p(`## What's On${w.place ? ` — near ${String(w.place).split(',')[0].trim()}` : ''}`)
+  p('')
+  p('Calendar events the network posted, for the next three weeks, sorted for this')
+  p('reader. Set them in the agate as "What\'s On", in place of a Diary: near first,')
+  p('then online, then one or two farther away only if the cell has room.')
+  p('')
+  if (on.near.length) { p('Near you:'); on.near.slice(0, 6).forEach(line) }
+  if (on.online.length) { p('Online:'); on.online.slice(0, 3).forEach(line) }
+  if (on.elsewhere.length) { p('Farther away:'); on.elsewhere.slice(0, 3).forEach(line) }
+  p('')
 }
 
 /**
@@ -571,6 +609,7 @@ export function digest (corpus, budget = DEFAULT_DIGEST_BUDGET) {
   p('')
 
   if (corpus.wires) printWires(p, corpus.wires)
+  printWhatsOn(p, corpus)
 
   const dropped = Object.entries(trimmed)
   if (dropped.length > 0) {

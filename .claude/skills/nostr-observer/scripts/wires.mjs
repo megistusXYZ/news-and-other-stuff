@@ -97,6 +97,9 @@ async function weather (fetch, place, units, sky, now) {
     // The place's own time zone, as Open-Meteo reports it: kick-offs are
     // printed in it.
     timezone: f.timezone || spot.timezone || null,
+    // The city's point, rounded as it was asked: What's On measures from it.
+    lat: Number(lat),
+    lon: Number(lon),
     now: { temp: round(f.current.temperature_2m), words: WEATHER_WORDS[f.current.weather_code] || 'Unsettled' },
     today: { ...day(0), sunrise: clock(d.sunrise[0]), sunset: clock(d.sunset[0]) },
     ahead: [1, 2, 3].filter((i) => d.time[i]).map(day),

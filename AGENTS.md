@@ -330,6 +330,20 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **What's On replaces the Diary (2026-09-26).** The calendar desk already
+  pulled dozens of meetups a day (73 on 2026-09-25), nearly all on other
+  continents; the Diary printed three at random. `scripts/whatson.mjs` sorts
+  them for the reader: upcoming within three weeks, each title-and-start once,
+  then near (within 150 km of the weather wire's point, which now keeps its
+  two-place `lat`/`lon`, or naming the town when there is no geohash), online
+  (the location, or with none the title, says online/Jitsi/Zoom/a URL), and
+  the rest nearest first. The digest prints a "What's On — near <town>" part
+  with day and time in the reader's clock and distance in their units; the
+  agate's fourth cell is "What's On": the next public holiday, then near,
+  online, and one or two farther if there is room. Less is more: the other
+  kinds measured that day (reposts, comments, web bookmarks, follow packs,
+  statuses, P2P offers) were left out on purpose.
+
 - **Long Reads (2026-09-26).** Every edition gets a slow shelf when the
   Long-form desk has two worth reading: `<section class="band longreads">`
   after the second front, three or four articles, one per author, people over

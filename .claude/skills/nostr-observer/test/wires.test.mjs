@@ -57,6 +57,9 @@ test('the weather: the reader\'s place, today and the next three days, in words 
     source: 'Weather data by Open-Meteo.com',
     unit: '°C',
     timezone: 'Europe/Madrid',
+    // The city's point, at two places, so What's On can say what is near.
+    lat: 41.39,
+    lon: 2.16,
     now: { temp: 18, words: 'Mainly clear' },
     today: { date: '2026-09-25', high: 25, low: 17, rain: 10, words: 'Overcast', sunrise: '07:38', sunset: '19:32' },
     ahead: [

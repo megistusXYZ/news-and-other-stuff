@@ -107,7 +107,7 @@ all photographs — and say why in the `<!-- restyle: ... -->` comment.
 6. **The picture spread**: a band whose body is `<div class="spread">` with
    four figures, the first — a landscape — largest.
 7. **The agate**: a band whose body is `<div class="agate">` of five `cell`s —
-   Headlines, Broadcasting, Classifieds, Diary, Conditions — in small type.
+   Headlines, Broadcasting, Classifieds, What's On, Conditions — in small type.
 8. **From the Wires**, when the digest carries them: `<section class="band
    tinted">` with a `cols4`: Sports, Culture, Almanac, Wider World — drop a
    cell the digest has nothing for and use `cols3`. The weather is in the
@@ -308,7 +308,7 @@ trust said, so:
 - The readings go where a paper keeps them: Markets (bitcoin, fees, the block
   height, the currency table) and the earthquakes into the Conditions cell of
   the agate, as rows, stamped; the next public holiday as the first line of
-  the Diary; air and moon as one short line at the foot of the weather box;
+  What's On; air and moon as one short line at the foot of the weather box;
   the launches as the last rows of Conditions, rocket and mission, the
   provider, the place and the time as the digest gives it.
 - Health & Safety is a small box, headed "Health & Safety" and the place:
@@ -354,12 +354,19 @@ The digest gives you `WHEN`, in the organiser's own timezone, and `LOCATION`.
 - These are a standing column, not a lead. A meetup is news to the twelve
   people near it; give it a line, not a headline, unless something about it is
   genuinely a story.
+- The digest's What's On part has already sorted them for this reader: near
+  you, online, farther away, with the day and time in the reader's clock and
+  the distance in their units. The agate's What's On cell is set from it, in
+  that order: each event a line — the day and time, the title linked to its
+  calendar URL, then the venue and town (and the distance, when it is near) or
+  "Online". One or two farther away only if the cell has room. When nothing is
+  near and nothing is online, say so in one line and give the nearest.
 - Link each calendar place or title to the **calendar URL the digest printed**
   (`https://njump.me/<64-hex-event-id>`). Step 5 encodes it as the event's
   brainstorm.world address (`/a/<naddr1…>`), where it opens beside the paper
   like any post — calendar events are replaceable, so an nevent would freeze
   one revision. Do not compose an `naddr1` yourself.
-- Use only calendar URLs from the digest's Calendar section. Never paste an
+- Use only calendar URLs from the digest (its What's On part or Calendar section). Never paste an
   njump.me URL from a post body; presence in the corpus is not evidence that a
   URL is yours to link.
 
@@ -435,7 +442,7 @@ These exceptions stay links, and all open in a new tab so the paper stays put:
 4. **A listing link for a classified in The Classifieds** — the derived
    `https://shopstr.store/listing/<64-hex>` URL from the digest, and nothing
    else on shopstr.store.
-5. **A calendar link in Diary & Calendar** — the derived
+5. **A calendar link in What's On** — the derived
    `https://njump.me/<64-hex>` URL from the digest, and nothing else on
    njump.me. Step 5 turns it into the event's brainstorm.world address.
 

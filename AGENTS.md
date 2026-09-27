@@ -861,7 +861,8 @@ paper lands on the reader's Observer page in brainstorm.world.
 - **Watch.** Topic searches surface templated spam that clears the trust
   floor: "lightning" was mostly identical GM posts.
 - **The demo pages.** Alongside `/mcp` the service serves the two pages
-  Brainstorm's Observer tab will take over:
+  Brainstorm's Observer tab will take over, set in the paper's own design (nameplate,
+  Oxford rule, hairline columns, Playfair, Source Serif and Plex Mono), not app cards:
   - `/setup`: Vitor's three steps, a live lens badge, the connector address,
     a "connected" line that lights on the reader's first tool call, and a
     topics box that composes the daily prompt. Nothing is stored.

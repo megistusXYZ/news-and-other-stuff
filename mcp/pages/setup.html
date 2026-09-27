@@ -3,196 +3,192 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Set up your Observer · Brainstorm</title>
+<title>Set up your paper · News and Other Stuff</title>
 <style>
-@font-face { font-family: "Figtree"; font-weight: 600; font-display: swap; src: url("/assets/fonts/figtree-latin-600-normal.woff2") format("woff2"); }
-@font-face { font-family: "Figtree"; font-weight: 800; font-display: swap; src: url("/assets/fonts/figtree-latin-800-normal.woff2") format("woff2"); }
-@font-face { font-family: "Plex"; font-weight: 400; font-display: swap; src: url("/assets/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-weight: 700; font-display: swap; src: url("/assets/fonts/playfair-display-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-weight: 900; font-display: swap; src: url("/assets/fonts/playfair-display-latin-900-normal.woff2") format("woff2"); }
+@font-face { font-family: "Source Serif 4"; font-weight: 400; font-display: swap; src: url("/assets/fonts/source-serif-4-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Source Serif 4"; font-weight: 400; font-style: italic; font-display: swap; src: url("/assets/fonts/source-serif-4-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Source Serif 4"; font-weight: 600; font-display: swap; src: url("/assets/fonts/source-serif-4-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-display: swap; src: url("/assets/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 500; font-display: swap; src: url("/assets/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
 :root {
-  --bg: #F2F3F0; --card: #FFFFFF; --ink: #0A0E18; --ink-2: #2B3442; --ink-3: #555D69;
-  --rule: #D6D9DB; --rule-soft: #E8EAE7; --purple: #7237FF; --purple-hover: #612FD9; --cyan: #13D2E5;
-  --teal: #267882; --ok: #1F7A4D; --ok-bg: #E6F4EC; --wait: #B7791F; --no: #B42318; --no-bg: #FDECEA;
-  --field: #F7F8F6; --shadow: 0 1px 2px rgba(10, 14, 24, .05);
-  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "Plex", ui-monospace, "SF Mono", Menlo, monospace;
+  --paper: #F2F3F0; --paper-2: #FAFAF8; --ink: #0A0E18; --ink-2: #2B3442; --ink-3: #555D69;
+  --rule: #0A0E18; --hair: #C9CDD0; --soft: #E3E5E2; --teal: #267882; --no: #9B2C2C;
+  --serif: "Source Serif 4", Georgia, serif; --display: "Playfair Display", Georgia, serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #0A0E18; --card: #151C29; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #2A3441; --rule-soft: #1D2533;
-    --purple: #8B5CF6; --purple-hover: #A78BFA; --teal: #13D2E5; --ok: #4ADE80; --ok-bg: rgba(74, 222, 128, .12); --no: #F87171; --no-bg: rgba(248, 113, 113, .12);
-    --field: #0F1520; color-scheme: dark; }
+  :root { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441; --soft: #1D2533;
+    --teal: #13D2E5; --no: #F87171; color-scheme: dark; }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-a { color: var(--purple); }
-:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
-.nav { background: var(--card); border-bottom: 1px solid var(--rule); }
-.nav-in { max-width: 1180px; margin: 0 auto; padding: 0 24px; height: 68px; display: flex; align-items: center; gap: 28px; }
-.logo { display: flex; align-items: center; gap: 10px; font: 800 1.2rem/1 var(--sans); color: var(--ink); text-decoration: none; }
-.logo i { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #7237FF, #13D2E5); display: block; }
-.tabs { display: flex; gap: 22px; height: 100%; }
-.tabs a { display: flex; align-items: center; color: var(--ink-2); text-decoration: none; font: 600 .95rem/1 var(--sans); border-bottom: 3px solid transparent; padding-top: 3px; }
-.tabs a[aria-current] { color: var(--ink); border-bottom-color: var(--purple); }
-.who { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-.avatar { width: 34px; height: 34px; border-radius: 50%; background: #2B174F; color: #fff; display: grid; place-items: center; font: 800 .85rem/1 var(--sans); }
-.demo { max-width: 1180px; margin: 16px auto 0; padding: 0 24px; }
-.demo p { margin: 0; padding: 8px 12px; border: 1px dashed var(--rule); border-radius: 8px; color: var(--ink-3); font-size: .85rem; }
-main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 64px; }
-.eyebrow { display: flex; align-items: center; gap: 16px; }
-.eyebrow .label { font: 600 .78rem/1 var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--teal); }
-.eyebrow hr { flex: 1; border: 0; border-top: 1px solid var(--rule); margin: 0; }
-.badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font: 600 .85rem/1 var(--sans); border: 1px solid var(--rule); color: var(--ink-3); background: var(--card); }
-.badge.ok { color: var(--ok); background: var(--ok-bg); border-color: transparent; }
-.badge.no { color: var(--no); background: var(--no-bg); border-color: transparent; }
-h1 { font: 800 clamp(1.9rem, 4vw, 2.6rem)/1.1 var(--sans); margin: 18px 0 26px; letter-spacing: -.01em; }
-.grid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 22px; align-items: start; }
-.card { background: var(--card); border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow); }
-.steps { padding: 8px 28px; }
-.step { display: grid; grid-template-columns: 34px 1fr; gap: 16px; padding: 24px 0; }
-.step + .step { border-top: 1px solid var(--rule-soft); }
-.num { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 800 .95rem/1 var(--sans); background: var(--rule-soft); color: var(--ink-2); }
-.step.active .num { background: var(--purple); color: #fff; }
-.step h2 { font: 800 1.15rem/1.3 var(--sans); margin: 4px 0 4px; }
-.step p { margin: 0 0 12px; color: var(--ink-2); }
-.field { display: block; width: 100%; font: 400 .95rem/1.5 var(--mono); background: var(--field); color: var(--ink); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; }
-textarea.field { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 1rem; resize: vertical; min-height: 84px; }
-pre.field { white-space: pre-wrap; margin: 0; }
-.row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-.btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 10px; font: 600 .95rem/1 var(--sans); cursor: pointer; border: 1px solid var(--rule); background: var(--card); color: var(--ink); text-decoration: none; }
-.btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; }
-.btn.primary:hover { background: var(--purple-hover); }
-.btn:hover { border-color: var(--ink-3); }
-.status { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--ink-3); font-size: .92rem; }
-.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--wait); flex: none; }
-.status.ok .dot { background: var(--ok); }
-.status.ok { color: var(--ok); }
-label.small { display: block; font: 600 .9rem/1.3 var(--sans); margin: 0 0 8px; }
-.where { margin: 14px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--field); color: var(--ink-2); font-size: .9rem; }
-.where b { font-family: var(--sans); }
-.where ul { margin: 6px 0 0; padding-left: 18px; }
-aside .card { padding: 22px 24px; }
-aside .card + .card { margin-top: 18px; }
-aside h3 { font: 800 1.05rem/1.3 var(--sans); margin: 0 0 12px; }
-aside ol, aside ul { margin: 0; padding-left: 20px; color: var(--ink-2); }
-aside li + li { margin-top: 8px; }
-.npub { display: flex; gap: 8px; align-items: center; }
-.npub[hidden] { display: none; }
-.npub input { font: 400 .85rem/1 var(--mono); padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); color: var(--ink); width: 280px; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.55 var(--serif); }
+a { color: inherit; text-decoration-color: var(--hair); text-underline-offset: 3px; }
+a:hover { text-decoration-color: currentColor; }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+.sheet { max-width: 1080px; margin: 0 auto; padding: 18px 28px 56px; }
+
+/* the paper's own head: folio, a fine rule, the nameplate, the Oxford rule */
+.mono { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
+.folio { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 8px; color: var(--ink-2); }
+.fine { height: 2px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
+.nameplate { padding: 18px 0 12px; }
+.nameplate h1 { margin: 0; font: 900 clamp(2.3rem, 6vw, 3.6rem)/.95 var(--display); letter-spacing: -.015em; }
+.nameplate p { margin: 8px 0 0; color: var(--ink-2); }
+.oxford { border-top: 3px solid var(--rule); border-bottom: 1px solid var(--rule); height: 7px; }
+.sections { display: flex; gap: 0; border-bottom: 1px solid var(--hair); }
+.sections a { padding: 11px 18px 10px; text-decoration: none; color: var(--ink-2); border-right: 1px solid var(--hair); }
+.sections a:first-child { padding-left: 0; }
+.sections a[aria-current] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+
+/* the page's own story */
+.kicker { color: var(--teal); margin: 26px 0 6px; }
+.headline { font: 700 clamp(1.8rem, 4vw, 2.6rem)/1.08 var(--display); margin: 0; }
+.dek { font-style: italic; color: var(--ink-2); margin: 10px 0 0; max-width: 46rem; }
+.lens { margin: 14px 0 0; color: var(--ink-3); }
+.lens.ok { color: var(--teal); }
+.lens.no { color: var(--no); }
+.ask { display: flex; gap: 8px; margin-top: 10px; }
+.ask[hidden] { display: none; }
+
+/* three columns with hairlines between, like the front page */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 24px; border-top: 1px solid var(--rule); }
+.step { padding: 18px 22px 22px; border-left: 1px solid var(--hair); }
+.step:first-child { padding-left: 0; border-left: 0; }
+.step:last-child { padding-right: 0; }
+.step .n { font: 900 2.4rem/1 var(--display); color: var(--ink); }
+.step h2 { font: 700 1.3rem/1.2 var(--display); margin: 6px 0 8px; }
+.step p { margin: 0 0 12px; font-size: .96rem; hyphens: auto; }
+.field { display: block; width: 100%; background: var(--paper-2); color: var(--ink); border: 1px solid var(--ink-3); border-radius: 0; padding: 9px 10px; font: 400 .82rem/1.5 var(--mono); }
+textarea.field { font: 400 .98rem/1.5 var(--serif); min-height: 88px; resize: vertical; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+.btn { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; min-height: 38px; padding: 0 14px; display: inline-flex; align-items: center;
+  border: 1px solid var(--ink); background: transparent; color: var(--ink); text-decoration: none; cursor: pointer; border-radius: 0; }
+.btn:hover, .btn.solid { background: var(--ink); color: var(--paper); }
+.btn.solid:hover { background: transparent; color: var(--ink); }
+.status { margin: 12px 0 0; color: var(--ink-3); }
+.status.ok { color: var(--teal); }
+.prompt { margin: 14px 0 0; padding: 2px 0 2px 14px; border-left: 3px solid var(--ink); font-style: italic; white-space: pre-wrap; }
+label.small { display: block; margin: 0 0 6px; color: var(--ink-2); }
+.where { margin: 14px 0 0; font-size: .9rem; color: var(--ink-2); }
+.where ul { margin: 4px 0 0; padding-left: 18px; }
+
+/* the agate: two short columns under a rule */
+.brief { display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; border-top: 3px solid var(--rule); }
+.brief section { padding: 16px 22px 0; border-left: 1px solid var(--hair); }
+.brief section:first-child { padding-left: 0; border-left: 0; }
+.brief h3 { margin: 0 0 8px; color: var(--ink-2); }
+.brief ol, .brief ul { margin: 0; padding-left: 20px; font-size: .95rem; }
+.brief li + li { margin-top: 5px; }
+.note { margin-top: 28px; padding-top: 10px; border-top: 1px solid var(--hair); font-style: italic; font-size: .88rem; color: var(--ink-3); }
+.foot { margin-top: 10px; color: var(--ink-3); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-@media (max-width: 900px) {
-  .grid { grid-template-columns: 1fr; }
-  .tabs a:not([aria-current]) { display: none; }
-  .steps { padding: 4px 18px; }
-  .npub input { width: 100%; }
-  .eyebrow { flex-wrap: wrap; }
-  .eyebrow hr { display: none; }
+@media (max-width: 860px) {
+  .sheet { padding: 14px 16px 44px; }
+  .steps, .brief { grid-template-columns: 1fr; }
+  .step, .brief section { padding: 16px 0; border-left: 0; border-top: 1px solid var(--hair); }
+  .step:first-child, .brief section:first-child { border-top: 0; }
+  .folio span:last-child { display: none; }
 }
 </style>
 </head>
 <body>
-<nav class="nav" aria-label="Brainstorm">
-  <div class="nav-in">
-    <a class="logo" href="#"><i aria-hidden="true"></i>Brainstorm</a>
-    <div class="tabs"><a href="#">Search</a><a href="#">Dashboard</a><a href="#">Network</a><a href="/setup" aria-current="page">Observer</a></div>
-    <div class="who"><span class="avatar" aria-hidden="true">R</span></div>
+<main class="sheet">
+  <div class="folio mono"><span id="today">&nbsp;</span><span>The Observer · Set up</span></div>
+  <div class="fine" aria-hidden="true"></div>
+  <header class="nameplate">
+    <h1>News and Other Stuff</h1>
+    <p>The observer for your network.</p>
+  </header>
+  <div class="oxford" aria-hidden="true"></div>
+  <nav class="sections mono" aria-label="Your Observer"><a href="/setup" id="tab-setup" aria-current="page">Set up</a><a href="/observer" id="papers">Your papers</a></nav>
+
+  <p class="kicker mono">The Observer · Getting started</p>
+  <h2 class="headline">Set up your daily paper</h2>
+  <p class="dek">Three steps, once. After that your own Claude prints this paper every morning, from what the people you trust said, and hands it back to be checked and kept.</p>
+  <p class="lens mono" id="lens" role="status" aria-live="polite">Checking your lens…</p>
+  <div class="ask" id="npub-ask" hidden>
+    <label class="sr" for="npub">Your npub</label>
+    <input class="field" id="npub" placeholder="npub1…" autocomplete="off" spellcheck="false" style="max-width:360px">
+    <button class="btn" id="npub-go" type="button">Check</button>
   </div>
-</nav>
-<div class="demo"><p>Local demo. On Brainstorm this page sits behind your sign-in and the connector lives at <b>brainstormserver.nosfabrica.com/mcp</b>; here a local token stands in for the Nostr sign-in.</p></div>
 
-<main>
-  <div class="eyebrow">
-    <span class="label">Your Observer</span><hr>
-    <div class="npub" id="npub-ask" hidden>
-      <label class="sr" for="npub">Your npub</label>
-      <input id="npub" placeholder="npub1…" autocomplete="off" spellcheck="false">
-      <button class="btn" id="npub-go" type="button">Check</button>
-    </div>
-    <span class="badge" id="lens" role="status" aria-live="polite">Checking your lens…</span>
-  </div>
-  <h1>Set up your daily paper</h1>
-
-  <div class="grid">
-    <section class="card steps" aria-label="Three steps">
-      <div class="step active">
-        <div class="num" aria-hidden="true">1</div>
-        <div>
-          <h2>Connect your Claude</h2>
-          <p>In Claude, go to Settings, Connectors, "Add custom connector", and paste this address. Claude will open Brainstorm so you can sign in with Nostr.</p>
-          <label class="sr" for="mcp">Connector address</label>
-          <input class="field" id="mcp" readonly value="/mcp">
-          <div class="row">
-            <button class="btn" type="button" data-copy="mcp">Copy</button>
-            <a class="btn primary" href="https://claude.ai/" target="_blank" rel="noopener noreferrer">Open Claude ↗</a>
-          </div>
-          <p class="status" id="connected" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span>Waiting for Claude to connect…</span></p>
-        </div>
+  <div class="steps">
+    <section class="step" aria-labelledby="s1">
+      <div class="n" aria-hidden="true">1</div>
+      <h2 id="s1">Connect your Claude</h2>
+      <p>In Claude, open Settings, then Connectors, and add a custom connector with this address. Claude opens Brainstorm so you can sign in with Nostr.</p>
+      <label class="sr" for="mcp">Connector address</label>
+      <input class="field" id="mcp" readonly value="/mcp">
+      <div class="buttons">
+        <button class="btn" type="button" data-copy="mcp">Copy</button>
+        <a class="btn" href="https://claude.ai/" target="_blank" rel="noopener noreferrer">Open Claude ↗</a>
       </div>
-
-      <div class="step">
-        <div class="num" aria-hidden="true">2</div>
-        <div>
-          <h2>Sign in with Nostr</h2>
-          <p>Happens inside step 1: one signature with your extension lets your Claude read your digest and hand in pages. Nothing else: it never signs or publishes as you, and never touches your follows, trust settings or scores.</p>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="num" aria-hidden="true">3</div>
-        <div>
-          <h2>Schedule the daily print</h2>
-          <p>Tell your Claude what you love reading about. Your paper gets a "Your topics" band from them, every day.</p>
-          <label class="small" for="topics">Your favourite topics, in your own words</label>
-          <textarea class="field" id="topics" placeholder="Nostr apps and relays, Bitcoin and Lightning, and AI agents"></textarea>
-          <p style="margin:14px 0 8px">Save this as a daily task at 07:00. Your digest is ready from 06:30.</p>
-          <label class="sr" for="prompt">The daily instructions</label>
-          <pre class="field" id="prompt">Print today's Nostr Observer with the Brainstorm connector. If my lens isn't ready, stop and tell me why.</pre>
-          <div class="row"><button class="btn primary" type="button" data-copy="prompt">Copy the instructions</button></div>
-          <div class="where">
-            <b>Where to schedule it today</b>
-            <ul>
-              <li>Claude Code (desktop app): Scheduled tasks, New task, every day at 07:00, with the Brainstorm connector.</li>
-              <li>Claude Code on the web: a routine, daily.</li>
-              <li>Or paste it into any Claude chat whenever you want a paper.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <p class="status mono" id="connected" role="status" aria-live="polite"><span>Waiting for Claude to connect…</span></p>
     </section>
 
-    <aside>
-      <div class="card">
-        <h3>What your Claude does each morning</h3>
-        <ol>
-          <li>Reads your digest: the last 24 hours, ranked by your web of trust, plus your topics</li>
-          <li>Writes the front page</li>
-          <li>Hands it back to Brainstorm to check and keep</li>
-        </ol>
-      </div>
-      <div class="card">
-        <h3>Good to know</h3>
+    <section class="step" aria-labelledby="s2">
+      <div class="n" aria-hidden="true">2</div>
+      <h2 id="s2">Sign in with Nostr</h2>
+      <p>It happens inside step one: a single signature with your extension lets your Claude read your digest and hand in pages.</p>
+      <p>Nothing else. It never signs or publishes as you, and never touches your follows, your trust settings or your scores.</p>
+    </section>
+
+    <section class="step" aria-labelledby="s3">
+      <div class="n" aria-hidden="true">3</div>
+      <h2 id="s3">Schedule the daily print</h2>
+      <label class="small mono" for="topics">Your favourite topics, in your own words</label>
+      <textarea class="field" id="topics" placeholder="Nostr apps and relays, Bitcoin and Lightning, and AI agents"></textarea>
+      <p class="prompt" id="prompt">Print today's Nostr Observer with the Brainstorm connector. If my lens isn't ready, stop and tell me why.</p>
+      <div class="buttons"><button class="btn solid" type="button" data-copy="prompt">Copy the instructions</button></div>
+      <div class="where">
+        Save them as a daily task at seven; your digest is ready from half past six.
         <ul>
-          <li>It runs on your Claude plan, about one conversation a day.</li>
-          <li>Brainstorm never sees your Claude login.</li>
-          <li>Every quote and link is checked against the posts before the paper is kept.</li>
-          <li>Disconnect any time, in Claude or in Settings here.</li>
+          <li>Claude Code, the desktop app: a scheduled task, every day.</li>
+          <li>Claude Code on the web: a daily routine.</li>
+          <li>Or paste them into any Claude chat when you want a paper.</li>
         </ul>
-        <p style="margin:14px 0 0"><a id="papers" href="/observer">See your papers →</a></p>
       </div>
-    </aside>
+    </section>
   </div>
+
+  <div class="brief">
+    <section>
+      <h3 class="mono">What your Claude does each morning</h3>
+      <ol>
+        <li>Reads your digest: the last 24 hours, ranked by your web of trust, and your topics.</li>
+        <li>Writes the front page.</li>
+        <li>Hands it back to Brainstorm to check and keep.</li>
+      </ol>
+    </section>
+    <section>
+      <h3 class="mono">Good to know</h3>
+      <ul>
+        <li>It runs on your Claude plan, about one conversation a day.</li>
+        <li>Brainstorm never sees your Claude login.</li>
+        <li>Every quote and link is checked against the posts before the paper is kept.</li>
+        <li>Disconnect any time, in Claude or in your settings here.</li>
+      </ul>
+    </section>
+  </div>
+
+  <p class="note">Editor's note: this is a local demonstration. On Brainstorm the page sits behind your sign-in and the connector lives at brainstormserver.nosfabrica.com/mcp; here a local token stands in for the Nostr signature.</p>
+  <p class="foot mono">News and Other Stuff · The observer for your network</p>
 </main>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id)
-  const params = new URLSearchParams(location.search)
-  const npub = (params.get('npub') || '').trim()
+  const npub = (new URLSearchParams(location.search).get('npub') || '').trim()
+  $('today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   $('mcp').value = location.origin + '/mcp'
   if (npub) $('papers').href = '/observer?npub=' + encodeURIComponent(npub)
 
   // Copy buttons: the field's text to the clipboard, and say so.
   document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
     const el = $(b.dataset.copy)
-    const text = el.value !== undefined && el.tagName === 'INPUT' ? el.value : el.textContent
+    const text = el.tagName === 'INPUT' ? el.value : el.textContent
     const was = b.textContent
     try { await navigator.clipboard.writeText(text); b.textContent = 'Copied' } catch { b.textContent = 'Select and copy' }
     setTimeout(() => { b.textContent = was }, 1600)
@@ -208,8 +204,7 @@ aside li + li { margin-top: 8px; }
   $('topics').addEventListener('input', paint)
   paint()
 
-  // The lens badge and the "connected" line need to know who you are; on
-  // Brainstorm that is your sign-in, here it is ?npub=.
+  // Who you are: on Brainstorm, your sign-in; here, ?npub=.
   if (!npub) {
     $('lens').textContent = 'Add your npub to check your lens'
     $('npub-ask').hidden = false
@@ -220,17 +215,17 @@ aside li + li { margin-top: 8px; }
   }
   fetch('/api/readiness?npub=' + encodeURIComponent(npub)).then((r) => r.json()).then((v) => {
     const b = $('lens')
-    if (v.ready) { b.className = 'badge ok'; b.textContent = '✓ Your lens is ready' } else {
-      b.className = 'badge no'; b.textContent = 'Lens not ready: ' + (v.do || v.say || v.state || 'unknown')
+    if (v.ready) { b.className = 'lens mono ok'; b.textContent = 'Your lens · ready ✓' } else {
+      b.className = 'lens mono no'; b.textContent = 'Your lens · not ready: ' + (v.do || v.say || v.state || 'unknown')
     }
   }).catch(() => { $('lens').textContent = 'Could not check your lens' })
 
   const connected = $('connected')
   const poll = () => fetch('/api/status?npub=' + encodeURIComponent(npub)).then((r) => r.json()).then((s) => {
     if (!s.connected) return
-    connected.className = 'status ok'
-    const when = new Date(s.lastCall * 1000).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
-    connected.lastElementChild.textContent = 'Connected: your Claude last called ' + when
+    connected.className = 'status mono ok'
+    const when = new Date(s.lastCall * 1000).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+    connected.firstElementChild.textContent = 'Connected ✓ · last call ' + when
   }).catch(() => {})
   poll()
   setInterval(poll, 5000)

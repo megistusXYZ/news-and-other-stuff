@@ -98,3 +98,22 @@ test('an accepted page says only what the reader should know: a link it unwrappe
   assert.match(out, /unwrapped/i)
   assert.doesNotMatch(out, /nevent1|npub1/, 'resolving a citation is the job, not news')
 })
+
+test('the brief asks for the whole paper, and an accepted page says how full it is against what the digest held', async () => {
+  const brief = text(await callTool('get_brief', {}, READER, deps()))
+  assert.match(brief, /the full paper/i)
+  assert.match(brief, /not a summary/i)
+
+  const d = deps()
+  const note = { id: '1'.repeat(64), kind: 1, pubkey: ADA, created_at: 1790300000, content: 'Noon bread.', tags: [] }
+  const talk = { id: '2'.repeat(64), kind: 1, pubkey: ADA, created_at: 1790300001, content: 'Evening talk.', tags: [] }
+  const art = [{ id: 'art-1', url: 'https://img.test/a.jpg', eventId: note.id }, { id: 'art-2', url: 'https://img.test/b.jpg', eventId: talk.id }]
+  d.store.keepCorpus(READER, { ...busyCorpus(), code: 'FULL01', art, desks: { notes: [note, talk], articles: [talk] } })
+  const html = '<!doctype html><html><head><title>The Nostr Observer — Sunday</title></head><body><main class="sheet"><section class="fold"><article><h2 class="lead-head">Bread</h2>'
+    + `<p><q>Noon bread.</q> <a href="https://brainstorm.world/e/${note.id}">Read</a></p><figure><img src="art-1" alt="bread"><figcaption>Bread</figcaption></figure></article></section>`
+    + '<section class="band"><div class="band-head"><h2>Long Reads</h2></div><p>Soon.</p></section></main></body></html>'
+  const out = text(await callTool('submit_edition', { code: 'FULL01', html }, READER, d))
+  assert.match(out, /^Accepted/)
+  assert.match(out, /The page has 2 sections and 1 picture; the digest held 2 desks with posts and 2 pictures on the shortlist\./,
+    'the front page and one band, against the notes and long-form it was given')
+})

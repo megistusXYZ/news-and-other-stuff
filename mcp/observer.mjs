@@ -16,6 +16,16 @@ let assets = null
 const dateOf = (corpus) => new Date(corpus.until * 1000).toISOString().slice(0, 10)
 const refused = (kind, detail) => ({ accepted: false, violations: [{ kind, detail, excerpt: '' }] })
 
+// How much of the day the page used, against what the digest held: said on
+// acceptance, never a reason to refuse. A thin paper should be visible.
+function fullness (page, corpus) {
+  const sections = [...page.matchAll(/<section\b[^>]*\bclass="([^"]*)"/gi)].filter((m) => /\b(fold|band)\b/.test(m[1])).length
+  const shortlist = new Set((corpus.art || []).map((a) => a.url))
+  const pictures = new Set([...page.matchAll(/<img\b[^>]*\bsrc="([^"]+)"/gi)].map((m) => m[1]).filter((u) => shortlist.has(u))).size
+  const desks = Object.entries(corpus.desks || {}).filter(([k, v]) => k !== 'topics' && v.length).length
+  return { sections, pictures, desks, shortlist: shortlist.size }
+}
+
 // The writer does not type the stylesheet; the printer sets it, once.
 function houseStyle (html) {
   if (/<style\b/i.test(html)) return html
@@ -39,7 +49,7 @@ export async function submitEdition ({ reader, code, html }, { store }) {
   const { html: living } = dress(page, corpus, assets)
   const date = dateOf(corpus)
   store.putEdition(reader, { date, code: corpus.code, html: page, living })
-  return { accepted: true, edition: corpus.code, date, changes }
+  return { accepted: true, edition: corpus.code, date, changes, fullness: fullness(page, corpus) }
 }
 
 // --- the tools --------------------------------------------------------------
@@ -64,6 +74,11 @@ few steps differ from the brief above:
 - Do not inline house.css and do not write a <style> block: the printer sets
   the house style. Everything else in the brief stands, including picture ids,
   citations and names in their writer forms, and quoting only what was said.
+- Print the full paper the brief describes, the same paper the skill prints,
+  not a summary of it: the fold, the reader's topics band, and a band or box
+  for every desk and wire the digest gives you something worth printing
+  from, with pictures from the shortlist. A thin page is a failure of the
+  job even when it is accepted.
 - Hand in the finished page with submit_edition: the edition code and the
   whole HTML. If it is refused, fix exactly what the reasons say and hand it
   in again, until it is accepted.
@@ -180,7 +195,10 @@ export async function callTool (name, args, reader, deps) {
       // Only what the reader should hear about: a picture dropped or a link
       // unwrapped. Resolving citations and names is the printer's job, not news.
       const worth = (out.changes || []).filter((c) => c.kind === 'dropped' || c.kind === 'unwrapped')
-      return say(`Accepted: edition ${out.edition} for ${out.date}, on the reader's Observer page.` + (worth.length ? `\nThe printer ${worth.map((c) => `${c.kind} ${c.detail || ''}`.trim()).slice(0, 8).join('; ')}.` : ''), { structuredContent: { edition: out.edition, date: out.date } })
+      const f = out.fullness
+      const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
+      const full = `\nThe page has ${plural(f.sections, 'section')} and ${plural(f.pictures, 'picture')}; the digest held ${plural(f.desks, 'desk')} with posts and ${plural(f.shortlist, 'picture')} on the shortlist.`
+      return say(`Accepted: edition ${out.edition} for ${out.date}, on the reader's Observer page.` + full + (worth.length ? `\nThe printer ${worth.map((c) => `${c.kind} ${c.detail || ''}`.trim()).slice(0, 8).join('; ')}.` : ''), { structuredContent: { edition: out.edition, date: out.date, ...out.fullness } })
     }
     default:
       return fail(`No tool called ${name}.`)

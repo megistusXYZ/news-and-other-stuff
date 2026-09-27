@@ -46,9 +46,7 @@ a:hover { text-decoration-color: currentColor; }
 .actions { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 0; }
 .actions button { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; background: none; border: 0; color: var(--ink); cursor: pointer; padding: 10px 12px; }
 .actions button + button { border-left: 1px solid var(--hair); }
-/* underlined at rest, so they read as links; darker on hover */
-.actions button { text-decoration: underline; text-decoration-thickness: 1px; text-decoration-color: var(--ink-3); text-underline-offset: 4px; }
-.actions button:hover, .actions button[aria-expanded="true"] { text-decoration-color: currentColor; text-decoration-thickness: 2px; }
+.actions button:hover { text-decoration: underline; text-underline-offset: 3px; }
 .actions button[disabled] { color: var(--ink-3); cursor: not-allowed; text-decoration: none; }
 .panel { margin: 16px 0 0; padding: 12px 0 14px; border-bottom: 1px solid var(--hair); }
 .panel .mono { color: var(--ink-2); margin: 0 0 6px; }

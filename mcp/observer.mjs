@@ -319,10 +319,11 @@ async function runTool (name, args, reader, deps) {
       const verdict = await deps.readiness(reader)
       if (!verdict.ready) return fail(`Your lens is not ready, so there is no paper today.\n${verdictText(verdict)}`)
       // The reader's own paper: its place, teams and pages, and its topics
-      // unless the reader named others today. The host's defaults (its brand)
-      // sit under it.
+      // unless the reader named others today. A reader who has saved nothing
+      // gets the house paper, every page and no place, teams or topics: never
+      // anyone else's. The host's defaults (its brand) sit under it.
       const settings = deps.store.paperOf ? deps.store.paperOf(reader) : null
-      const paper = settings ? cleanPaper({ ...(deps.paperDefaults || {}), ...settings }) : null
+      const paper = cleanPaper({ ...(deps.paperDefaults || {}), ...(settings || WHOLE_PAPER) })
       const named = cleanTopics(args.topics)
       const topics = named.length ? named : ((settings && settings.topics) || [])
       const corpus = await deps.pull(reader, { topics, paper })

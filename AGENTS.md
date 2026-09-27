@@ -852,6 +852,14 @@ paper lands on the reader's Observer page in brainstorm.world.
   `<section class="your-topics">` citing one of them. This is the proof the
   personalization is real. A dogfood on 2026-09-27 printed two accepted
   papers for the same day with different topics, and the two bands differed.
+- **Each reader's own Claude, each reader's own paper.** Every reader prints
+  with their own Claude account, on their own plan; the connector holds no
+  model key and never runs a model for anyone. A reader's paper is built only
+  from that reader's own settings. A reader who has saved nothing gets the
+  house paper (every page, no place, teams or topics), never the host's
+  `observer.config.json` or another reader's settings: only the house marks
+  (brand, stamps, imprint) come from that file. Fixed 2026-09-27, when a
+  fallback to the host's config was found.
 - **Hosting reversal.** For the Observer page this reverses "we do not
   host": the service keeps each reader's accepted editions (`fileStore`).
   "Publish to my Blossom" stays the reader-owned path.

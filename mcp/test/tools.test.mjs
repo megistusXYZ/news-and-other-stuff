@@ -197,6 +197,19 @@ test('each morning the digest uses the saved paper: its place, teams and pages, 
   assert.deepEqual(d.calls[1].topics, ['sourdough'], 'topics named today win')
 })
 
+test('a reader who has saved nothing gets the house paper, never the host\'s or another reader\'s place, teams or topics', async () => {
+  const d = { ...paperDeps(), paperDefaults: { brand: 'brainstorm' } }
+  await callTool('set_paper', { place: '60614', teams: ['Chicago Cubs (Baseball)'], topics: ['jazz'] }, 'cc'.repeat(32), d)
+  await callTool('get_digest', {}, READER, d)
+  const { paper, topics } = d.calls[0]
+  assert.ok(paper, 'a paper is always handed in, so nothing falls back to settings kept elsewhere')
+  assert.equal(paper.brand, 'brainstorm', 'the house marks')
+  assert.ok(!paper.wires.place, 'no one else\'s place')
+  assert.deepEqual(paper.wires.teams || [], [], 'no one else\'s teams')
+  assert.deepEqual(topics, [], 'no one else\'s topics')
+  assert.equal(paper.wires.culture, true, 'every page, as a first save would give')
+})
+
 test('a first save starts from the whole paper, so "I live in 60614" alone still gets a full paper; a reader can then turn pages off', async () => {
   const d = paperDeps()
   await callTool('set_paper', { place: '60614' }, READER, d)

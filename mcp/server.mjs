@@ -20,7 +20,7 @@ import { memoryStore, fileStore } from './store.mjs'
 import { toHex, toNpub } from '../.claude/skills/nostr-observer/scripts/nostr.mjs'
 import { gather } from '../.claude/skills/nostr-observer/scripts/readiness.mjs'
 import { assess, REMEDY } from '../.claude/skills/nostr-observer/scripts/chain.mjs'
-import { pullCorpus, readPaper, DEFAULT_RELAY } from '../.claude/skills/nostr-observer/scripts/corpus.mjs'
+import { pullCorpus, DEFAULT_RELAY } from '../.claude/skills/nostr-observer/scripts/corpus.mjs'
 
 /** A fixed map of bearer tokens to readers: for local use only. */
 export function tokenAuth (tokens) {
@@ -175,7 +175,7 @@ export function createConnector ({ authenticate, deps, readers = new Set() }) {
 }
 
 // The real thing: the lens check and the pull against the ranked relay.
-export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paperFor = () => null, publicUrl = null, paperDefaults = {} } = {}) {
+export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), publicUrl = null, paperDefaults = {} } = {}) {
   return {
     store,
     // The house's own marks (brand, stamps, imprint), beneath every reader's settings.
@@ -201,7 +201,7 @@ export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paper
       const found = r.ok ? ((await r.json()).teams || []) : []
       return found.slice(0, 6).map((t) => ({ label: `${t.strTeam} (${t.strSport})`, league: t.strLeague || null }))
     },
-    pull: (reader, { topics, paper }) => pullCorpus(reader, { relay, topics, paper: paper || paperFor(reader) }),
+    pull: (reader, { topics, paper }) => pullCorpus(reader, { relay, topics, paper }),
   }
 }
 
@@ -214,18 +214,18 @@ function main () {
     console.error('Set OBSERVER_TOKENS="<token>:<npub>" to say who may use this local connector.')
     process.exit(2)
   }
-  // A local reader may keep their own paper settings (place, feeds, the back
-  // page) in observer.config.json, as the skill does.
+  // Only the host's marks come from observer.config.json, beneath every
+  // reader's own settings. The file's place, teams and topics are the host's
+  // own paper and never reach another reader: each reader's settings are
+  // their own, saved with set_paper.
   const config = process.env.OBSERVER_CONFIG || 'observer.config.json'
-  const paper = existsSync(config) ? readPaper(config) : null
-  // The host's marks from that file sit beneath every reader's own settings.
   const raw = existsSync(config) ? JSON.parse(readFileSync(config, 'utf8')) : {}
   const paperDefaults = Object.fromEntries(['brand', 'stamp', 'stampDark', 'imprint'].filter((k) => raw[k] != null).map((k) => [k, raw[k]]))
   const port = Number(process.env.PORT || 8787)
   // Accepted editions are also written under OBSERVER_EDITIONS, if set, so a
   // local reader can open them.
   const store = process.env.OBSERVER_EDITIONS ? fileStore(process.env.OBSERVER_EDITIONS) : memoryStore()
-  createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ store, paperFor: () => paper, paperDefaults, publicUrl: (process.env.OBSERVER_PUBLIC_URL || `http://127.0.0.1:${port}`).replace(/\/$/, '') }), readers: new Set(tokens.values()) })
+  createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ store, paperDefaults, publicUrl: (process.env.OBSERVER_PUBLIC_URL || `http://127.0.0.1:${port}`).replace(/\/$/, '') }), readers: new Set(tokens.values()) })
     .listen(port, '127.0.0.1', () => console.log(`Brainstorm Observer connector on http://127.0.0.1:${port}/mcp, with /setup and /observer, for ${tokens.size} reader(s)`))
 }
 

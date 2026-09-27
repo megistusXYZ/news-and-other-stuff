@@ -818,6 +818,49 @@ brand files, the Megistus imprint, the ostrich stamps, `docs/QA-*` and The
 Tape. NOTICE records what the MIT licence does not cover.
 Stay current with `git fetch upstream && git merge upstream/main`.
 
+**The Brainstorm Observer connector (2026-09-27).** Following Vitor's
+mockups, the printer moves into each reader's own Claude. Brainstorm hosts
+an MCP connector, the reader's Claude calls its tools each morning, and the
+paper lands on the reader's Observer page in brainstorm.world.
+- **The service.** `mcp/` is a small Node service built on the official
+  `@modelcontextprotocol/sdk` (Streamable HTTP, stateless, JSON responses).
+  It reuses the skill's own functions, and the skill itself stays
+  dependency-free.
+- **The four tools.**
+  - `get_readiness`: the lens check. The digest refuses to pull through a
+    lens that is not ready.
+  - `get_brief`: the synced editorial plus a connector note. The writer does
+    not type the CSS; the printer sets house.css.
+  - `get_digest({topics})`: returned in parts of at most 90k characters,
+    because claude.ai truncates tool results at 100k. The parts rejoin
+    exactly.
+  - `submit_edition({code, html})`: runs resolve and `check()` against the
+    exact corpus behind that code, dresses the living copy, and keeps both.
+    A refusal returns the checker's reasons so the writer can fix the page
+    and hand it in again.
+- **Auth.** `authenticate(req) → reader` is the only seam Brainstorm replaces
+  (OAuth with their NIP-98 sign-in). Locally it is a bearer-token map. NIP-98
+  must be checked against a configured public URL, never one taken from the
+  request headers (as in `server/…/Main.kt:40-51`).
+- **Topics.** They ride in the reader's own prompt and are never stored.
+  `cleanTopics` allows at most five, as plain words, so a topic can never add
+  a search operator. Each topic is its own ranked search through the reader's
+  lens. Measured the same day, search-staging honours keywords alongside
+  `observer:`: "garden" returned 11 ranked posts, against 1 in the day's
+  ranked notes.
+- **The TOPICS check.** When any topic found posts, the page must carry a
+  `<section class="your-topics">` citing one of them. This is the proof the
+  personalization is real. A dogfood on 2026-09-27 printed two accepted
+  papers for the same day with different topics, and the two bands differed.
+- **Hosting reversal.** For the Observer page this reverses "we do not
+  host": the service keeps each reader's accepted editions (`fileStore`).
+  "Publish to my Blossom" stays the reader-owned path.
+- **Scheduling.** claude.ai has no scheduled tasks today, so readers schedule
+  in Claude Code (a desktop scheduled task or a cloud routine), or paste the
+  prompt into a chat.
+- **Watch.** Topic searches surface templated spam that clears the trust
+  floor: "lightning" was mostly identical GM posts.
+
 ## Conventions
 
 Mirror vespa-relay: Kotlin, Gradle version catalog, spotless + ktlint, git hooks

@@ -114,3 +114,20 @@ test('the form saves the reader\'s paper the same way their Claude would, and re
   assert.equal((await post(JSON.stringify({ stamp: 'x' }))).status, 400, 'nothing a reader may set')
   assert.equal((await post('{}', `/api/paper?npub=${toNpub(STRANGER)}`)).status, 404, 'only the readers this connector serves')
 })
+
+test('a daily reminder for any calendar: at the reader\'s own time and time zone, with the instructions in it', async () => {
+  deps.now = () => 1790309349 // 2026-09-25 04:09 UTC, which is 11:09 p.m. on the 24th in Chicago
+  const res = await get(`/reminder.ics?time=07:00&tz=America%2FChicago&npub=${toNpub(READER)}`)
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get('content-type'), /^text\/calendar/)
+  assert.match(res.headers.get('content-disposition'), /attachment; filename="print-my-paper\.ics"/)
+  const ics = (await res.text()).replace(/\r\n /g, '') // unfold the long lines, as a calendar does
+  assert.match(ics, /^BEGIN:VCALENDAR\r\n/)
+  assert.match(ics, /\r\nDTSTART;TZID=America\/Chicago:20260925T070000\r\n/, 'the next seven o\'clock, in Chicago')
+  assert.match(ics, /\r\nRRULE:FREQ=DAILY\r\n/)
+  assert.match(ics, /\r\nSUMMARY:Print today's paper\r\n/)
+  assert.match(ics, /DESCRIPTION:Paste this into Claude: Print today's Nostr Observer with the Brainstorm connector\. If my lens isn't ready\\, stop and tell me why\./, 'commas escaped, as the format asks')
+  assert.match(ics, /BEGIN:VALARM/)
+  assert.equal((await get('/reminder.ics?time=25:00&tz=America%2FChicago')).status, 400)
+  assert.equal((await get('/reminder.ics?time=07:00&tz=Not%2FA_Zone')).status, 400)
+})

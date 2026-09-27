@@ -42,6 +42,38 @@ const FONTS = new URL('../.claude/skills/nostr-observer/reference/fonts/', impor
 
 const send = (res, status, type, body) => { res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body) }
 const json = (res, status, value) => send(res, status, 'application/json; charset=utf-8', JSON.stringify(value))
+const DAILY_PROMPT = "Print today's Nostr Observer with the Brainstorm connector. If my lens isn't ready, stop and tell me why."
+
+/**
+ * A daily reminder any calendar can take (RFC 5545): at the reader's own time
+ * in their own time zone, from the next such time on, with the instructions
+ * to paste in its notes. For readers whose Claude cannot schedule yet.
+ */
+export function reminder ({ time, tz, now, papers = null }) {
+  const t = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(time || ''))
+  if (!t || !/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+){0,2}$/.test(String(tz || ''))) return null
+  let parts
+  try {
+    parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+      .formatToParts(new Date(now * 1000)).map((p) => [p.type, p.value]))
+  } catch { return null }
+  const later = Number(parts.hour) * 60 + Number(parts.minute) >= Number(t[1]) * 60 + Number(t[2])
+  const day = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day) + (later ? 1 : 0)))
+  const ymd = day.toISOString().slice(0, 10).replace(/-/g, '')
+  const stamp = new Date(now * 1000).toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '')
+  const text = (s) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n')
+  const fold = (line) => { const out = []; for (let i = 0; i < line.length; i += 73) out.push((i ? ' ' : '') + line.slice(i, i + 73)); return out.join('\r\n') }
+  const notes = `Paste this into Claude: ${DAILY_PROMPT}` + (papers ? `\nYour papers: ${papers}` : '')
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//News and Other Stuff//Observer//EN', 'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT', `UID:print-my-paper-${ymd}-${t[1]}${t[2]}@news-and-other-stuff`, `DTSTAMP:${stamp}`,
+    `DTSTART;TZID=${tz}:${ymd}T${t[1]}${t[2]}00`, 'DURATION:PT10M', 'RRULE:FREQ=DAILY',
+    "SUMMARY:Print today's paper", fold(`DESCRIPTION:${text(notes)}`),
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'TRIGGER:PT0M', "DESCRIPTION:Print today's paper", 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR', '',
+  ].join('\r\n')
+}
+
 async function readBody (req, max = 20_000) {
   let body = ''
   for await (const chunk of req) { body += chunk; if (body.length > max) throw new Error('too large') }
@@ -69,6 +101,12 @@ async function page (req, res, url, deps, readers) {
     return json(res, 200, await (path === '/api/place' ? deps.geocode(q) : deps.findTeams(q)))
   }
   const reader = readerOf(url.searchParams.get('npub'))
+  if (path === '/reminder.ics') {
+    const ics = reminder({ time: url.searchParams.get('time'), tz: url.searchParams.get('tz'), now: deps.now ? deps.now() : Math.floor(Date.now() / 1000), papers: reader && deps.publicUrl ? `${deps.publicUrl}/observer?npub=${toNpub(reader)}` : null })
+    if (!ics) return send(res, 400, 'text/plain', 'give a time as HH:MM and a time zone such as America/Chicago')
+    res.writeHead(200, { 'Content-Type': 'text/calendar; charset=utf-8', 'Content-Disposition': 'attachment; filename="print-my-paper.ics"', 'Cache-Control': 'no-store' })
+    return res.end(ics)
+  }
   if (path === '/api/paper') {
     if (!reader || !readers.has(reader)) return json(res, 404, { error: 'no paper for that npub here' })
     if (req.method !== 'POST') return json(res, 200, (deps.store.paperOf && deps.store.paperOf(reader)) || {})
@@ -140,6 +178,7 @@ export function createConnector ({ authenticate, deps, readers = new Set() }) {
 export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paperFor = () => null, publicUrl = null } = {}) {
   return {
     store,
+    publicUrl,
     // Where the reader reads an accepted paper: this service's Observer page.
     paperUrl: publicUrl ? (reader, date, code) => `${publicUrl}/observer/${toNpub(reader)}/${date}-${code}` : null,
     readiness: async (reader) => {

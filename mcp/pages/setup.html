@@ -152,6 +152,8 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
   .q + .q, .pair > div + div, .brief section + section { border-top: 1px solid var(--hair); }
   .pages { grid-template-columns: 1fr 1fr; }
   .folio span:last-child, .part-head .aside { display: none; }
+  .summary dl { grid-template-columns: 1fr auto; }
+  .summary dt { grid-column: 1 / -1; border-bottom: 0; padding-bottom: 0; }
 }
 </style>
 </head>
@@ -166,7 +168,7 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
   <div class="oxford" aria-hidden="true"></div>
   <nav class="sections mono" aria-label="Your Observer"><a href="/setup" aria-current="page">Set up</a><a href="/observer" id="papers">Your papers</a></nav>
 
-  <p class="kicker mono">The Observer · Getting started</p>
+  <p class="kicker mono" id="kicker">The Observer · Getting started</p>
   <h2 class="headline" id="headline">Set up your daily paper</h2>
   <p class="dek" id="dek">Tell us a little about you, connect your Claude, and set the time. After that your own Claude prints this paper every morning, from what the people you trust said, with your weather, your teams and your topics.</p>
   <ol class="progress mono" id="progress" aria-label="Your progress"><li id="p1">1 Your paper</li><li id="p2">2 Connect Claude</li><li id="p3">3 First paper</li></ol>
@@ -552,6 +554,7 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
     return 'Connected ✓'
   }
   let seenChange = 0
+  let lastSummaryCall = null
   const poll = () => Promise.all([
     fetch(q('/api/status')).then((r) => r.json()),
     fetch(q('/api/today')).then((r) => r.ok ? r.json() : null).catch(() => null),
@@ -565,7 +568,7 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
     if (s.step && s.step.outcome === 'accepted') { const a = el('a', null, 'read today\'s paper →'); a.href = q('/observer'); span.append(a) }
     $('first').hidden = !(today && !today.in)
     mark('p2', true)
-    summary()
+    if (s.lastCall !== lastSummaryCall) { lastSummaryCall = s.lastCall; summary() }
     // Settings a reader's Claude saved show up here too.
     if (s.step && s.step.tool === 'set_paper' && s.lastCall * 1000 > savedHere + 3000 && s.lastCall !== seenChange) {
       seenChange = s.lastCall
@@ -591,11 +594,11 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
     const a = el('a', null, 'read it'); a.href = q('/observer'); $('s-last').append(a)
     $('s-lens').textContent = lensReady ? 'Ready ✓' : 'Not ready yet'
     $('summary').hidden = false; $('walkthrough').hidden = true
-    $('headline').textContent = 'Your daily paper'; $('dek').hidden = true
+    $('headline').textContent = 'Your daily paper'; $('dek').hidden = true; $('kicker').textContent = 'The Observer · Your paper'
   }).catch(() => {})
   const openSetup = (focusId) => {
     showingSetup = true; $('summary').hidden = true; $('walkthrough').hidden = false
-    $('headline').textContent = 'Set up your daily paper'; $('dek').hidden = false
+    $('headline').textContent = 'Set up your daily paper'; $('dek').hidden = false; $('kicker').textContent = 'The Observer · Getting started'
     const target = $(focusId); if (target) { target.scrollIntoView({ block: 'center' }); target.focus() }
   }
   $('show-setup').addEventListener('click', () => openSetup('place'))

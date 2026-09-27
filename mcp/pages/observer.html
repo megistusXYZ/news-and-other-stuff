@@ -193,8 +193,10 @@ a:hover { text-decoration-color: currentColor; }
   }
 
   // Today's paper not in yet: say so, and when it usually comes.
-  fetch('/api/today?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : null).then((t) => {
+  fetch('/api/today?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : null).then(async (t) => {
     if (!t || t.in) return
+    const any = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).catch(() => [])
+    if (!any.length) return
     $('today-note').hidden = false
     $('today-note').textContent = 'Today\'s paper isn\'t in yet. Your Claude usually prints it around seven; or print a fresh edition now. Below is your latest.'
   }).catch(() => {})

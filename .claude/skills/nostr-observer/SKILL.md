@@ -101,7 +101,8 @@ again:
 
 The keys are `place`, `teams`, `feeds` (https only), `almanac`, `cartoon`,
 `puzzle`, `recipe`, `serial` (a Gutenberg number), `picture`, `markets`,
-`world`, `sky`, `culture`, and `units` (`us` or `metric`). "No thanks" is an answer: write
+`world`, `sky`, `culture`, and `units` (`us` or `metric`). Never ask for `founded`: the first print writes the date of the paper's
+first issue there itself, and every issue number counts from it. "No thanks" is an answer: write
 `"wiresAsked": true` alone. Step 3 fetches whatever is set.
 
 ---

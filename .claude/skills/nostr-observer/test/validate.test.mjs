@@ -418,6 +418,21 @@ test('a profile of somebody who did not post in the window is refused', () => {
   assert.deepEqual(changes.map((c) => c.kind), ['unwrapped'])
 })
 
+// --- the issue number, 2026-09-26 ----------------------------------------------
+
+test('when the paper has an issue number, the folio\'s first span prints it exactly', () => {
+  const issued = { ...corpus, issue: { volume: 1, number: 3, label: 'Vol. I · No. 3' } }
+  const folio = (first) => `<div class="folio">\n  <span>${first}</span>\n  <span>Sunday, September 27, 2026</span>\n</div>`
+  const kinds = (html, c) => check(html, c).violations.map((v) => v.kind)
+
+  assert.deepEqual(kinds(folio('Vol. I · No. 3'), issued), [])
+  assert.deepEqual(kinds(folio('Vol. I &middot; No. 3'), issued), [], 'an entity is the same character')
+  assert.deepEqual(kinds(folio('No. 8FC05A'), issued), ['FOLIO'], 'the edition code in its place is caught')
+  assert.deepEqual(kinds(folio('Vol. I · No. 4'), issued), ['FOLIO'], 'a number the writer counted itself is caught')
+  assert.deepEqual(kinds('<p>no folio</p>', issued), ['FOLIO'])
+  assert.deepEqual(kinds(folio('No. 8FC05A'), corpus), [], 'no issue number, no check: the edition code stands')
+})
+
 // --- the paper's own name, 2026-09-25 ---------------------------------------
 
 test('a configured name is held: the nameplate and title must carry it', () => {
@@ -559,4 +574,8 @@ test('resolve adds one "Sources & licences" list at the foot, grouped by section
   assert.deepEqual(check(html, { ...corpus, wires }).violations, [], 'plain text and data attributes: nothing for the boundary to refuse')
   assert.doesNotMatch(resolve('<main class="sheet"></main>', corpus).html, /class="sources"/, 'no wires, no list')
   assert.equal(resolve(html, { ...corpus, wires }).html.match(/<details class="sources">/g).length, 1, 'resolving again sets the list afresh, not twice')
+  const coded = resolve('<main class="sheet"><p>The paper.</p></main>', { ...corpus, wires, code: '8FC05A', issue: { volume: 1, number: 3, label: 'Vol. I · No. 3' } }).html
+  assert.match(coded, /<li><span class="sources-section">This edition<\/span> Vol\. I · No\. 3, made from the reading coded 8FC05A; a copy with the same code was made from the same posts\.<\/li>\n<\/ul>/,
+    'the last line: the number to cite, and the code to compare')
+  assert.match(resolve('<main class="sheet"><p>The paper.</p></main>', { ...corpus, wires, code: '8FC05A' }).html, /This edition<\/span> Made from the reading coded 8FC05A;/)
 })

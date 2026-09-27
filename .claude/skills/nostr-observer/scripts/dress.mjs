@@ -23,11 +23,12 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { join } from 'node:path'
+import { join, dirname, basename } from 'node:path'
 import { check, permalinkTarget, toPermalink, articleLinkTarget, calendarLinkTarget, profileLinkTarget, streamLinkTarget, listingLinkTarget, toStreamLink, toListingLink, decodeEntities } from './validate.mjs'
 import { tags, attributes, textIn } from './html.mjs'
 import { filterFor } from './corpus.mjs'
 import { toNpub, BRAINSTORM, ARTICLE_KINDS } from './nostr.mjs'
+import { LIVING, neighbours } from './issue.mjs'
 
 const REFERENCE = fileURLToPath(new URL('../reference/', import.meta.url))
 
@@ -279,7 +280,7 @@ function prose (markdown, heading) {
  * Dress a page. Pure: no files, so a test can hand it any page, any corpus
  * and any assets. Throws on a page that has not passed validate.
  */
-export function dress (html, corpus, assets) {
+export function dress (html, corpus, assets, options = {}) {
   if (/id=["']?observer-data/.test(html)) throw new Error('This page is already dressed. Dress the validated edition, not its living copy.')
   const { violations } = check(html, corpus)
   if (violations.length) {
@@ -663,7 +664,18 @@ export function dress (html, corpus, assets) {
   // of the writer's span, so the mark is its own empty link (to Brainstorm, in
   // a new tab, like the colophon's wordmark), and the text the writer typed is
   // untouched around it.
-  if (brand) out = out.replace(/(<div class="folio">\s*<span>No\.?\s*)(?=[0-9A-Z])/, '$1<a class="lv-issue-mark" href="https://brainstorm.world" target="_blank" rel="noopener noreferrer" aria-label="Brainstorm"></a>')
+  if (brand) out = out.replace(/(<div class="folio">\s*<span>(?:Vol\. [IVXLCDM]+ · )?No\.?\s*)(?=[0-9A-Z])/, '$1<a class="lv-issue-mark" href="https://brainstorm.world" target="_blank" rel="noopener noreferrer" aria-label="Brainstorm"></a>')
+  // The issue number turns like a page: an arrow each side to the issues
+  // before and after on this machine (dim where there is none yet), and, on
+  // hover, the edition code it was made from, the thing to quote when two
+  // copies are compared.
+  if (options.issues) {
+    const note = corpus.issue && corpus.code
+      ? ` title="${escAttr(`Issue ${corpus.issue.number}${corpus.paper && corpus.paper.name ? ` of ${corpus.paper.name}` : ''}, made from the reading coded ${corpus.code}`)}"`
+      : ''
+    out = out.replace(/(<div class="folio">\s*)<span>([\s\S]*?)<\/span>/, (_, open, inner) =>
+      `${open}<span${note}>${stepOf('prev', options.issues.prev)}${inner}${stepOf('next', options.issues.next)}</span>`)
+  }
   // Gutenberg marks italics with underscores; in the serial they read as
   // italics. Only inside the serial's text, never a word like snake_case.
   out = out.replace(/(<div class="serial-text">)([\s\S]*?)(<\/div>)/, (_, open, text, close) =>
@@ -691,8 +703,45 @@ export function dress (html, corpus, assets) {
 
   return {
     html: out,
+    issues: options.issues || null,
     stats: { cited: cited.size, people: people.size },
   }
+}
+
+const escAttr = (text) => String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// One arrow of the folio: a link to that issue's living copy, opening in
+// place, or a dim mark kept for when there is one. Only an edition's own
+// file name is ever a link.
+function stepOf (dir, step) {
+  const glyph = dir === 'prev' ? '‹' : '›'
+  if (!step || !LIVING.test(step.href)) return `<span class="lv-step lv-${dir}" aria-hidden="true">${glyph}</span>`
+  const label = `${dir === 'prev' ? 'Previous' : 'Next'} issue${step.when ? `: ${step.when}` : ''}`
+  return `<a class="lv-step lv-${dir}" href="${step.href}" rel="${dir}" aria-label="${escAttr(label)}">${glyph}</a>`
+}
+
+/**
+ * Point one arrow of an existing living copy at a new neighbour: yesterday's
+ * copy learns of today's. A copy dressed before the arrows existed gets the
+ * arrow at that end of its issue number. Anything else is left as it was.
+ */
+export function linkStep (html, dir, step) {
+  if (!step || !LIVING.test(step.href)) return html
+  const link = stepOf(dir, step)
+  const current = new RegExp(`<(?:a|span) class="lv-step lv-${dir}"[^>]*>[‹›]</(?:a|span)>`)
+  if (current.test(html)) return html.replace(current, link)
+  return html.replace(/(<div class="folio">\s*<span[^>]*>)([\s\S]*?)(<\/span>)/, (_, open, inner, close) =>
+    dir === 'prev' ? open + link + inner + close : open + inner + link + close)
+}
+
+const titleOf = (html) => decodeEntities(((/<title>([\s\S]*?)<\/title>/i.exec(html) || [])[1] || '').trim())
+
+// The living copies beside this one in its folder, for the folio's arrows.
+function issuesBeside (out, title) {
+  const dir = dirname(out)
+  const files = readdirSync(dir).filter((name) => LIVING.test(name) && name !== basename(out))
+    .map((name) => ({ name, title: titleOf(readFileSync(join(dir, name), 'utf8').slice(0, 200000)) }))
+  return neighbours(files, basename(out), title)
 }
 
 function main () {
@@ -705,13 +754,24 @@ function main () {
   const out = arg('--out', page.replace(/\.html$/i, '') + '.living.html')
   let result
   try {
-    result = dress(readFileSync(page, 'utf8'), corpus, loadAssets())
+    const source = readFileSync(page, 'utf8')
+    result = dress(source, corpus, loadAssets(), { issues: issuesBeside(out, titleOf(source)) })
   } catch (error) {
     console.error(`\n  NOT DRESSED: ${error.message}\n`)
     for (const v of error.violations || []) console.error(`  ${v.kind}: ${v.detail}\n    ${v.excerpt}`)
     process.exit(1)
   }
   writeFileSync(out, result.html)
+  // The issues either side learn of this one: their arrows point here now.
+  const self = { href: basename(out), when: titleOf(result.html).split(' — ').slice(1).join(' — ') }
+  for (const [dir, back] of [['prev', 'next'], ['next', 'prev']]) {
+    const other = result.issues && result.issues[dir]
+    if (!other) continue
+    const path = join(dirname(out), other.href)
+    const before = readFileSync(path, 'utf8')
+    const after = linkStep(before, back, self)
+    if (after !== before) writeFileSync(path, after)
+  }
   const { cited, people } = result.stats
   console.log('')
   console.log(`  Dressed: ${out}`)

@@ -921,6 +921,15 @@ a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72
 .lv-issue-mark, .lv-imprint { position: relative; }
 .lv-issue-mark::after, .lv-imprint::after { content: ""; position: absolute; inset: -7px; }
 
+/* The issue number's arrows: yesterday's paper and tomorrow's, one either
+ * side, quiet as the folio. A dim one waits for an issue not yet printed. */
+.lv-step { display: inline-block; position: relative; padding: 0 .5em; font: 400 1.05em/1 var(--body); color: var(--ink-3); text-decoration: none; }
+.lv-step.lv-prev { padding-left: 0; }
+a.lv-step::after { content: ""; position: absolute; inset: -8px -7px; }
+a.lv-step:hover { color: var(--accent); }
+a.lv-step:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+span.lv-step { opacity: .35; }
+
 /* High contrast: the greys become ink, the rules darken, links are underlined.
  * The brand's sheet comes after this one, so these reach a little further. */
 html:root[data-lv-contrast="high"]:not([data-theme="dark"]) {

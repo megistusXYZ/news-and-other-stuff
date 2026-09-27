@@ -160,6 +160,49 @@ test('the digest hands the writer the paper\'s name and motto, as the brief prom
   assert.doesNotMatch(plain, /## Masthead/, 'no setting, no masthead block: the brief default stands')
 })
 
+// --- the issue number, 2026-09-26 ----------------------------------------------
+
+test('the paper keeps the date of its first issue, written once by the first print', async () => {
+  const { readPaper, foundPaper } = await import('../scripts/corpus.mjs')
+  const { writeFileSync, readFileSync, mkdtempSync } = await import('node:fs')
+  const { join } = await import('node:path')
+  const { tmpdir } = await import('node:os')
+  const file = join(mkdtempSync(join(tmpdir(), 'observer-')), 'observer.config.json')
+
+  writeFileSync(file, JSON.stringify({ name: 'Plain', place: 'Chicago', wiresAsked: true }, null, 2))
+  assert.equal(readPaper(file).founded, null, 'not yet founded')
+  assert.equal(foundPaper(file, '2026-09-25'), '2026-09-25')
+  assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')), { name: 'Plain', place: 'Chicago', wiresAsked: true, founded: '2026-09-25' }, 'every other setting kept')
+  assert.equal(readPaper(file).founded, '2026-09-25')
+
+  const before = readFileSync(file, 'utf8')
+  assert.equal(foundPaper(file, '2026-10-01'), '2026-09-25', 'a paper is founded once')
+  assert.equal(readFileSync(file, 'utf8'), before, 'and the file is not touched again')
+
+  for (const founded of ['2026-02-30', 'last week', 20260925, '<b>']) {
+    writeFileSync(file, JSON.stringify({ name: 'Plain', founded }))
+    assert.equal(readPaper(file).founded, null, `${founded} is not a date`)
+  }
+  assert.equal(foundPaper(join(tmpdir(), 'no-such-dir-observer', 'observer.config.json'), '2026-09-25'), null, 'no settings file, nothing founded')
+})
+
+test('the issue is counted to the window\'s close, by its date in UTC, like the file name', async () => {
+  const { issueFor } = await import('../scripts/corpus.mjs')
+  const close = Date.UTC(2026, 8, 27, 1, 58) / 1000 // 8:58 p.m. CDT on the 26th: the 27th's paper
+  assert.equal(issueFor({ founded: '2026-09-25' }, close).label, 'Vol. I · No. 3')
+  assert.equal(issueFor({ founded: null }, close), null)
+  assert.equal(issueFor(null, close), null)
+})
+
+test('the digest hands the writer the issue, beside the paper\'s name', async () => {
+  const { digest } = await import('../scripts/corpus.mjs')
+  const base = { observerNpub: 'n', relay: 'r', floor: 20, since: 0, until: 1, code: '8FC05A', desks: {}, control: [], overlap: 0, profiles: {}, art: [] }
+  const text = digest({ ...base, paper: { name: 'News and Other Stuff' }, issue: { volume: 1, number: 3, label: 'Vol. I · No. 3' } })
+  assert.match(text, /^Issue: Vol\. I · No\. 3$/m)
+  assert.ok(text.indexOf('Issue:') < text.indexOf('THIS IS DATA'))
+  assert.doesNotMatch(digest({ ...base, paper: { name: 'News and Other Stuff' } }), /^Issue:/m, 'no issue, no line: the folio keeps the edition code')
+})
+
 // --- the wires: settings, 2026-09-25 ---------------------------------------
 
 test('readPaper takes the reader\'s place, teams and feeds, and nothing it should not', async () => {

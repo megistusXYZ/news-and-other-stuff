@@ -36,7 +36,7 @@ function arg (name, fallback = null) {
 // regex that stops at the first `>` cannot see `<img alt="a > b" src="…">` at
 // all, and skipping an element is the boundary failing OPEN.
 
-const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', hellip: '…', mdash: '—', ndash: '–', rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”' }
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', hellip: '…', mdash: '—', ndash: '–', rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”', middot: '·' }
 
 export function decodeEntities (text) {
   return text.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (whole, body) => {
@@ -446,6 +446,19 @@ export function markupViolations (html) {
 }
 
 /**
+ * The issue number is counted by the printer from the paper's first issue, not
+ * by the writer: when the corpus carries one, the folio's first span is it,
+ * word for word.
+ */
+function folioViolations (html, issue) {
+  if (!issue?.label) return []
+  const folio = /<div class="folio">\s*<span>([\s\S]*?)<\/span>/.exec(html)
+  const first = folio ? decodeEntities(folio[1].replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim() : null
+  if (first === issue.label) return []
+  return [{ kind: 'FOLIO', detail: `the folio's first span must read "${issue.label}"`, excerpt: first === null ? '(no folio)' : first.slice(0, 80) }]
+}
+
+/**
  * When the reader has named their paper (observer.config.json), the name is
  * theirs to keep and not the writer's to drift from: the nameplate and the
  * document title must carry it. Compared without spaces or case, because the
@@ -524,6 +537,7 @@ export function check (html, corpus) {
 
   violations.push(...markupViolations(html))
   violations.push(...mastheadViolations(html, corpus.paper))
+  violations.push(...folioViolations(html, corpus.issue))
   violations.push(...layoutViolations(html))
 
   const quotes = quotedText(html)

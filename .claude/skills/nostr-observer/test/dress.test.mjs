@@ -5,7 +5,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { dress, islandJson, loadAssets } from '../scripts/dress.mjs'
+import { dress, islandJson, loadAssets, linkStep } from '../scripts/dress.mjs'
 import { toPermalink, toProfileLink } from '../scripts/validate.mjs'
 import { toNpub } from '../scripts/nostr.mjs'
 
@@ -587,6 +587,47 @@ test('a branded paper sets the B before the issue number\'s digits, the text unt
   const plain = dress(foliod.replace('<header', '<header'), corpus, assets).html
   assert.doesNotMatch(plain, /lv-issue-mark/, 'no brand, no B')
   assert.ok(html.replace(/<a class="lv-issue-mark"[^>]*><\/a>/, '').includes('<span>No. 13C931</span>'))
+})
+
+// --- the issue number and its arrows, 2026-09-26 ---------------------------------
+
+const issued = { ...brandCorpus, code: '8FC05A', issue: { volume: 1, number: 3, label: 'Vol. I · No. 3' } }
+const issuePage = brandPage.replace('<main class="sheet">', '<main class="sheet"><div class="folio"><span>Vol. I · No. 3</span><span>Sunday</span></div>')
+const PREV = { href: 'observer-2026-09-25-13C931.living.html', when: 'Friday, September 25, 2026' }
+
+test('the issue number gets the B, a note of the edition it was made from, and an arrow each way', () => {
+  const { html } = dress(issuePage, issued, branded, { issues: { prev: PREV, next: null } })
+  const first = /<div class="folio">(<span[^>]*>[\s\S]*?<\/span>)<span>Sunday/.exec(html)[1]
+  assert.match(first, /^<span title="Issue 3 of The Daily Brainstorm, made from the reading coded 8FC05A">/, 'the code is still there to quote, on hover')
+  assert.match(first, /<a class="lv-step lv-prev" href="observer-2026-09-25-13C931\.living\.html" rel="prev" aria-label="Previous issue: Friday, September 25, 2026">‹<\/a>/,
+    'yesterday\'s paper opens in place, like turning back a page')
+  assert.match(first, /Vol\. I · No\. <a class="lv-issue-mark"[^>]*><\/a>3/, 'the B before the digits, as before')
+  assert.match(first, /<span class="lv-step lv-next" aria-hidden="true">›<\/span><\/span>$/, 'no next issue yet: a dim arrow, kept for when there is one')
+  assert.equal(first.replace(/<[^>]*>/g, ''), '‹Vol. I · No. 3›', 'the writer\'s words untouched between the arrows')
+})
+
+test('with nothing either side the arrows are both dim, and no issue number means no note', () => {
+  const { html } = dress(issuePage.replace('Vol. I · No. 3', 'No. 8FC05A'), brandCorpus, branded, { issues: { prev: null, next: null } })
+  assert.match(html, /<div class="folio"><span><span class="lv-step lv-prev" aria-hidden="true">‹<\/span>No\. <a class="lv-issue-mark"[^>]*><\/a>8FC05A<span class="lv-step lv-next" aria-hidden="true">›<\/span><\/span>/)
+  assert.doesNotMatch(dress(issuePage, issued, branded).html, /lv-step/, 'no neighbours asked for, no arrows')
+})
+
+test('a new issue reaches back: the one before gets its next arrow, and a reprint moves it', () => {
+  const before = dress(issuePage, issued, branded, { issues: { prev: PREV, next: null } }).html
+  const next = { href: 'observer-2026-09-28-ABCDEF.living.html', when: 'Monday, September 28, 2026' }
+  const linked = linkStep(before, 'next', next)
+  assert.match(linked, /<a class="lv-step lv-next" href="observer-2026-09-28-ABCDEF\.living\.html" rel="next" aria-label="Next issue: Monday, September 28, 2026">›<\/a><\/span><span>Sunday/)
+  assert.equal(linked.split('lv-next').length, 2, 'one next arrow')
+  const moved = linkStep(linked, 'next', { ...next, href: 'observer-2026-09-28-123456.living.html' })
+  assert.match(moved, /href="observer-2026-09-28-123456\.living\.html" rel="next"/)
+  assert.equal(moved.split('lv-next').length, 2)
+  assert.equal(linkStep(moved, 'prev', PREV), moved, 'an arrow already right is left alone')
+
+  // A copy dressed before the arrows existed gets one set at the end of its number.
+  const old = '<div class="folio">\n  <span>No. <a class="lv-issue-mark"></a>13C931</span>\n  <span>Friday</span>'
+  assert.equal(linkStep(old, 'next', next), '<div class="folio">\n  <span>No. <a class="lv-issue-mark"></a>13C931<a class="lv-step lv-next" href="observer-2026-09-28-ABCDEF.living.html" rel="next" aria-label="Next issue: Monday, September 28, 2026">›</a></span>\n  <span>Friday</span>')
+  assert.equal(linkStep('<p>no folio</p>', 'next', next), '<p>no folio</p>')
+  assert.equal(linkStep(old, 'next', { href: 'javascript:alert(1)', when: 'x' }), old, 'only an edition\'s own file name')
 })
 
 // --- recipe tabs, 2026-09-25 ---------------------------------------------------------

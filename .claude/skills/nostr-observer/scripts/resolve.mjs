@@ -310,7 +310,11 @@ export function resolve (html, corpus) {
   if (rows.length) {
     const list = '<details class="sources">\n<summary>Sources &amp; licences</summary>\n<ul>\n'
       + `<li><span class="sources-section">The network</span> Posts from Nostr, ranked by ${linked('Brainstorm', 'https://brainstorm.world/')}</li>\n`
-      + rows.join('\n') + '\n</ul>\n</details>\n'
+      + rows.join('\n')
+      + (/^[0-9A-F]{6}$/.test(corpus.code || '')
+        ? `\n<li><span class="sources-section">This edition</span> ${corpus.issue ? `${escText(corpus.issue.label)}, made` : 'Made'} from the reading coded ${corpus.code}; a copy with the same code was made from the same posts.</li>`
+        : '')
+      + '\n</ul>\n</details>\n'
     const end = out.lastIndexOf('</main>')
     out = end > -1 ? out.slice(0, end) + list + out.slice(end) : out.replace(/<\/body>(?![\s\S]*<\/body>)/i, `${list}</body>`)
   }

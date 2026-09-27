@@ -198,10 +198,13 @@ row with it. There is no dateline under the nameplate: the index row that
 follows it is printed afterwards, from your section labels, and is not yours
 to write.
 
-- **The edition code goes top-left, as `No. XXXXXX`.** It is given to you in
-  the brief. Print it exactly, in that form, and never invent one — it is a
-  fingerprint of the material this edition was made from, and two papers
-  carrying the same code were made from the same reading of the network.
+- **The issue number goes top-left, in the folio's first span.** When the
+  digest gives an `Issue:` line (`Vol. I · No. 3`), print it exactly, in that
+  form: the printer counts it from the paper's first issue, and you never
+  count, change or invent one. Without that line, print the edition code as
+  `No. XXXXXX` instead — a fingerprint of the material this edition was made
+  from; two papers carrying the same code were made from the same reading of
+  the network. The code always names the file.
 - **The date carries its day of the week.** "Tuesday, August 18, 2026" — a
   front page says what day it is, and a reader opening yesterday's edition
   should be able to tell at a glance.
@@ -496,7 +499,7 @@ no explanation after it. Start with `<!doctype html>` and set a `<title>`.
 
 The `<title>` is the date, not the edition code: `The Nostr Observer — Tuesday,
 August 18, 2026`. Use the same date string as the folio's centred span — day of
-the week, month, day, year. The edition code belongs on the page in the folio,
+the week, month, day, year. The issue number belongs on the page in the folio,
 not in the document title.
 
 Add link-preview meta tags in `<head>`, immediately after `<title>`:

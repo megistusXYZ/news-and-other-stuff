@@ -362,6 +362,23 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   source. On phones and tablets the folio is two rows: the issue number with
   "Aa", then the date beneath it.
 
+- **Issue numbers (2026-09-26).** The folio's first span is the paper's own
+  issue, "Vol. I · No. 3", the way papers number themselves: No. is the days
+  since the reader's first issue plus one, Vol. turns on each anniversary
+  (`issueOf` in scripts/issue.mjs; two dates in, nothing stored, so a number
+  always means the same morning and a missed morning leaves a gap). The first
+  print writes `founded` into observer.config.json (Benjamin's is
+  2026-09-25); onboarding will carry it as a `founded` tag on the preference
+  event. The edition's date is its window's close in UTC, as in the file
+  name. The digest gives `Issue:`, the writer prints it, and validate.mjs
+  refuses any other folio (FOLIO). The six-character code stays: it names
+  the file, shows on hover over the number, and closes the Sources list, as
+  the thing to compare two copies by. dress.mjs sets an arrow each side of
+  the number to the nearest living copies of the same paper in the folder,
+  opening in place, dim where there is none, and points the neighbours'
+  arrows back at the new one (`linkStep`). No numbering from Nostr age or
+  from counting files: both are unexplainable or fragile.
+
 - **Access and devices (2026-09-26).** Audited at 320, 375, 768, 1024 and
   1920 px, light and dark: no sideways scroll anywhere, 200% text zoom holds,
   the reader panel is a labelled modal that traps and returns focus. Fixed and

@@ -858,8 +858,14 @@ paper lands on the reader's Observer page in brainstorm.world.
 - **Scheduling.** claude.ai has no scheduled tasks today, so readers schedule
   in Claude Code (a desktop scheduled task or a cloud routine), or paste the
   prompt into a chat.
-- **Watch.** Topic searches surface templated spam that clears the trust
-  floor: "lightning" was mostly identical GM posts.
+- **Topic relevance.** The relay's search matches a topic's words anywhere:
+  inside a link, inside another word ("OpenAI agents" for "ai agents"), or once
+  in passing deep in an essay. So `pullCorpus` asks for 50 and keeps a post only
+  when the topic is one of its hashtags (#foodstr and #bookstr count), in an
+  article's title or summary, or in its first 280 characters with links taken
+  out, as whole words. Word-for-word copies and articles republished under the
+  same title count once. Measured 2026-09-27: "architecture" went from 8 posts
+  to 2 genuine ones, and "ai agents" from 21 to 8.
 - **The demo pages.** Alongside `/mcp` the service serves the two pages
   Brainstorm's Observer tab will take over, set in the paper's own design (nameplate,
   Oxford rule, hairline columns, Playfair, Source Serif and Plex Mono), not app cards:

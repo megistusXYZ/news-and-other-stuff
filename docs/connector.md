@@ -94,7 +94,8 @@ Every call is for the signed-in reader, never a reader named in the arguments.
 
 **Topics** are at most five plain words, cleaned so that a topic can never add
 a search operator. Each topic is its own ranked search through the reader's
-lens. search-staging honours keywords alongside `observer:`: "garden" returned
+lens. A post counts only when it is about the topic: a hashtag, an article's
+title, or its opening lines, never a word inside a link or in passing. search-staging honours keywords alongside `observer:`: "garden" returned
 11 ranked posts, against 1 in the day's ranked notes.
 
 ## HTTP surface
@@ -208,9 +209,11 @@ claude mcp add --transport http brainstorm-observer http://127.0.0.1:8787/mcp --
    - how long to keep editions;
    - a cap on fresh editions per reader per day;
    - rate limits on the public lookups.
-6. **Spam in topic searches.** "lightning" was mostly identical good-morning
-   posts that clear the trust floor. This may be worth a higher floor for
-   topic desks.
+6. **Spam in topic searches.** Word-for-word copies now count once, and a
+   post must be about the topic (a hashtag, a title, or its opening lines), not
+   just mention it. Templated posts that differ by a word can still clear the
+   trust floor. If they persist, a higher floor for topic desks is the next
+   step.
 
 ## Where the decisions are recorded
 

@@ -700,6 +700,48 @@ test('each topic is its own ranked search through the reader\'s lens, and a topi
   assert.equal(plain.desks.topics, undefined, 'no topics, no topics desk')
 })
 
+test('a topic keeps only posts that are about it: a hashtag, a title, or the opening lines, never a passing word or a link', async () => {
+  const { pullCorpus } = await import('../scripts/corpus.mjs')
+  const reader = 'aa'.repeat(32)
+  const post = (n, content, tags = [], kind = 1) => ({ id: String(n).repeat(64).slice(0, 64), kind, pubkey: 'bb'.repeat(32), created_at: 1790300000, content, tags })
+  const filler = 'The weather held all week and the market was busy on Saturday morning. '.repeat(6)
+  // What the relay hands back for these searches, measured 2026-09-27: it
+  // matches a word anywhere, inside a link, inside another word, or in passing.
+  const found = {
+    food: [
+      post(1, 'Braised short ribs tonight.', [['t', 'foodstr']]),
+      post(2, 'Food trucks are back on the square.'),
+      post(3, filler + 'Anyway, I skipped food that day.'),
+      post(4, 'Braised short ribs tonight.', [['t', 'foodstr']]),
+    ],
+    architecture: [
+      post(5, 'Improving site performance: https://github.blog/engineering/architecture-optimization/x'),
+      post(6, filler, [['title', 'Brutalist architecture in the Loop']], 30023),
+      post(7, 'Reading about the architecture of old train stations today.'),
+      post(8, filler + 'Republished.', [['title', 'Brutalist Architecture in the Loop ']], 30023),
+    ],
+    'ai agents': [
+      post(8, 'Unsecured #OpenAI agents posted user images.'),
+      post(9, 'A field guide to AI agents that book your travel.'),
+      post(1, 'x', [['t', 'aiagents']]),
+    ],
+    books: [post(2, 'New in the shop.', [['t', 'bookstr']])],
+  }
+  const req = async (relay, filter) => {
+    if (filter.kinds[0] === 0) return { events: [] }
+    const topic = Object.keys(found).find((t) => filter.search.endsWith(' ' + t))
+    return { events: topic ? found[topic] : [] }
+  }
+  const until = Date.UTC(2026, 8, 27, 11, 40) / 1000
+  const corpus = await pullCorpus(reader, { relay: 'wss://relay.test', until, req, topics: Object.keys(found) })
+  const ids = (topic) => corpus.topics.find((t) => t.topic === topic).events.map((e) => e.id[0])
+
+  assert.deepEqual(ids('food'), ['1', '2'], 'its hashtag (#foodstr) or its opening lines; not a passing word, and a word-for-word copy once')
+  assert.deepEqual(ids('architecture'), ['6', '7'], 'an article\'s title counts, once however often it is republished; a word inside a link does not')
+  assert.deepEqual(ids('ai agents'), ['9', '1'], 'the phrase as words, or run together as a hashtag; not "OpenAI agents"')
+  assert.deepEqual(ids('books'), ['2'], 'a plural topic finds its singular hashtag')
+})
+
 test('the digest hands the writer the reader\'s topics above the data warning, and their posts below it', async () => {
   const { digest } = await import('../scripts/corpus.mjs')
   const post = { id: 'e'.repeat(64), kind: 1, pubkey: 'bb'.repeat(32), created_at: 1790300000, content: 'My sourdough finally rose.', tags: [] }

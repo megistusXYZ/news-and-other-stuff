@@ -862,6 +862,46 @@ export function cleanTopics (list) {
 }
 
 const TOPIC_LIMIT = 12
+// The relay is asked for more than the paper keeps, because the search is
+// loose and most of what it matches is dropped below.
+const TOPIC_FETCH = 50
+const TOPIC_LEDE = 280
+
+/**
+ * Whether a post is about a topic, not just touching it. The relay's search
+ * matches a word anywhere: inside a link, inside another word ("OpenAI agents"
+ * for "ai agents"), or once in passing deep in an essay (measured 2026-09-27).
+ * A post is about a topic when the topic is one of its hashtags (#foodstr and
+ * #bookstr included), in an article's title or summary, or in its opening
+ * lines, as whole words, with links taken out first.
+ */
+function aboutTopic (event, topic) {
+  const words = topic.split(' ')
+  const joined = words.join('').replace(/['-]/g, '')
+  const stem = joined.replace(/s$/, '')
+  const forms = new Set([joined, joined + 's', joined + 'str', stem, stem + 's', stem + 'str'])
+  if ((event.tags || []).some((t) => t[0] === 't' && forms.has(String(t[1] ?? '').toLowerCase()))) return true
+  const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const phrase = new RegExp(`(?<![\\p{L}\\p{N}])${escaped.join('[\\s-]+')}(?:s|es)?(?![\\p{L}\\p{N}])`, 'iu')
+  const heading = (event.tags || []).filter((t) => t[0] === 'title' || t[0] === 'summary').map((t) => t[1]).join(' ')
+  if (phrase.test(heading)) return true
+  return phrase.test(String(event.content ?? '').replace(/(?:https?:\/\/|nostr:)\S+/gi, ' ').slice(0, TOPIC_LEDE))
+}
+
+// A post and its copies are one post: the same greeting from a dozen
+// accounts, or an article republished under the same title. The first, which
+// ranked highest, is kept.
+function firstOfCopies (events) {
+  const seen = new Set()
+  const plain = (s) => String(s ?? '').toLowerCase().replace(/\s+/g, ' ').trim()
+  return events.filter((e) => {
+    const title = plain(e.tags?.find((t) => t[0] === 'title')?.[1])
+    const keys = [plain(e.content), ...(title ? ['title:' + title] : [])]
+    if (keys.some((k) => seen.has(k))) return false
+    keys.forEach((k) => seen.add(k))
+    return true
+  })
+}
 
 /**
  * The pull, as a function: every desk through the reader's lens, the control
@@ -905,9 +945,10 @@ export async function pullCorpus (observerHex, { relay = DEFAULT_RELAY, floor = 
   let topicDesks
   if (wanted.length) {
     topicDesks = await pool(wanted, 3, async (topic) => {
-      const f = filterFor([1, 30023], since, until, TOPIC_LIMIT, observerHex, floor)
+      const f = filterFor([1, 30023], since, until, TOPIC_FETCH, observerHex, floor)
       const { events } = await request(relay, { ...f, search: `${f.search} ${topic}` }, { idleMs: 25_000, label: 'topic' })
-      return { topic, events: events.filter((e) => e.pubkey !== observerHex).slice(0, TOPIC_LIMIT) }
+      const about = events.filter((e) => e.pubkey !== observerHex && aboutTopic(e, topic))
+      return { topic, events: firstOfCopies(about).slice(0, TOPIC_LIMIT) }
     })
     const seen = new Set()
     desks.topics = topicDesks.flatMap((t) => t.events).filter((e) => !seen.has(e.id) && seen.add(e.id))

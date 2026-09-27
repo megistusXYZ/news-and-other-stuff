@@ -83,6 +83,7 @@ textarea.field { min-height: 76px; resize: vertical; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
 .chip { font: 400 .82rem/1 var(--serif); padding: 6px 9px; border: 1px solid var(--hair); background: transparent; color: var(--ink-2); cursor: pointer; border-radius: 0; }
 .chip:hover { border-color: var(--ink); color: var(--ink); }
+.chips-then { align-self: center; margin: 0 2px 0 8px; color: var(--ink-3); }
 .pages { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 22px; }
 .pages fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .pages legend { padding: 0; margin: 0 0 6px; color: var(--ink-2); }
@@ -229,7 +230,7 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
         <label class="sr" for="topics">Your favourite topics</label>
         <textarea class="field" id="topics" placeholder="Architecture, jazz, startups, the Great Lakes"></textarea>
         <div class="chips" id="chips" aria-label="Add a topic">
-          <button class="chip" type="button">Bitcoin</button><button class="chip" type="button">Nostr</button><button class="chip" type="button">AI agents</button><button class="chip" type="button">Cooking</button><button class="chip" type="button">Music</button><button class="chip" type="button">Space</button><button class="chip" type="button">Gardening</button><button class="chip" type="button">Startups</button>
+          <button class="chip" type="button">Food</button><button class="chip" type="button">Music</button><button class="chip" type="button">Travel</button><button class="chip" type="button">Health</button><button class="chip" type="button">Books</button><button class="chip" type="button">Art</button><button class="chip" type="button">History</button><button class="chip" type="button">Nature</button><button class="chip" type="button">Space</button><button class="chip" type="button">Photography</button><span class="chips-then mono">And from Nostr</span><button class="chip" type="button">Bitcoin</button><button class="chip" type="button">Nostr</button><button class="chip" type="button">AI</button>
         </div>
       </div>
       <div class="q wide">

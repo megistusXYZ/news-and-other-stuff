@@ -76,3 +76,17 @@ test('a reader can hand in a page only for a digest they were given', async () =
   const unknown = await submitEdition({ reader: READER, code: 'ZZZ999', html: page() }, { store })
   assert.deepEqual(unknown.violations.map((v) => v.kind), ['CODE'])
 })
+
+test('a file store keeps each accepted edition and its living copy on disk, by reader and date', async () => {
+  const { fileStore } = await import('../store.mjs')
+  const { mkdtempSync, readdirSync } = await import('node:fs')
+  const { join } = await import('node:path')
+  const { tmpdir } = await import('node:os')
+  const dir = mkdtempSync(join(tmpdir(), 'editions-'))
+  const store = fileStore(dir)
+  store.keepCorpus(READER, corpusWith(null))
+  const out = await submitEdition({ reader: READER, code: 'ABC123', html: page() }, { store })
+  assert.equal(out.accepted, true)
+  assert.deepEqual(readdirSync(join(dir, READER.slice(0, 16))).sort(), ['2026-09-25-ABC123.html', '2026-09-25-ABC123.living.html'])
+  assert.equal(store.edition(READER, '2026-09-25').code, 'ABC123')
+})

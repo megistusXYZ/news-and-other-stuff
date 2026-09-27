@@ -16,7 +16,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 import { TOOLS, callTool } from './observer.mjs'
-import { memoryStore } from './store.mjs'
+import { memoryStore, fileStore } from './store.mjs'
 import { toHex } from '../.claude/skills/nostr-observer/scripts/nostr.mjs'
 import { gather } from '../.claude/skills/nostr-observer/scripts/readiness.mjs'
 import { assess, REMEDY } from '../.claude/skills/nostr-observer/scripts/chain.mjs'
@@ -89,7 +89,10 @@ function main () {
   const config = process.env.OBSERVER_CONFIG || 'observer.config.json'
   const paper = existsSync(config) ? readPaper(config) : null
   const port = Number(process.env.PORT || 8787)
-  createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ paperFor: () => paper }) })
+  // Accepted editions are also written under OBSERVER_EDITIONS, if set, so a
+  // local reader can open them.
+  const store = process.env.OBSERVER_EDITIONS ? fileStore(process.env.OBSERVER_EDITIONS) : memoryStore()
+  createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ store, paperFor: () => paper }) })
     .listen(port, '127.0.0.1', () => console.log(`Brainstorm Observer connector on http://127.0.0.1:${port}/mcp for ${tokens.size} reader(s)`))
 }
 

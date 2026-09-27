@@ -177,8 +177,10 @@ export async function callTool (name, args, reader, deps) {
       if (!out.accepted) {
         return fail('Refused. Fix these and hand it in again:\n' + out.violations.map((v) => `- ${v.kind}: ${v.detail}${v.excerpt ? `\n    ${v.excerpt}` : ''}`).join('\n'))
       }
-      const changed = (out.changes || []).filter((c) => !['resolved', 'feature', 'credit'].includes(c.kind))
-      return say(`Accepted: edition ${out.edition} for ${out.date}, on the reader's Observer page.` + (changed.length ? `\nThe printer changed ${changed.length} thing(s): ${changed.slice(0, 8).map((c) => c.detail || c.kind).join('; ')}` : ''), { structuredContent: { edition: out.edition, date: out.date } })
+      // Only what the reader should hear about: a picture dropped or a link
+      // unwrapped. Resolving citations and names is the printer's job, not news.
+      const worth = (out.changes || []).filter((c) => c.kind === 'dropped' || c.kind === 'unwrapped')
+      return say(`Accepted: edition ${out.edition} for ${out.date}, on the reader's Observer page.` + (worth.length ? `\nThe printer ${worth.map((c) => `${c.kind} ${c.detail || ''}`.trim()).slice(0, 8).join('; ')}.` : ''), { structuredContent: { edition: out.edition, date: out.date } })
     }
     default:
       return fail(`No tool called ${name}.`)

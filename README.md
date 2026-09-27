@@ -5,6 +5,8 @@ from what the people you trust on Nostr actually said, ranked by
 [Brainstorm](https://brainstorm.world). Everything runs on your own machine,
 through your own Claude Code.
 
+![The front page of News and Other Stuff, Vol. I · No. 3: the nameplate with its ostrich, the section row, and the day's top three stories](docs/front-page.png)
+
 This is a fork of [NosFabrica/the-nostr-observer](https://github.com/NosFabrica/the-nostr-observer)
 (MIT), kept by [Megistus XYZ](https://www.megistus.xyz). It adds the Brainstorm
 edition and a living copy with accessible reader settings, credits in one
@@ -14,6 +16,11 @@ pull requests; the brand and the edition's own choices stay here. See
 [NOTICE](NOTICE) for the marks and pictures, which the MIT licence does not
 cover.
 
+**What you need.** [Claude Code](https://claude.com/claude-code), Node 22 or
+newer, and a Nostr account with a Brainstorm web-of-trust lens: the paper is
+ranked through it, and a readiness check stops before printing, and says what
+is missing, if the lens is not ready yet.
+
 **Run it.** Copy `observer.config.example.json` to `observer.config.json`, set
 your place, teams and feeds, then open this repository in Claude Code and ask
 `print my Nostr Observer`. Your papers land in `editions/`, which is never
@@ -21,8 +28,17 @@ committed. The Tape (share closes) is off by default: Yahoo's terms do not
 permit automated collection, so turning it on is for personal use at your own
 risk.
 
-**Keeping up with upstream.** `git fetch upstream && git merge upstream/main`
-into `megistus-edition`.
+**Keeping up with upstream.** Once, after cloning:
+
+```bash
+git remote add upstream https://github.com/NosFabrica/the-nostr-observer.git
+```
+
+Then, whenever NosFabrica moves, merge it into `megistus-edition`:
+
+```bash
+git fetch upstream && git merge upstream/main
+```
 
 The original project's README follows.
 

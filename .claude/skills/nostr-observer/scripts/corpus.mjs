@@ -804,29 +804,25 @@ export function issueFor (paper, until) {
   return paper && paper.founded ? issueOf(paper.founded, new Date(until * 1000).toISOString().slice(0, 10)) : null
 }
 
-async function main () {
-  const input = process.argv[2]
-  if (!input || input.startsWith('--')) {
-    console.error('Usage: node corpus.mjs <npub> [--relay wss://...] [--out corpus.json] [--floor 20]')
-    process.exit(2)
-  }
-  const relay = arg('--relay', DEFAULT_RELAY)
-  const out = arg('--out', 'corpus.json')
-  const floor = parseInt(arg('--floor', String(DEFAULT_TRUST_FLOOR)), 10)
-  const observerHex = toHex(input)
-
-  const until = Math.floor(Date.now() / 1000)
+/**
+ * The pull, as a function: every desk through the reader's lens, the control
+ * run without it, the bylines, the art and the wires the paper asks for. No
+ * files and no network of its own: `request` is the relay (the real `req`
+ * unless a test or a host hands in another), and `paper` is the reader's
+ * settings, already read. The CLI below and the connector both call this.
+ */
+export async function pullCorpus (observerHex, { relay = DEFAULT_RELAY, floor = DEFAULT_TRUST_FLOOR, until = Math.floor(Date.now() / 1000), paper = null, req: request = req, fetch = null, log = () => {} } = {}) {
   const since = until - WINDOW_SECONDS
 
-  process.stderr.write(`  Pulling ${DESKS.length} desks + the control run…\n`)
+  log(`  Pulling ${DESKS.length} desks + the control run…\n`)
 
   const results = await pool([...DESKS, null], 5, async (desk) => {
     if (desk === null) {
       // The control run: the same window, no lens, NO FLOOR.
-      const { events } = await req(relay, filterFor([1], since, until, 400, null, floor), { idleMs: 25_000, label: 'control' })
+      const { events } = await request(relay, filterFor([1], since, until, 400, null, floor), { idleMs: 25_000, label: 'control' })
       return { key: '__control__', events }
     }
-    const { events } = await req(
+    const { events } = await request(
       relay,
       filterFor(desk.kinds, since, until, desk.limit, observerHex, floor),
       { idleMs: 25_000, label: desk.key },
@@ -853,7 +849,7 @@ async function main () {
     for (let at = 0; at < authors.length; at += perChunk) chunks.push(authors.slice(at, at + perChunk))
     // `include:spam` because a profile fetch names no observer and the auth
     // gate closes it without one — and a byline read should not be ranked.
-    const found = (await pool(chunks, 3, async (some) => (await req(relay, { kinds: [0], authors: some, search: INCLUDE_SPAM }, { label: 'profiles' })).events)).flat()
+    const found = (await pool(chunks, 3, async (some) => (await request(relay, { kinds: [0], authors: some, search: INCLUDE_SPAM }, { label: 'profiles' })).events)).flat()
     for (const event of found.sort((a, b) => a.created_at - b.created_at)) {
       let meta = {}
       try { meta = JSON.parse(event.content || '{}') } catch { /* a kind 0 that is not JSON */ }
@@ -889,9 +885,7 @@ async function main () {
 
   // The wires the reader asked for, fetched here on their machine, stamped
   // with the window's close. A service that fails costs its section only.
-  const paper = readPaper()
-  if (paper) paper.founded = foundPaper('observer.config.json', new Date(until * 1000).toISOString().slice(0, 10))
-  const wires = paper && paper.wires ? await gatherWires(paper.wires, { now: until, nextArt: art.length + 1 }) : null
+  const wires = paper && paper.wires ? await gatherWires(paper.wires, { now: until, nextArt: art.length + 1, ...(fetch ? { fetch } : {}) }) : null
   if (wires) {
     // The puzzle is made here, from the edition code, and the wires' pictures
     // join the shortlist so the writer cites them by id like any photograph.
@@ -902,7 +896,7 @@ async function main () {
     }
     art.push(...wires.art)
     const got = ['weather', 'sports', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'tabloid', 'five', 'health', 'launches', 'feature', 'tape'].filter((k) => wires[k]).concat(wires.headlines.length ? ['headlines'] : [])
-    process.stderr.write(`  Wires: ${got.join(', ') || 'nothing'}${wires.notes.length ? ` (${wires.notes.length} note(s))` : ''}.\n`)
+    log(`  Wires: ${got.join(', ') || 'nothing'}${wires.notes.length ? ` (${wires.notes.length} note(s))` : ''}.\n`)
   }
 
   const corpus = {
@@ -923,8 +917,28 @@ async function main () {
     wires,
   }
 
+  return corpus
+}
+
+async function main () {
+  const input = process.argv[2]
+  if (!input || input.startsWith('--')) {
+    console.error('Usage: node corpus.mjs <npub> [--relay wss://...] [--out corpus.json] [--floor 20]')
+    process.exit(2)
+  }
+  const relay = arg('--relay', DEFAULT_RELAY)
+  const out = arg('--out', 'corpus.json')
+  const floor = parseInt(arg('--floor', String(DEFAULT_TRUST_FLOOR)), 10)
+  const observerHex = toHex(input)
+  const until = Math.floor(Date.now() / 1000)
+  const paper = readPaper()
+  if (paper) paper.founded = foundPaper('observer.config.json', new Date(until * 1000).toISOString().slice(0, 10))
+
+  const corpus = await pullCorpus(observerHex, { relay, floor, until, paper, log: (line) => process.stderr.write(line) })
+  const all = Object.values(corpus.desks).flat()
+
   writeFileSync(out, JSON.stringify(corpus, null, 2))
-  process.stderr.write(`  ${all.length} events across ${Object.keys(desks).length} desks, ${art.length} pictures shortlisted.\n`)
+  process.stderr.write(`  ${all.length} events across ${Object.keys(corpus.desks).length} desks, ${corpus.art.length} pictures shortlisted.\n`)
   process.stderr.write(`  Full corpus written to ${out}\n\n`)
   const text = digest(corpus)
   process.stderr.write(`  Digest is ${text.length.toLocaleString()} characters (~${Math.round(text.length / 4).toLocaleString()} tokens).\n\n`)

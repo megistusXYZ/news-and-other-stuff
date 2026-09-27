@@ -623,3 +623,50 @@ test('the digest prints The Tape: each close and its change, stamped in the read
   assert.match(out, /^- NVDA \(NVIDIA Corporation\): \$225\.07, up 0\.49 \(\+0\.22%\)$/m)
   assert.match(out, /^- MSTR \(Strategy Inc\): \$158\.61, down 3\.00 \(−1\.86%\)$/m)
 })
+
+// --- the pull, as a function the connector can call (2026-09-27) --------------
+
+// A relay that answers like search-staging: a lensed query gets that kind's
+// ranked posts, the control run gets the anonymous ones, a kind 0 query gets
+// profiles. It records every filter it was sent.
+function fakeRelay ({ reader, author }) {
+  const sent = []
+  const post = (id, kind, extra = {}) => ({ id: id.repeat(64), kind, pubkey: author, created_at: 1790300000, content: `post ${id}`, tags: [], ...extra })
+  const req = async (relay, filter) => {
+    sent.push(filter)
+    if (filter.kinds[0] === 0) return { events: [{ id: '0'.repeat(64), kind: 0, pubkey: author, created_at: 1, content: JSON.stringify({ name: 'Ada' }), tags: [] }] }
+    if (!/observer:/.test(filter.search || '')) return { events: [post('c', 1)] }
+    if (filter.kinds.includes(1)) return { events: [post('a', 1), post('b', 1, { pubkey: reader })] }
+    if (filter.kinds.includes(30311)) return { events: [post('d', 30311, { tags: [['d', 's'], ['status', 'ended']] })] }
+    return { events: [] }
+  }
+  return { req, sent }
+}
+
+test('pullCorpus reads every desk through the reader\'s lens and the control run without it, with no files and no network of its own', async () => {
+  const { pullCorpus, DESKS } = await import('../scripts/corpus.mjs')
+  const reader = 'aa'.repeat(32)
+  const author = 'bb'.repeat(32)
+  const { req, sent } = fakeRelay({ reader, author })
+  const until = Date.UTC(2026, 8, 27, 11, 40) / 1000
+  const corpus = await pullCorpus(reader, { relay: 'wss://relay.test', until, paper: { name: 'Plain', founded: '2026-09-25' }, req })
+
+  assert.deepEqual(Object.keys(corpus.desks).sort(), DESKS.map((d) => d.key).sort(), 'every desk, even the empty ones')
+  assert.deepEqual(corpus.desks.notes.map((e) => e.id), ['a'.repeat(64)], 'the reader\'s own posts are not news to them')
+  assert.deepEqual(corpus.desks.live, [], 'a stream that has ended is not live')
+  assert.deepEqual(corpus.control.map((e) => e.id), ['c'.repeat(64)])
+  assert.equal(corpus.profiles[author].name, 'Ada')
+  assert.equal(corpus.since, until - 86400, 'the fixed 24 hours')
+  assert.match(corpus.code, /^[0-9A-F]{6}$/)
+  assert.equal(corpus.issue.label, 'Vol. I · No. 3', 'counted from the paper it was given, not from a file')
+  assert.equal(corpus.wires, null, 'no wire settings, nothing fetched')
+
+  const lensed = sent.filter((f) => /observer:/.test(f.search || ''))
+  assert.equal(lensed.length, DESKS.length, 'one query per desk, never merged')
+  assert.ok(lensed.every((f) => f.search.startsWith(`observer:${reader} sort:rank`)))
+  assert.equal(sent.filter((f) => f.kinds[0] === 1 && !/observer:/.test(f.search || '')).length, 1, 'one control run, without the lens')
+
+  const again = await pullCorpus(reader, { relay: 'wss://relay.test', until, paper: null, req: fakeRelay({ reader, author }).req })
+  assert.equal(again.code, corpus.code, 'the same reading, the same code')
+  assert.equal(again.issue, null)
+})

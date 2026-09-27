@@ -576,12 +576,12 @@ test('a network comic must be a picture: a video is passed over, and a caption o
 test('a branded paper sets the B before the issue number\'s digits, the text untouched, and it undresses away', () => {
   const foliod = brandPage.replace('<main class="sheet">', '<main class="sheet"><div class="folio"><span>No. 13C931</span><span>Friday</span></div>')
   const { html } = dress(foliod, brandCorpus, branded)
-  assert.match(html, /<div class="folio"><span>No\. <span class="lv-issue-mark" aria-hidden="true"><\/span>13C931<\/span>/,
-    'between "No." and the digits, where a pseudo-element cannot reach')
+  assert.match(html, /<div class="folio"><span>No\. <a class="lv-issue-mark" href="https:\/\/brainstorm\.world" target="_blank" rel="noopener noreferrer" aria-label="Brainstorm"><\/a>13C931<\/span>/,
+    'between "No." and the digits, where a pseudo-element cannot reach; the mark opens Brainstorm in a new tab, like the wordmark')
   assert.equal(html.split('lv-issue-mark').length, 2, 'once, on the issue number only')
   const plain = dress(foliod.replace('<header', '<header'), corpus, assets).html
   assert.doesNotMatch(plain, /lv-issue-mark/, 'no brand, no B')
-  assert.ok(html.replace('<span class="lv-issue-mark" aria-hidden="true"></span>', '').includes('<span>No. 13C931</span>'))
+  assert.ok(html.replace(/<a class="lv-issue-mark"[^>]*><\/a>/, '').includes('<span>No. 13C931</span>'))
 })
 
 // --- recipe tabs, 2026-09-25 ---------------------------------------------------------

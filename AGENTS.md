@@ -760,8 +760,10 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   between "No." and the digits ("No. B 13C931", Benjamin's call), in its own
   gradient at the folio's cap height, a little muted, with air either side so
   it reads as the printer's device. A pseudo-element cannot reach the middle
-  of the writer's span, so dress sets an empty `lv-issue-mark` span there;
-  brand-only, and it undresses away.
+  of the writer's span, so dress sets an empty `lv-issue-mark` link there,
+  to brainstorm.world in a new tab like the colophon's wordmark (2026-09-26);
+  brand-only, and it undresses away. Every link that leaves the paper opens in
+  a new tab; only stories, people, stations and listings open in the panel.
 - RECIPE TABS, HEALTH & SAFETY, LAUNCHES (2026-09-25): three more keyless
   wires. Recipe: beside the dish of the day, a vegetarian dish and something
   sweet from TheMealDB's categories, picked by the day index so they hold all

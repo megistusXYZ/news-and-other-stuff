@@ -42,7 +42,7 @@ const FONTS = new URL('../.claude/skills/nostr-observer/reference/fonts/', impor
 
 const send = (res, status, type, body) => { res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body) }
 const json = (res, status, value) => send(res, status, 'application/json; charset=utf-8', JSON.stringify(value))
-const DAILY_PROMPT = "Print today's Nostr Observer with the Brainstorm connector. If my lens isn't ready, stop and tell me why."
+const DAILY_PROMPT = "Print today's Nostr Observer with the Brainstorm connector. If my trust network isn't ready, stop and tell me why."
 
 /**
  * A daily reminder any calendar can take (RFC 5545): at the reader's own time
@@ -175,9 +175,11 @@ export function createConnector ({ authenticate, deps, readers = new Set() }) {
 }
 
 // The real thing: the lens check and the pull against the ranked relay.
-export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paperFor = () => null, publicUrl = null } = {}) {
+export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paperFor = () => null, publicUrl = null, paperDefaults = {} } = {}) {
   return {
     store,
+    // The house's own marks (brand, stamps, imprint), beneath every reader's settings.
+    paperDefaults,
     publicUrl,
     // Where the reader reads an accepted paper: this service's Observer page.
     paperUrl: publicUrl ? (reader, date, code) => `${publicUrl}/observer/${toNpub(reader)}/${date}-${code}` : null,
@@ -216,11 +218,14 @@ function main () {
   // page) in observer.config.json, as the skill does.
   const config = process.env.OBSERVER_CONFIG || 'observer.config.json'
   const paper = existsSync(config) ? readPaper(config) : null
+  // The host's marks from that file sit beneath every reader's own settings.
+  const raw = existsSync(config) ? JSON.parse(readFileSync(config, 'utf8')) : {}
+  const paperDefaults = Object.fromEntries(['brand', 'stamp', 'stampDark', 'imprint'].filter((k) => raw[k] != null).map((k) => [k, raw[k]]))
   const port = Number(process.env.PORT || 8787)
   // Accepted editions are also written under OBSERVER_EDITIONS, if set, so a
   // local reader can open them.
   const store = process.env.OBSERVER_EDITIONS ? fileStore(process.env.OBSERVER_EDITIONS) : memoryStore()
-  createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ store, paperFor: () => paper, publicUrl: (process.env.OBSERVER_PUBLIC_URL || `http://127.0.0.1:${port}`).replace(/\/$/, '') }), readers: new Set(tokens.values()) })
+  createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ store, paperFor: () => paper, paperDefaults, publicUrl: (process.env.OBSERVER_PUBLIC_URL || `http://127.0.0.1:${port}`).replace(/\/$/, '') }), readers: new Set(tokens.values()) })
     .listen(port, '127.0.0.1', () => console.log(`Brainstorm Observer connector on http://127.0.0.1:${port}/mcp, with /setup and /observer, for ${tokens.size} reader(s)`))
 }
 

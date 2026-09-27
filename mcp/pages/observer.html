@@ -52,6 +52,9 @@ a:hover { text-decoration-color: currentColor; }
 .panel .mono { color: var(--ink-2); margin: 0 0 6px; }
 .panel p { margin: 0 0 8px; font-size: .95rem; }
 .prompt { margin: 8px 0 10px; padding: 2px 0 2px 14px; border-left: 3px solid var(--ink); font-style: italic; }
+.copy { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; min-height: 38px; padding: 0 14px; margin-right: 14px;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; border-radius: 0; }
+.copy:hover { background: transparent; color: var(--ink); }
 .archive a { display: block; padding: 5px 0; border-bottom: 1px solid var(--hair); text-decoration: none; }
 .archive a:last-child { border-bottom: 0; }
 
@@ -125,9 +128,10 @@ a:hover { text-decoration-color: currentColor; }
 
   <div class="panel" id="fresh" hidden>
     <p class="mono">Print a fresh edition</p>
-    <p>Your Claude prints it, on your plan. Paste this into any Claude chat that has the Brainstorm connector; the new paper appears here once it is handed in.</p>
-    <p class="prompt" id="fresh-prompt">Print today's Nostr Observer with the Brainstorm connector. If my lens isn't ready, stop and tell me why.</p>
-    <a href="/setup" id="setup-link">Add your topics on the set-up page</a>
+    <p>Your Claude prints it, on your plan: copy this into any Claude chat that has the Brainstorm connector, and the new paper appears here once it is handed in.</p>
+    <p class="prompt" id="fresh-prompt">Print today's Nostr Observer with the Brainstorm connector. If my trust network isn't ready, stop and tell me why.</p>
+    <button class="copy" type="button" id="fresh-copy">Copy the instructions</button>
+    <a href="/setup" id="setup-link">Change your paper on the set-up page</a>
   </div>
   <div class="panel archive" id="archive" hidden><p class="mono">Every paper</p><div id="archive-list"></div></div>
 
@@ -170,6 +174,11 @@ a:hover { text-decoration-color: currentColor; }
     try { localStorage.setItem('observer-week', folded ? 'folded' : 'open') } catch { /* private window: not remembered */ }
   })
   toggle($('archive-btn'), $('archive'))
+  $('fresh-copy').addEventListener('click', async () => {
+    const b = $('fresh-copy'); const was = b.textContent
+    try { await navigator.clipboard.writeText($('fresh-prompt').textContent); b.textContent = 'Copied' } catch { b.textContent = 'Select and copy' }
+    setTimeout(() => { b.textContent = was }, 1600)
+  })
 
   const dayName = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
   const short = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })

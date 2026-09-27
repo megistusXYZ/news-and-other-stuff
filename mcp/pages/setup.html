@@ -91,6 +91,32 @@ textarea.field { min-height: 76px; resize: vertical; }
 .save { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 16px 0 0; border-top: 1px solid var(--hair); margin-top: 6px; }
 .saved { color: var(--teal); }
 .saved.no { color: var(--no); }
+.progress { display: flex; flex-wrap: wrap; gap: 0; margin: 14px 0 0; padding: 0; list-style: none; color: var(--ink-3); }
+.progress li + li::before { content: "·"; margin: 0 .7em; color: var(--hair); }
+.progress li.done { color: var(--teal); }
+.progress li.done::after { content: " ✓"; }
+details.more { margin-top: 2px; }
+details.more > summary { cursor: pointer; list-style: none; font-size: .98rem; color: var(--ink-2); }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary u { text-underline-offset: 3px; text-decoration-color: var(--hair); }
+details.more[open] > summary { margin-bottom: 12px; }
+.tabs { display: flex; gap: 0; margin: 4px 0 12px; border-bottom: 1px solid var(--hair); }
+.tabs button { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; background: none; border: 0; padding: 9px 14px 8px; color: var(--ink-3); cursor: pointer; }
+.tabs button:first-child { padding-left: 0; }
+.tabs button[aria-selected="true"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+ol.how { margin: 0 0 10px; padding-left: 20px; font-size: .96rem; }
+ol.how li + li { margin-top: 4px; }
+.by-hand { margin: 12px 0 6px; font-size: .9rem; color: var(--ink-3); font-style: italic; }
+pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
+.remind { margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--hair); font-size: .95rem; }
+.remind .inline { align-items: center; margin-top: 8px; }
+.remind input[type=time] { width: auto; font-family: var(--mono); }
+.summary dl { display: grid; grid-template-columns: 11rem 1fr auto; margin: 8px 0 0; }
+.summary dt, .summary dd { margin: 0; padding: 10px 0; border-bottom: 1px solid var(--hair); }
+.summary dt { color: var(--ink-3); }
+.summary dd.edit { text-align: right; }
+.summary dd.edit button { background: none; border: 0; cursor: pointer; font: inherit; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--hair); text-underline-offset: 3px; }
+.summary .again { margin-top: 14px; }
 .talk { margin: 12px 0 0; padding: 2px 0 2px 14px; border-left: 3px solid var(--hair); font-style: italic; color: var(--ink-2); font-size: .95rem; }
 
 /* the two short steps after, side by side */
@@ -140,25 +166,41 @@ textarea.field { min-height: 76px; resize: vertical; }
   <nav class="sections mono" aria-label="Your Observer"><a href="/setup" aria-current="page">Set up</a><a href="/observer" id="papers">Your papers</a></nav>
 
   <p class="kicker mono">The Observer · Getting started</p>
-  <h2 class="headline">Set up your daily paper</h2>
-  <p class="dek">Tell us a little about you, connect your Claude, and set the time. After that your own Claude prints this paper every morning, from what the people you trust said, with your weather, your teams and your topics.</p>
-  <p class="lens mono" id="lens" role="status" aria-live="polite">Checking your lens…</p>
+  <h2 class="headline" id="headline">Set up your daily paper</h2>
+  <p class="dek" id="dek">Tell us a little about you, connect your Claude, and set the time. After that your own Claude prints this paper every morning, from what the people you trust said, with your weather, your teams and your topics.</p>
+  <ol class="progress mono" id="progress" aria-label="Your progress"><li id="p1">1 Your paper</li><li id="p2">2 Connect Claude</li><li id="p3">3 First paper</li></ol>
+  <p class="lens mono" id="lens" role="status" aria-live="polite">Checking your trust network…</p>
   <div class="ask" id="npub-ask" hidden>
-    <label class="sr" for="npub">Your npub</label>
+    <label class="sr" for="npub">Your Nostr account (npub)</label>
     <input class="field code" id="npub" placeholder="npub1…" autocomplete="off" spellcheck="false" style="max-width:360px">
     <button class="btn" id="npub-go" type="button">Check</button>
   </div>
   <div class="gate" id="gate" role="note" hidden>
-    <p class="mono" style="color:var(--no)">Before anything else: your lens</p>
+    <p class="mono" style="color:var(--no)">Before anything else: your trust network</p>
     <p id="gate-say"></p>
     <p id="gate-do"></p>
-    <p><a href="https://brainstorm.world/" target="_blank" rel="noopener noreferrer">Ask for your lens at brainstorm.world ↗</a> · this page updates by itself once it is ready.</p>
+    <p><a href="https://brainstorm.world/" target="_blank" rel="noopener noreferrer">Ask Brainstorm to set up your trust network ↗</a> · this page updates by itself once it is ready.</p>
   </div>
+
+  <!-- For a returning reader: the paper at a glance -->
+  <section class="part summary" id="summary" hidden aria-labelledby="h-summary">
+    <div class="part-head"><h2 id="h-summary">Your paper is set up ✓</h2></div>
+    <dl>
+      <dt class="mono">Where</dt><dd id="s-place"></dd><dd class="edit"><button type="button" data-edit="place">Edit</button></dd>
+      <dt class="mono">Teams</dt><dd id="s-teams"></dd><dd class="edit"><button type="button" data-edit="team">Edit</button></dd>
+      <dt class="mono">Topics</dt><dd id="s-topics"></dd><dd class="edit"><button type="button" data-edit="topics">Edit</button></dd>
+      <dt class="mono">Last printed</dt><dd id="s-last"></dd><dd class="edit"><button type="button" data-edit="mcp">Edit</button></dd>
+      <dt class="mono">Trust network</dt><dd id="s-lens"></dd><dd class="edit"></dd>
+    </dl>
+    <button class="btn again" type="button" id="show-setup">Show setup again</button>
+  </section>
+
+  <div id="walkthrough">
 
   <!-- 1. Your paper -->
   <section class="part" id="part-paper" aria-labelledby="h-paper">
     <div class="part-head"><span class="n" aria-hidden="true">1</span><h2 id="h-paper">Your paper</h2><span class="aside mono">About two minutes</span></div>
-    <p class="lede">Four questions. Change any of it later, here or by telling your Claude.</p>
+    <p class="lede">Three questions. Change any of it later, here or by telling your Claude.</p>
     <form id="paper-form" class="form" autocomplete="off">
       <div class="q">
         <h3>Where are you?</h3>
@@ -192,7 +234,8 @@ textarea.field { min-height: 76px; resize: vertical; }
       </div>
       <div class="q wide">
         <h3>What else goes in your paper?</h3>
-        <p class="hint">All of it, unless you say otherwise.</p>
+        <details class="more" id="more">
+        <summary>Everything is included: world news, culture, weather, markets, the Feature and the back page. <u>Change</u></summary>
         <div class="pages">
           <fieldset><legend class="mono">The news</legend>
             <label><input type="checkbox" data-page="worldnews" checked> World news headlines</label>
@@ -218,13 +261,11 @@ textarea.field { min-height: 76px; resize: vertical; }
             <label><input type="checkbox" data-page="recipe" checked> Recipe of the day</label>
           </fieldset>
         </div>
-      </div>
-      <div class="q wide">
-        <h3>Name your paper <span class="mono" style="color:var(--ink-3)">optional</span></h3>
-        <label class="sr" for="name">Your paper's name</label>
+        <p style="margin:16px 0 6px"><label for="name"><b>A name for your paper</b> <span class="mono" style="color:var(--ink-3)">optional</span></label></p>
         <input class="field" id="name" placeholder="News and Other Stuff" style="max-width:420px">
+        </details>
         <div class="save">
-          <button class="btn solid" type="submit" id="save">Save my paper</button>
+          <button class="btn solid" type="submit" id="save">Save and continue →</button>
           <span class="saved mono" id="saved" role="status" aria-live="polite"></span>
         </div>
         <p class="talk" id="talk">Rather talk than type? Once your Claude is connected, just tell it, for example: "I live in 60614, I follow the Cubs, and I love jazz and architecture." It fills this in for you.</p>
@@ -236,21 +277,35 @@ textarea.field { min-height: 76px; resize: vertical; }
   <section class="part" aria-label="Connect and schedule">
     <div class="pair" id="steps">
       <div>
-        <div class="part-head"><span class="n" aria-hidden="true">2</span><h2>Connect your Claude</h2></div>
-        <p class="lede">In Claude, open Settings, then Connectors, and add a custom connector with this address. Claude opens Brainstorm, where you Sign in with Nostr: one signature, and it never signs or publishes as you.</p>
-        <label class="sr" for="mcp">Connector address</label>
-        <input class="field code" id="mcp" readonly value="/mcp">
-        <div class="buttons">
-          <button class="btn" type="button" data-copy="mcp">Copy</button>
-          <a class="btn" href="https://claude.ai/" target="_blank" rel="noopener noreferrer">Open Claude ↗</a>
+        <div class="part-head" id="connect"><span class="n" aria-hidden="true">2</span><h2>Connect your Claude</h2></div>
+        <div class="tabs" role="tablist" aria-label="Which Claude">
+          <button type="button" role="tab" id="tab-app" aria-selected="true" aria-controls="panel-app">Claude app</button>
+          <button type="button" role="tab" id="tab-code" aria-selected="false" aria-controls="panel-code" tabindex="-1">Claude Code</button>
+        </div>
+        <div id="panel-app" role="tabpanel" aria-labelledby="tab-app">
+          <ol class="how">
+            <li>Press <b>Add to Claude</b>. Claude opens with the connector filled in; press Add.</li>
+            <li>Claude asks you to Sign in with Nostr: approve once in your extension. It never signs or publishes as you.</li>
+            <li>Come back here: the line below turns green.</li>
+          </ol>
+          <div class="buttons"><a class="btn solid" id="add-to-claude" href="https://claude.ai/settings/connectors" target="_blank" rel="noopener noreferrer">Add to Claude ↗</a></div>
+          <p class="by-hand">Or add it by hand in Claude's Settings, Connectors, with this address:</p>
+          <label class="sr" for="mcp">Connector address</label>
+          <input class="field code" id="mcp" readonly value="/mcp">
+          <div class="buttons"><button class="btn" type="button" data-copy="mcp">Copy</button></div>
+        </div>
+        <div id="panel-code" role="tabpanel" aria-labelledby="tab-code" hidden>
+          <p style="margin:0 0 8px">Paste this in your terminal once, then run <code>/mcp</code> in Claude Code to sign in with Nostr:</p>
+          <pre class="field code cmd" id="cmd">claude mcp add --transport http brainstorm-observer /mcp</pre>
+          <div class="buttons"><button class="btn" type="button" data-copy="cmd">Copy</button></div>
         </div>
         <p class="status mono" id="connected" role="status" aria-live="polite"><span>Waiting for Claude to connect…</span></p>
         <div class="first" id="first" hidden><b>Your first paper, now.</b> No need to wait for tomorrow: paste the instructions from step three into a Claude chat. It takes about ten minutes, and you can watch it here.</div>
       </div>
       <div>
         <div class="part-head"><span class="n" aria-hidden="true">3</span><h2>Schedule the daily print</h2></div>
-        <p class="lede">Save this as a daily task at seven; your digest is ready from half past six. Your settings are saved, so this is all it needs.</p>
-        <p class="prompt" id="prompt">Print today's Nostr Observer with the Brainstorm connector. If my lens isn't ready, stop and tell me why.</p>
+        <p class="lede" id="schedule">Save this as a daily task at seven; today's posts are ready from half past six. Your settings are saved, so this is all it needs.</p>
+        <p class="prompt" id="prompt">Print today's Nostr Observer with the Brainstorm connector. If my trust network isn't ready, stop and tell me why.</p>
         <div class="buttons"><button class="btn solid" type="button" data-copy="prompt">Copy the instructions</button></div>
         <div class="where">
           Where to schedule it today:
@@ -260,6 +315,14 @@ textarea.field { min-height: 76px; resize: vertical; }
             <li>Or paste it into any Claude chat when you want a paper.</li>
           </ul>
         </div>
+        <div class="remind">
+          <b>Only using the Claude app?</b> It can't schedule yet, so let your calendar remind you each morning, with the instructions ready to paste.
+          <div class="inline">
+            <label for="remind-time" class="mono" style="color:var(--ink-2)">At</label>
+            <input class="field" type="time" id="remind-time" value="07:00">
+            <a class="btn" id="remind" href="/reminder.ics?time=07:00">Add to my calendar</a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -268,7 +331,7 @@ textarea.field { min-height: 76px; resize: vertical; }
     <section>
       <h3 class="mono">What your Claude does each morning</h3>
       <ol>
-        <li>Reads your digest: the last 24 hours, ranked by your web of trust, with your weather, teams and topics.</li>
+        <li>Reads what the people you trust posted in the last 24 hours, with your weather, teams and topics.</li>
         <li>Writes the front page.</li>
         <li>Hands it back to Brainstorm to check and keep.</li>
       </ol>
@@ -283,6 +346,7 @@ textarea.field { min-height: 76px; resize: vertical; }
       </ul>
     </section>
   </div>
+  </div>
 
   <p class="note">Editor's note: this is a local demonstration. On Brainstorm the page sits behind your sign-in and the connector lives at brainstormserver.nosfabrica.com/mcp; here a local token stands in for the Nostr signature.</p>
   <p class="foot mono">News and Other Stuff · The observer for your network</p>
@@ -295,7 +359,30 @@ textarea.field { min-height: 76px; resize: vertical; }
   const npub = (new URLSearchParams(location.search).get('npub') || '').trim()
   const q = (path) => path + (path.includes('?') ? '&' : '?') + 'npub=' + encodeURIComponent(npub)
   $('today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-  $('mcp').value = location.origin + '/mcp'
+  const address = location.origin + '/mcp'
+  $('mcp').value = address
+  $('cmd').textContent = 'claude mcp add --transport http brainstorm-observer ' + address
+  // Opens Claude's "add custom connector" with the name and address filled in;
+  // the address stays below to add by hand if Claude opens a plain page.
+  $('add-to-claude').href = 'https://claude.ai/settings/connectors?modal=add-custom-connector&mcpName=' + encodeURIComponent('Brainstorm Observer') + '&mcpServerUrl=' + encodeURIComponent(address)
+
+  // Two ways to connect: the Claude app, or Claude Code.
+  const tabs = [$('tab-app'), $('tab-code')]
+  const pick = (tab) => tabs.forEach((t) => {
+    const on = t === tab
+    t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1
+    $(t.getAttribute('aria-controls')).hidden = !on
+  })
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => pick(t))
+    t.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const next = tabs[(i + 1) % 2]; pick(next); next.focus() } })
+  })
+
+  // A daily reminder for the calendar, at the reader's time, in their zone.
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  const remindLink = () => { $('remind').href = '/reminder.ics?time=' + encodeURIComponent($('remind-time').value || '07:00') + '&tz=' + encodeURIComponent(tz) + (npub ? '&npub=' + encodeURIComponent(npub) : '') }
+  $('remind-time').addEventListener('input', remindLink)
+  remindLink()
   if (npub) $('papers').href = q('/observer')
 
   document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
@@ -321,6 +408,8 @@ textarea.field { min-height: 76px; resize: vertical; }
     { url: 'https://variety.com/feed/', section: 'Culture' },
     { url: 'https://pitchfork.com/rss/news/', section: 'Culture' },
   ]
+  const mark = (id, done) => $(id).classList.toggle('done', !!done)
+  let placeLabel = null
   let place = null
   let units = null
   let savedHere = 0 // when this page last saved, so its own save is not "news".
@@ -335,7 +424,8 @@ textarea.field { min-height: 76px; resize: vertical; }
     try {
       const found = await (await fetch('/api/place?q=' + encodeURIComponent(text))).json()
       if (!found.length) { out.className = 'found no'; out.textContent = 'No place found. Try your ZIP or postal code.'; return }
-      place = found[0].place; units = found[0].units
+      place = found[0].place; units = found[0].units; placeLabel = found[0].label
+      if (!$('summary').hidden) $('s-place').textContent = placeLabel
       out.className = 'found ok'
       out.textContent = '✓ ' + found[0].label + ' · ' + (units === 'us' ? '°F' : '°C') + (found.length > 1 ? '  (not right? use your ZIP or postal code)' : '')
     } catch { out.className = 'found no'; out.textContent = 'Could not look that up just now.' }
@@ -403,6 +493,7 @@ textarea.field { min-height: 76px; resize: vertical; }
       const k = box.dataset.page
       box.checked = k === 'worldnews' ? (s.feeds || []).some((f) => f.section === 'Wider World') : !!s[k]
     }
+    mark('p1', !!s.founded)
     $('saved').className = 'saved mono'
     $('saved').textContent = s.founded ? 'Your paper since ' + new Date(s.founded + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }) : ''
   }
@@ -417,13 +508,15 @@ textarea.field { min-height: 76px; resize: vertical; }
       const out = await r.json()
       if (!r.ok) throw new Error(out.error || 'not saved')
       savedHere = Date.now()
+      mark('p1', true)
+      $('connect').scrollIntoView({ behavior: 'smooth', block: 'start' })
       $('saved').textContent = 'Saved ✓ · your paper since ' + new Date(out.founded + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' })
     } catch (error) { $('saved').className = 'saved mono no'; $('saved').textContent = 'Not saved: ' + error.message }
   })
 
   // --- who you are: on Brainstorm, your sign-in; here, ?npub= ----------------
   if (!npub) {
-    $('lens').textContent = 'Add your npub to check your lens'
+    $('lens').textContent = 'Add your Nostr account (npub) to begin'
     $('npub-ask').hidden = false
     const go = () => { const v = $('npub').value.trim(); if (v) location.search = '?npub=' + encodeURIComponent(v) }
     $('npub-go').addEventListener('click', go)
@@ -432,25 +525,27 @@ textarea.field { min-height: 76px; resize: vertical; }
   }
   fetch(q('/api/paper')).then((r) => r.ok ? r.json() : null).then(fillForm).catch(() => {})
 
+  let lensReady = false
   const lens = () => fetch(q('/api/readiness')).then((r) => r.json()).then((v) => {
     const b = $('lens')
     $('gate').hidden = !!v.ready
     $('steps').classList.toggle('blocked', !v.ready)
-    if (v.ready) { b.className = 'lens mono ok'; b.textContent = 'Your lens · ready ✓'; return true }
-    b.className = 'lens mono no'; b.textContent = 'Your lens · not ready yet'
+    lensReady = !!v.ready
+    if (v.ready) { b.className = 'lens mono ok'; b.textContent = 'Your trust network · ready ✓'; return true }
+    b.className = 'lens mono no'; b.textContent = 'Your trust network isn\'t ready yet'
     $('gate-say').textContent = v.say || ''
     $('gate-do').textContent = v.do || ''
     return false
-  }).catch(() => { $('lens').textContent = 'Could not check your lens'; return true })
-  lens().then((ready) => { if (!ready) { const again = setInterval(() => lens().then((ok) => { if (ok) clearInterval(again) }), 30000) } })
+  }).catch(() => { $('lens').textContent = 'Could not check your trust network'; return true })
+  lens().then((ready) => { summary(); if (!ready) { const again = setInterval(() => lens().then((ok) => { if (ok) clearInterval(again) }), 30000) } })
 
   // The status follows the reader's Claude step by step, ending on the paper.
   const words = (step) => {
     if (!step) return 'Connected ✓'
-    if (step.tool === 'get_readiness') return 'Connected ✓ · checking your lens'
+    if (step.tool === 'get_readiness') return 'Connected ✓ · checking your trust network'
     if (step.tool === 'get_paper' || step.tool === 'set_paper') return 'Connected ✓ · reading your settings'
     if (step.tool === 'get_brief') return 'Reading the brief'
-    if (step.tool === 'get_digest') return step.parts ? `Reading your digest · part ${step.part} of ${step.parts}` : 'Your lens stopped the digest'
+    if (step.tool === 'get_digest') return step.parts ? `Reading today's posts · part ${step.part} of ${step.parts}` : 'Stopped: your trust network isn\'t ready'
     if (step.tool === 'submit_edition' && step.outcome === 'refused') return `Handed in · fixing ${step.problems} problem${step.problems === 1 ? '' : 's'}`
     if (step.tool === 'submit_edition') return 'Accepted ✓ · '
     return 'Connected ✓'
@@ -468,12 +563,44 @@ textarea.field { min-height: 76px; resize: vertical; }
     span.textContent = words(s.step) + (s.step && s.step.outcome === 'accepted' ? '' : ' · ' + when)
     if (s.step && s.step.outcome === 'accepted') { const a = el('a', null, 'read today\'s paper →'); a.href = q('/observer'); span.append(a) }
     $('first').hidden = !(today && !today.in)
+    mark('p2', true)
+    summary()
     // Settings a reader's Claude saved show up here too.
     if (s.step && s.step.tool === 'set_paper' && s.lastCall * 1000 > savedHere + 3000 && s.lastCall !== seenChange) {
       seenChange = s.lastCall
       fetch(q('/api/paper')).then((r) => r.json()).then((p) => { fillForm(p); $('saved').className = 'saved mono'; $('saved').textContent = 'Updated by your Claude ✓' }).catch(() => {})
     }
   }).catch(() => {})
+  // A returning reader sees the paper at a glance: once settings are saved,
+  // Claude has connected and at least one paper is in.
+  let showingSetup = false
+  const summary = () => Promise.all([
+    fetch(q('/api/paper')).then((r) => r.ok ? r.json() : {}),
+    fetch(q('/api/editions')).then((r) => r.ok ? r.json() : []),
+    fetch(q('/api/status')).then((r) => r.json()),
+  ]).then(([p, editions, st]) => {
+    mark('p3', editions.length > 0)
+    const ready = p.founded && st.connected && editions.length > 0
+    if (!ready || showingSetup) { $('summary').hidden = true; $('walkthrough').hidden = false; return }
+    $('s-place').textContent = placeLabel || p.place || 'Not set'
+    $('s-teams').textContent = (p.teams || []).join(', ') || 'None yet'
+    $('s-topics').textContent = (p.topics || []).join(', ') || 'None yet'
+    const last = editions[0]
+    $('s-last').replaceChildren(document.createTextNode(new Date(last.printedAt * 1000).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' }) + ' · '))
+    const a = el('a', null, 'read it'); a.href = q('/observer'); $('s-last').append(a)
+    $('s-lens').textContent = lensReady ? 'Ready ✓' : 'Not ready yet'
+    $('summary').hidden = false; $('walkthrough').hidden = true
+    $('headline').textContent = 'Your daily paper'; $('dek').hidden = true
+  }).catch(() => {})
+  const openSetup = (focusId) => {
+    showingSetup = true; $('summary').hidden = true; $('walkthrough').hidden = false
+    $('headline').textContent = 'Set up your daily paper'; $('dek').hidden = false
+    const target = $(focusId); if (target) { target.scrollIntoView({ block: 'center' }); target.focus() }
+  }
+  $('show-setup').addEventListener('click', () => openSetup('place'))
+  document.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openSetup(b.dataset.edit)))
+
+  summary()
   poll()
   setInterval(poll, 5000)
 })()

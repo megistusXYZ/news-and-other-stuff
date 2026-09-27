@@ -915,6 +915,33 @@ paper lands on the reader's Observer page in brainstorm.world.
   - **Routes:** `/api/place`, `/api/team`, and `/api/paper` (GET and POST,
     local readers only).
   - **The prompt.** The daily prompt is now a single line.
+- **A simpler setup (2026-09-27).**
+  - **The walkthrough:**
+    - three questions; the pages and the paper's name fold behind
+      "Everything is included · Change";
+    - a progress line (1 Your paper, 2 Connect Claude, 3 First paper);
+    - "Save and continue →".
+  - **Plain words** on the reader's pages: "your trust network" (not lens),
+    "today's posts" (not digest), "your Nostr account". The tools and the
+    brief keep the precise terms.
+  - **Connecting.** Step 2 has two tabs:
+    - **Claude app:** "Add to Claude" opens
+      `claude.ai/settings/connectors?modal=add-custom-connector&mcpName=…&mcpServerUrl=…`,
+      with the address and Copy shown as the fallback. The pre-filled modal
+      was not verified signed in.
+    - **Claude Code:** `claude mcp add --transport http brainstorm-observer <url>`,
+      then `/mcp` to sign in. Connectors added this way work in desktop
+      scheduled tasks; cloud routines need the claude.ai connector.
+  - **No schedule in the Claude app?** A calendar reminder: `/reminder.ics`
+    (RFC 5545), daily at the reader's own time in their own time zone, with
+    the instructions to paste.
+  - **Returning readers** (settings saved, Claude connected, a paper in) see
+    "Your paper is set up ✓": where, teams, topics, last printed, trust
+    network, each with an Edit link, and "Show setup again".
+  - **Your papers:** "Print a fresh edition" gains a Copy button.
+  - **The local connector** puts the config's brand, stamps and imprint
+    beneath every reader's settings (`paperDefaults`), so saving settings
+    never drops the house marks.
 
 ## Conventions
 

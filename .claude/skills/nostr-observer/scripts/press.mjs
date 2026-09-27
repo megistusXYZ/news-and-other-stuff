@@ -4,7 +4,9 @@
 
 // A post as it reads: no nostr: references, no links, whitespace closed up.
 export function pressText (content) {
-  return String(content || '').replace(/nostr:[a-z0-9]+/gi, '').replace(/https?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim()
+  return String(content || '').replace(/\[([^\]\n]+)\]\(https?:\/\/[^)\s]+\)/g, '$1').replace(/^#{1,6}\s+/gm, '')
+    .replace(/(\*\*|__)(?=\S)([^\n]*?\S)\1/g, '$2')
+    .replace(/nostr:[a-z0-9]+/gi, '').replace(/https?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim()
     .replace(/(?:\s*#[\p{L}\p{N}_]+)+$/u, '').trim()
 }
 

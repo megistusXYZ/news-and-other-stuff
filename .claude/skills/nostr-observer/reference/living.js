@@ -724,7 +724,10 @@ function reader () {
     clear()
     for (const f of waiting.values()) f.remove()
     waiting.clear()
-    if (opener && opener.focus) opener.focus()
+    // After history.back() the browser may focus the fragment it returns to
+    // (the skip link's heading); the opener gets it back a frame later.
+    const back = opener
+    if (back && back.focus) { back.focus(); requestAnimationFrame(() => { if (document.activeElement !== back && back.isConnected) back.focus() }) }
   }
 
   // `#read=` names a PATH on brainstorm.world, or one of this edition's own
@@ -1050,7 +1053,9 @@ async function stationStatus () {
 
 // A post as it reads: no nostr: references, no links, whitespace closed up.
 function pressText (content) {
-  return String(content || '').replace(/nostr:[a-z0-9]+/gi, '').replace(/https?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim()
+  return String(content || '').replace(/\[([^\]\n]+)\]\(https?:\/\/[^)\s]+\)/g, '$1').replace(/^#{1,6}\s+/gm, '')
+    .replace(/(\*\*|__)(?=\S)([^\n]*?\S)\1/g, '$2')
+    .replace(/nostr:[a-z0-9]+/gi, '').replace(/https?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim()
     .replace(/(?:\s*#[\p{L}\p{N}_]+)+$/u, '').trim()
 }
 
@@ -1353,6 +1358,7 @@ function puzzle () {
   for (let d = 1; d <= 9; d++) { const b = el('button', 'lv-key', String(d)); b.type = 'button'; b.dataset.digit = d; pad.append(b) }
   pad.append(clearBtn)
   const word = el('p', 'lv-sudoku-word')
+  word.setAttribute('aria-live', 'polite')
   bar.append(timer, notesBtn, checkBtn, revealBtn)
   wrap.append(table, bar, pad, word)
   pre.replaceWith(wrap)
@@ -1387,6 +1393,7 @@ function puzzle () {
       td.classList.toggle('lv-same', !!selDigit && v === selDigit && i !== selected)
       td.classList.toggle('lv-peer', !!sel && i !== selected && (r === sel[0] || c === sel[1] || (Math.floor(r / 3) === Math.floor(sel[0] / 3) && Math.floor(c / 3) === Math.floor(sel[1] / 3))))
       td.classList.toggle('lv-conflict', conflict.has(i))
+      td.setAttribute('aria-label', `Row ${r + 1}, column ${c + 1}: ${state.given[r][c] ? `${value(r, c)}, given` : v ? String(v) : state.notes[r][c].length ? `empty, notes ${state.notes[r][c].join(' ')}` : 'empty'}`)
       if (state.given[r][c]) return
       td.replaceChildren()
       if (v) td.textContent = String(v)
@@ -1452,7 +1459,12 @@ function puzzle () {
     }
   }
 
-  cells.forEach((td, i) => { if (td.classList.contains('lv-cell')) td.addEventListener('click', () => select(i)) })
+  // A cell reached by Tab is chosen as if clicked, so the keyboard alone plays.
+  cells.forEach((td, i) => {
+    if (!td.classList.contains('lv-cell')) return
+    td.addEventListener('click', () => select(i))
+    td.addEventListener('focus', () => { if (selected !== i) { selected = i; paint() } })
+  })
   pad.addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return
     if (b === clearBtn) enter(0); else if (b.dataset.digit) enter(Number(b.dataset.digit))
@@ -1560,8 +1572,14 @@ function five () {
   foot.append(stats, post, share)
   // The plate goes straight under the heading; the writer's note follows it.
   const head = host.querySelector('.back-head')
-  if (head) head.after(board, message, keyboard, foot); else host.append(board, message, keyboard, foot)
+  // Heard as well as seen: the game names itself, and each guess is read out.
+  const said = el('p', 'lv-sr')
+  said.setAttribute('aria-live', 'polite')
+  message.setAttribute('aria-live', 'polite')
+  if (head) head.after(board, message, said, keyboard, foot); else host.append(board, message, said, keyboard, foot)
   host.tabIndex = 0
+  host.setAttribute('role', 'group')
+  host.setAttribute('aria-label', 'Five, the daily word: type a five-letter word and press Enter')
 
   let current = ''
   let done = saved.won || saved.guesses.length >= 6
@@ -1619,6 +1637,7 @@ function five () {
     const r = saved.guesses.length
     saved.guesses.push(current); scored.push(marks)
     paintRow(r, current, marks)
+    said.textContent = `${current.toUpperCase()}: ` + [...current].map((ch, i) => `${ch.toUpperCase()} ${{ hit: 'in place', near: 'in the word', miss: 'not in it' }[marks[i]]}`).join(', ') + '.'
     if (marks.every((m) => m === 'hit')) { saved.won = true; done = true; message.textContent = ['Genius.', 'Magnificent.', 'Impressive.', 'Splendid.', 'Great.', 'Phew.'][r]; record(true) }
     else if (saved.guesses.length >= 6) { done = true; record(false); message.textContent = 'Out of guesses…'; answerByTrying().then((w) => { if (w) message.textContent = `The word was ${w.toUpperCase()}.` }) }
     else message.textContent = ''

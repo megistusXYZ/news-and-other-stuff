@@ -62,6 +62,14 @@ test('the text is read, not markup: references and links are gone, whitespace cl
   assert.equal(pressText('Why #bitcoin fixes this, again.'), 'Why #bitcoin fixes this, again.', 'a hashtag inside a sentence is a word')
 })
 
+test('markdown is read as the words it marks: no asterisks, no heading marks, a link keeps its text', () => {
+  assert.equal(pressText('📰 **In this week\'s issue:** a market, and __more__'), '📰 In this week\'s issue: a market, and more')
+  assert.equal(pressText('**BREAKING** Nostr Just Became Bitcoin\'s Swap Discovery'), 'BREAKING Nostr Just Became Bitcoin\'s Swap Discovery')
+  assert.equal(pressText('### Why this matters\nEtsy takes [25.9%](https://www.fool.com/x) now.'), 'Why this matters Etsy takes 25.9% now.')
+  assert.equal(pressText('2 * 3 = 6, and 4*5 too'), '2 * 3 = 6, and 4*5 too', 'a lone asterisk is arithmetic')
+  assert.equal(pressText('snake_case_name stays'), 'snake_case_name stays')
+})
+
 test('a headline is the first sentence, cut at a word when it runs long', () => {
   assert.deepEqual(headlineOf('Short one. Then the rest of it.'), { headline: 'Short one.', text: 'Then the rest of it.' })
   const long = 'This first sentence goes on and on about many things that happened today on the network and never seems to stop for breath at all'

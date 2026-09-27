@@ -204,7 +204,8 @@ to write.
   count, change or invent one. Without that line, print the edition code as
   `No. XXXXXX` instead — a fingerprint of the material this edition was made
   from; two papers carrying the same code were made from the same reading of
-  the network. The code always names the file.
+  the network. The code always names the file. Anywhere else, call the code
+  "edition XXXXXX", never "No.": the number is the issue's.
 - **The date carries its day of the week.** "Tuesday, August 18, 2026" — a
   front page says what day it is, and a reader opening yesterday's edition
   should be able to tell at a glance.
@@ -277,6 +278,12 @@ You will be given a shortlist of available art, each with an id like `art-3`.
   so never invent one and never write a raw URL in `src`.
 - Every picture gets a caption that says something. "A photograph" is not a
   caption; what is happening, who took it and why it is on this page is.
+- A caption, like a story, says only what the post, its author's profile or
+  the digest says. Never add a place, a time of day, a meal or a circumstance
+  you inferred: no "in Montreal" because a post mentions a bike race, no
+  "at breakfast" or "by mid-morning" unless the digest's time, in the
+  author's own day, says so. When unsure, leave it out; nothing checks this
+  but you.
 - Credit the photographer by name.
 - Prefer two or three pictures that earn their place over ten that do not.
 

@@ -241,6 +241,10 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cols2 { display: grid; grid-template-columns: repeat(2, 1fr); }
 .cols3 { display: grid; grid-template-columns: repeat(3, 1fr); }
 .cols4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+.cols5 { display: grid; grid-template-columns: repeat(5, 1fr); }
+/* The reader's own topics: a band like the others, one cell a topic. */
+.your-topics .cell .box-head { color: var(--accent); }
+.your-topics .topic-quiet { font-style: italic; color: var(--ink-2); font-size: .9rem; }
 .cell { padding: 0 18px; border-left: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: 9px; }
 .cell:first-child { padding-left: 0; border-left: 0; }
 .cell:last-child { padding-right: 0; }
@@ -310,14 +314,14 @@ td.num { text-align: right; padding-right: 0; font-family: var(--mono); font-siz
 
 @media (max-width: 1000px) {
   .span-3, .span-4, .span-5 { grid-column: span 6; }
-  .cols4 { grid-template-columns: repeat(2, 1fr); }
+  .cols4, .cols5 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 720px) {
   .sheet { padding: 14px 15px 56px; }
   .fold { display: flex; flex-direction: column; }
   .col { padding: 18px 0; border-left: 0; border-bottom: 1px solid var(--rule); }
   .col:last-child { border-bottom: 0; }
-  .cols2, .cols3, .cols4 { display: flex; flex-direction: column; }
+  .cols2, .cols3, .cols4, .cols5 { display: flex; flex-direction: column; }
   .cell { padding: 16px 0; border-left: 0; border-top: 1px solid var(--rule-soft); }
   .cell:first-child { border-top: 0; padding-top: 0; }
   .reverse { padding: 20px 16px; }

@@ -508,7 +508,12 @@ export function check (html, corpus) {
         w.serial && w.serial.text, w.recipe && w.recipe.method, w.recipe && w.recipe.name,
         w.cartoon && w.cartoon.caption, w.cartoon && w.cartoon.title, w.picture && w.picture.caption].filter(Boolean)
     : []
-  const haystack = [...events.map((e) => e.content || ''), ...wireTexts].map(normalize)
+  // A long-form article's summary is the author's own words, signed with the
+  // piece, and the Long Reads quote it. Only an article's: a tag on a note is
+  // not something anyone said.
+  const summaries = events.filter((e) => e.kind === 30023)
+    .map((e) => ((e.tags || []).find((t) => t[0] === 'summary') || [])[1]).filter(Boolean)
+  const haystack = [...events.map((e) => e.content || ''), ...wireTexts, ...summaries].map(normalize)
   const eventIds = new Set(events.map((e) => e.id))
   const allowedImages = new Set((corpus.art || []).map((a) => a.url))
   const calendarIds = indexOf(corpus).calendars.byId

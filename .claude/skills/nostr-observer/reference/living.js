@@ -1230,7 +1230,8 @@ async function namesFor (url, pubkeys) {
 function cameos () {
   const seen = new Set()
   for (const story of $$('.fold .story, .band .cell')) {
-    if (story.querySelector('.lv-cameo')) continue
+    // A Long Read carries its own cover; it needs no face beside it.
+    if (story.querySelector('.lv-cameo') || story.closest('.longreads')) continue
     for (const p of $$('p', story)) {
       if (!p.querySelector('q')) continue
       if (p.matches('.kicker, .byline, .dek, .note') || p.closest('figcaption')) continue

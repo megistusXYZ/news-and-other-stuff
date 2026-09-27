@@ -485,3 +485,16 @@ test('the serial and the recipe may be quoted word for word, like any wire', () 
   assert.deepEqual(wireKinds('<q>Convincing him to turn off the instruments.</q>'), [])
   assert.deepEqual(wireKinds('<q>a single man in possession of a great fortune</q>'), ['QUOTE'])
 })
+
+// --- Long Reads, 2026-09-26 -----------------------------------------------------------
+
+test('an article\'s own summary may be quoted word for word; a reworded one may not, and a note\'s tags are not text', () => {
+  const article = { id: '6'.repeat(64), kind: 30023, pubkey: '7'.repeat(64), created_at: 1, content: 'The body of the piece.',
+    tags: [['d', 'x'], ['title', 'The Unknown Difficulty'], ['summary', 'Why the hardest part of mining is the part nobody measures.']] }
+  const note = { id: '8'.repeat(64), kind: 1, pubkey: '7'.repeat(64), created_at: 1, content: 'hello', tags: [['summary', 'A tag on a note is not something anyone said.']] }
+  const shelf = { ...corpus, desks: { ...corpus.desks, articles: [article], notes: [...(corpus.desks.notes || []), note] } }
+  const shelfKinds = (html) => check(html, shelf).violations.map((v) => v.kind)
+  assert.deepEqual(shelfKinds('<q>Why the hardest part of mining is the part nobody measures.</q>'), [])
+  assert.deepEqual(shelfKinds('<q>Why the easiest part of mining is the part nobody measures.</q>'), ['QUOTE'])
+  assert.deepEqual(shelfKinds('<q>A tag on a note is not something anyone said.</q>'), ['QUOTE'])
+})

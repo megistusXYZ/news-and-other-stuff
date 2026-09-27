@@ -241,6 +241,14 @@ a.lv-cartoon-title:hover { color: var(--accent); }
 .band.tinted .band-head { border-bottom-color: var(--rule); }
 .band.tinted .credits { margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--rule); font-family: var(--mono); font-style: normal; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 
+/* Long Reads: the slow shelf. Each cover cropped to one shape so the four
+ * columns start level; the kicker carries the author and the reading time. */
+.band.longreads .cell figure { margin: 0 0 10px; }
+.band.longreads .cell figure img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.band.longreads .kicker a { color: inherit; text-decoration: none; }
+.band.longreads .kicker a:hover { text-decoration: underline; }
+.band.longreads .sub-head { margin-top: 2px; }
+
 .box.weather { gap: 6px; }
 .weather-now { display: flex; align-items: baseline; gap: 10px; font-size: .86rem; line-height: 1.35; color: var(--ink-2); }
 .weather-big { font-family: var(--serif); font-weight: 900; font-size: 2.1rem; line-height: 1; color: var(--ink); letter-spacing: -0.02em; }

@@ -330,6 +330,17 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **Long Reads (2026-09-26).** Every edition gets a slow shelf when the
+  Long-form desk has two worth reading: `<section class="band longreads">`
+  after the second front, three or four articles, one per author, people over
+  news-republishing bots, none the front already carries. The digest gives
+  each article its reading time (230 words a minute), its author's `summary`,
+  and its cover by art id: an article's NIP-23 `image` tag, which the
+  shortlist now reads, up to six on top of the 40-picture cap (they came last
+  in desk order and never made it). The validator lets an article's own
+  summary be quoted word for word (its tags only; a note's tags are not
+  speech). Covers crop to 16:9; no cameo beside a Long Read.
+
 - **Stop Press (2026-09-26).** The strip's drawer is edited like late news,
   not dealt out as cards: `scripts/press.mjs` (`pressText`, `headlineOf`,
   `stopPress`, copied into living.js byte for byte and tested) leaves out

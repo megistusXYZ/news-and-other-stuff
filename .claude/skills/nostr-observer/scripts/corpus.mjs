@@ -181,7 +181,7 @@ export function parseImeta (tag) {
 export function shortlist (byDesk, profiles, max = 40) {
   const art = []
   const seen = new Set()
-  for (const [deskKey, events] of Object.entries(byDesk)) {
+  collect: for (const [deskKey, events] of Object.entries(byDesk)) {
     for (const event of events) {
       for (const tag of tagsNamed(event, 'imeta')) {
         const meta = parseImeta(tag)
@@ -207,9 +207,32 @@ export function shortlist (byDesk, profiles, max = 40) {
           desk: deskKey,
           caption: (event.content || '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim().slice(0, 160),
         })
-        if (art.length >= max) return art
+        if (art.length >= max) break collect
       }
     }
+  }
+  // An article's cover is its NIP-23 `image` tag, not an imeta, and the
+  // Long-form desk comes late, after the cap has filled. Up to six covers are
+  // shortlisted on top of it, captioned with the title, for the Long Reads.
+  let covers = 0
+  for (const event of byDesk.articles || []) {
+    const url = tagValue(event, 'image')
+    if (covers >= 6 || !url || seen.has(url) || !url.toLowerCase().startsWith('https://')) continue
+    seen.add(url)
+    covers += 1
+    art.push({
+      id: `art-${art.length + 1}`,
+      url,
+      mime: null,
+      width: null,
+      height: null,
+      alt: null,
+      eventId: event.id,
+      pubkey: event.pubkey,
+      byline: profiles[event.pubkey]?.name || shortNpub(event.pubkey),
+      desk: 'articles',
+      caption: (tagValue(event, 'title') || '').replace(/\s+/g, ' ').trim().slice(0, 160),
+    })
   }
   return art
 }
@@ -572,6 +595,15 @@ export function digest (corpus, budget = DEFAULT_DIGEST_BUDGET) {
       const author = corpus.profiles[event.pubkey]?.name || shortNpub(event.pubkey)
       p(`- [${event.id}] kind ${event.kind} · ${author} · ${when(event.created_at)}`)
       if (title) p(`  title: ${title}`)
+      // For the Long Reads: how long it is (at 230 words a minute), its
+      // picture if one was shortlisted, and the author's own summary.
+      if (desk.key === 'articles') {
+        const minutes = Math.max(1, Math.round(String(event.content || '').split(/\s+/).filter(Boolean).length / 230))
+        const art = corpus.art.find((a) => a.eventId === event.id)
+        p(`  read: ${minutes} min${art ? ` · picture: ${art.id}` : ''}`)
+        const summary = tagValue(event, 'summary')
+        if (summary) p(`  summary: ${summary.replace(/\s+/g, ' ').trim().slice(0, 300)}`)
+      }
       if (desk.key === 'live' && tagValue(event, 'd')) {
         p(`  watch: ${streamWriterUrl(event.id)}`)
       }

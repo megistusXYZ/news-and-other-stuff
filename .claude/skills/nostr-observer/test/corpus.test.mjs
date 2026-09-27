@@ -465,3 +465,36 @@ test('the digest hands the writer a health box and the launches, in the reader\'
   const none = digest({ ...base, wires: { ...wires, health: null, launches: null } })
   assert.doesNotMatch(none, /Health & Safety|### Launches/)
 })
+
+test('the digest tells the writer how long each article is, its own summary, and its picture, for the Long Reads', async () => {
+  const { digest } = await import('../scripts/corpus.mjs')
+  const words = (n) => Array.from({ length: n }, (_, i) => `word${i}`).join(' ')
+  const long = { id: '3'.repeat(64), kind: 30023, pubkey: '4'.repeat(64), created_at: 1790262780, content: words(2300),
+    tags: [['d', 'unknown-difficulty'], ['title', 'The Unknown Difficulty'], ['summary', 'Why the hardest part of mining is the part nobody measures.'], ['image', 'https://img.example/a.jpg']] }
+  const short = { id: '5'.repeat(64), kind: 30023, pubkey: '4'.repeat(64), created_at: 1790262790, content: words(120), tags: [['d', 'note'], ['title', 'A Short One']] }
+  const corpus = { code: 'ABC123', since: 1790222949, until: 1790309349, desks: { articles: [long, short] }, control: [], profiles: { ['4'.repeat(64)]: { name: 'Roger' } },
+    art: [{ id: 'art-7', url: 'https://img.example/a.jpg', eventId: long.id, byline: 'Roger' }] }
+  const out = digest(corpus)
+  assert.match(out, /title: The Unknown Difficulty\n  read: 10 min · picture: art-7\n  summary: Why the hardest part of mining is the part nobody measures\./)
+  assert.match(out, /title: A Short One\n  read: 1 min\n/, 'no summary or picture, none claimed')
+})
+
+test('an article\'s cover picture is shortlisted for the Long Reads, beyond the cap, up to six', async () => {
+  const { shortlist } = await import('../scripts/corpus.mjs')
+  const pic = (i) => ({ id: `p${i}`.padEnd(64, '0'), kind: 20, pubkey: '1'.repeat(64), created_at: i, content: '', tags: [['imeta', `url https://img.example/p${i}.jpg`, 'm image/jpeg']] })
+  const article = (i, image) => ({ id: `a${i}`.padEnd(64, '0'), kind: 30023, pubkey: '2'.repeat(64), created_at: i, content: 'text', tags: [['d', `a${i}`], ['title', `Piece ${i}`], ...(image ? [['image', image]] : [])] })
+  const byDesk = {
+    pictures: Array.from({ length: 5 }, (_, i) => pic(i)),
+    articles: [article(1, 'https://img.example/cover1.jpg'), article(2, 'http://img.example/insecure.jpg'), article(3, null),
+      ...Array.from({ length: 8 }, (_, i) => article(10 + i, `https://img.example/cover${10 + i}.png`))],
+  }
+  const art = shortlist(byDesk, {}, 5)
+  const covers = art.filter((a) => a.desk === 'articles')
+  assert.equal(art.filter((a) => a.desk === 'pictures').length, 5, 'the cap is still the cap for everything else')
+  assert.equal(covers.length, 6, 'six covers at most, on top of it')
+  assert.equal(covers[0].url, 'https://img.example/cover1.jpg')
+  assert.equal(covers[0].eventId, byDesk.articles[0].id)
+  assert.equal(covers[0].caption, 'Piece 1', 'a cover is captioned with its title')
+  assert.ok(!covers.some((a) => a.url.startsWith('http:')))
+  assert.deepEqual(art.map((a) => a.id), art.map((_, i) => `art-${i + 1}`), 'ids stay one run')
+})

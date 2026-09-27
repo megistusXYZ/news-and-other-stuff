@@ -93,24 +93,35 @@ all photographs — and say why in the `<!-- restyle: ... -->` comment.
 4. **The second front**, under the fold: `<section class="band seconds">`
    holding a `cols4` of four `cell`s, each a story with a `kicker`, a
    `sub-head` and a paragraph or two. No band heading; the row is its own.
-5. **The picture spread**: a band whose body is `<div class="spread">` with
+5. **Long Reads**, when the digest's Long-form desk has at least two worth
+   reading: `<section class="band longreads">` headed "Long Reads", a `cols3`
+   (or `cols4` when four are strong) of `cell`s, one article each. A `kicker`
+   with the author and the digest's reading time ("Roger · 10 min read"), the
+   article's own title as a `sub-head`, word for word, its picture by id when
+   the digest names one, then two sentences on what it argues — the author's
+   summary quoted exactly, or your own words from the article — and a "Read"
+   link citing the article. Prefer people over accounts that republish other
+   outlets' news, one article per author, and none the front page already
+   carries. This is the paper's slow shelf: the best long writing in the
+   reader's network, every edition.
+6. **The picture spread**: a band whose body is `<div class="spread">` with
    four figures, the first — a landscape — largest.
-6. **The agate**: a band whose body is `<div class="agate">` of five `cell`s —
+7. **The agate**: a band whose body is `<div class="agate">` of five `cell`s —
    Headlines, Broadcasting, Classifieds, Diary, Conditions — in small type.
-7. **From the Wires**, when the digest carries them: `<section class="band
+8. **From the Wires**, when the digest carries them: `<section class="band
    tinted">` with a `cols4`: Sports, Culture, Almanac, Wider World — drop a
    cell the digest has nothing for and use `cols3`. The weather is in the
    rail. Culture takes the headlines the digest lists under Culture, one or
    two an outlet. The Almanac ends with "Looked up" as one line: the
    most-read pages, titles only, in order — it is about the day, and it
    keeps the four cells of even length.
-8. **The Tabloid**, when the digest carries it: `<section class="band
+9. **The Tabloid**, when the digest carries it: `<section class="band
    tabloid">` — a black bar reading THE TABLOID, a strap that says what it is
    not, then `cols2`: Searching (a numbered list, term in bold, the rough
    search count after it, the headline beneath) and Saying (a numbered list,
    topic in bold, the one-line why beneath). Loud, short, and clearly not the
    paper's own judgement.
-9. **The Back Page**, when the digest carries it: `<section class="band
+10. **The Back Page**, when the digest carries it: `<section class="band
    back">` headed "The Back Page", whose body is a `<div class="back-grid">`
    in two balanced rows: the cartoon as a `figure` (`span-8`) beside the
    puzzle (`span-4`); then the word game (`<div class="span-4 five">` with

@@ -446,6 +446,25 @@ export function markupViolations (html) {
 }
 
 /**
+ * The reader's topics are the one thing the reader wrote themselves, and the
+ * band is how they see the paper listened: when any topic found posts, the
+ * page must carry a `your-topics` section citing at least one of them. A day
+ * when every topic was quiet asks for nothing.
+ */
+function topicsViolations (html, corpus) {
+  const ids = new Set((corpus.topics || []).flatMap((t) => (t.events || []).map((e) => e.id)))
+  if (!ids.size) return []
+  const cited = (href) => permalinkTarget(href) || articleLinkTarget(href, corpus) || (/^https:\/\/brainstorm\.world\/e\/([0-9a-f]{64})$/.exec(href) || [])[1]
+  const bands = [...html.matchAll(/<section\b[^>]*\bclass="[^"]*\byour-topics\b[^"]*"[^>]*>([\s\S]*?)<\/section>/gi)].map((m) => m[1])
+  if (bands.some((band) => [...band.matchAll(/href="([^"]+)"/g)].some((m) => ids.has(cited(m[1]))))) return []
+  return [{
+    kind: 'TOPICS',
+    detail: `the reader asked for ${(corpus.topics || []).map((t) => t.topic).join(', ')}: set <section class="your-topics"> citing at least one of their posts`,
+    excerpt: bands.length ? bands[0].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) : '(no your-topics section)',
+  }]
+}
+
+/**
  * The issue number is counted by the printer from the paper's first issue, not
  * by the writer: when the corpus carries one, the folio's first span is it,
  * word for word.
@@ -538,6 +557,7 @@ export function check (html, corpus) {
   violations.push(...markupViolations(html))
   violations.push(...mastheadViolations(html, corpus.paper))
   violations.push(...folioViolations(html, corpus.issue))
+  violations.push(...topicsViolations(html, corpus))
   violations.push(...layoutViolations(html))
 
   const quotes = quotedText(html)

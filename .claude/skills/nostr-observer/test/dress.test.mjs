@@ -652,3 +652,10 @@ test('a picture from a post is marked with that post, a wire picture with its ow
   assert.doesNotMatch(img('https://www.themealdb.com/images/media/meals/oxtail.jpg'), /data-href|data-ev/, 'a link is https or nothing')
   assert.doesNotMatch(img('https://img.example/orphan.jpg'), /data-href|data-ev/, 'a post the corpus does not hold is not opened')
 })
+
+test('the serial\'s Gutenberg _italics_ read as italics in the living copy, and undress back to the markers', () => {
+  const serialPage = page.replace('</article>', '</article><article class="serial"><div class="serial-text"><p>If you do _not_ marry Mr. Collins, and snake_case stays.</p></div></article>')
+  const { html } = dress(serialPage, corpus, assets)
+  assert.match(html, /If you do <em class="lv-gutenberg">not<\/em> marry Mr\. Collins, and snake_case stays\./)
+  assert.ok(html.replace(/<em class="lv-gutenberg">([^<]*)<\/em>/g, '_$1_').includes('If you do _not_ marry'))
+})

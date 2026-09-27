@@ -89,10 +89,19 @@ all photographs — and say why in the `<!-- restyle: ... -->` comment.
    puzzle (`span-4`); then the word game (`<div class="span-4 five">` with
    `<p class="back-head">Five</p>` and nothing else — the living copy draws the
    game) beside the recipe (`span-8`, its ingredients and method set in two
-   columns by the stylesheet); then the serial as `<article class="serial">` —
-   a `kicker` naming the book, author and instalment, and its text in
-   paragraphs; the stylesheet sets it in three columns. No column ends more
-   than a few lines before its neighbour: shorten the method, not the page.
+   columns by the stylesheet); then the Feature, when the digest carries it,
+   as `<article class="feature">` — a `kicker` ("The Feature · The
+   Conversation · Technology" on a weekday, "The Sunday Story" on a Sunday),
+   the title as a `sub-head` word for word, a `byline` with the authors (and
+   the date on a weekday), then `<div class="feature-text"></div>` left EMPTY,
+   then the digest's credit line, exactly, in a `<p class="note">` with the
+   address after it as plain text. The printer sets the whole text in that
+   empty div, word for word: the weekday piece is licensed no-derivatives and
+   the story is printed whole, so you never type, cut or summarise either.
+   The stylesheet sets it in three columns. A paper without a Feature prints
+   the serial there instead, as `<article class="serial">` — a `kicker` naming
+   the book, author and instalment, and its text in paragraphs. No column ends
+   more than a few lines before its neighbour: shorten the method, not the page.
 
 Write nothing after the last band; the printer's colophon is added afterwards.
 

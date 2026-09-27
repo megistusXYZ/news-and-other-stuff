@@ -537,3 +537,98 @@ test('launches: the next two rockets up, what they carry, from where and when', 
     ],
   })
 })
+
+// --- the Feature, 2026-09-26 ------------------------------------------------------
+
+const ATOM = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Science + Tech – The Conversation</title>
+  <entry>
+    <published>2026-09-25T18:21:22Z</published>
+    <link rel="alternate" type="text/html" href="https://theconversation.com/trump-frames-unregulated-ai-292642"/>
+    <title>Trump frames unregulated AI as a way to keep ahead of China – but in fact, it harms US national security</title>
+    <content type="html">&lt;figure&gt;&lt;img src="https://images.theconversation.com/x.jpg" /&gt;&lt;figcaption&gt;&lt;span class="caption"&gt;Presidents walking.&lt;/span&gt;&lt;/figcaption&gt;&lt;/figure&gt;&lt;p&gt;Amid the chorus calling for &lt;a href="https://example.com/a"&gt;a slowdown&lt;/a&gt; &amp;amp; oversight, one voice stands out.&lt;/p&gt;
+
+&lt;h2&gt;A race, or a threat?&lt;/h2&gt;
+
+&lt;p&gt;“Whoever wins AI, WINS!” he posted.&lt;/p&gt;&lt;img src="https://counter.theconversation.com/content/292642/count.gif" alt="The Conversation" width="1" height="1" /&gt;
+&lt;p class="fine-print"&gt;&lt;em&gt;&lt;span&gt;Stephen Collins does not work for any company that would benefit.&lt;/span&gt;&lt;/em&gt;&lt;/p&gt;</content>
+    <summary>An unregulated sector has risks in itself.</summary>
+    <author><name>Stephen Collins, Professor of Government, Kennesaw State University</name></author>
+    <rights>Licensed as Creative Commons – attribution, no derivatives.</rights>
+  </entry>
+  <entry>
+    <published>2026-09-24T10:00:00Z</published>
+    <link rel="alternate" type="text/html" href="https://theconversation.com/older-1"/>
+    <title>An older piece</title>
+    <content type="html">&lt;p&gt;Older.&lt;/p&gt;</content>
+    <author><name>Someone Else</name></author>
+    <rights>Licensed as Creative Commons – attribution, no derivatives.</rights>
+  </entry>
+</feed>`
+
+const STORY = [
+  'The Project Gutenberg eBook of Beyond the Door, by Philip K. Dick', '', 'Title: Beyond the Door', '', 'Author: Philip K. Dick', '',
+  '*** START OF THE PROJECT GUTENBERG EBOOK BEYOND THE DOOR ***', '', '', 'Produced by Greg Weeks and the Online', 'Distributed Proofreading Team', '', '',
+  '    _Did you ever wonder at the lonely life the bird in a cuckoo clock', '    has to lead?_', '', ' beyond', '    the', '   door', '', ' _by ... Philip K. Dick_', '',
+  ' Larry Thomas bought a cuckoo clock', ' for his wife.', '', 'That night at the dinner table he brought it out and set it down _there_.', '',
+  '"Well," Doris said.', '', '                              THE END', '', 'Transcriber\'s Note:', '', 'This etext was produced from Fantastic Universe January 1954.', '',
+  '*** END OF THE PROJECT GUTENBERG EBOOK BEYOND THE DOOR ***', 'licence text'].join('\r\n')
+
+const SUNDAY = Date.UTC(2026, 8, 27, 2) / 1000
+
+test('the Feature on a weekday: The Conversation\'s newest technology piece, whole, as blocks of text; figures and the counter left out', async () => {
+  const { fetch, asked } = network([[/theconversation\.com\/us\/technology\/articles\.atom/, ATOM]])
+  const wires = await gatherWires({ ...off, feature: true }, { fetch, now: NOW })
+  assert.ok(asked.some((u) => /theconversation\.com\/us\/technology\/articles\.atom/.test(u)))
+  assert.deepEqual(wires.feature, {
+    kind: 'conversation',
+    title: 'Trump frames unregulated AI as a way to keep ahead of China – but in fact, it harms US national security',
+    authors: ['Stephen Collins, Professor of Government, Kennesaw State University'],
+    published: '2026-09-25',
+    summary: 'An unregulated sector has risks in itself.',
+    blocks: [
+      { type: 'p', text: 'Amid the chorus calling for a slowdown & oversight, one voice stands out.' },
+      { type: 'h', text: 'A race, or a threat?' },
+      { type: 'p', text: '“Whoever wins AI, WINS!” he posted.' },
+      { type: 'p', text: 'Stephen Collins does not work for any company that would benefit.' },
+    ],
+    link: 'https://theconversation.com/trump-frames-unregulated-ai-292642',
+    source: 'The Conversation',
+    licence: 'CC BY-ND 4.0',
+    credit: 'This article is republished from The Conversation under a Creative Commons license. Read the original article.',
+  })
+})
+
+test('the Feature skips a piece that is not licensed for republishing', async () => {
+  const unlicensed = ATOM.replace('<rights>Licensed as Creative Commons – attribution, no derivatives.</rights>', '<rights>All rights reserved.</rights>')
+  const { fetch } = network([[/theconversation\.com/, unlicensed]])
+  const wires = await gatherWires({ ...off, feature: true }, { fetch, now: NOW })
+  assert.equal(wires.feature.title, 'An older piece')
+})
+
+test('the Feature on a Sunday: a complete public-domain science-fiction story, front matter and transcriber\'s note stripped', async () => {
+  const { fetch, asked } = network([[/gutenberg\.org\/cache\/epub\/\d+\/pg\d+\.txt/, STORY], [/theconversation\.com/, ATOM]])
+  const wires = await gatherWires({ ...off, feature: true }, { fetch, now: SUNDAY })
+  assert.ok(asked.some((u) => /gutenberg\.org\/cache\/epub/.test(u)) && !asked.some((u) => /theconversation/.test(u)), 'Sunday is the story')
+  const f = wires.feature
+  assert.equal(f.kind, 'story')
+  assert.equal(f.title, 'Beyond the Door')
+  assert.deepEqual(f.authors, ['Philip K. Dick'])
+  assert.equal(f.source, 'Project Gutenberg')
+  assert.equal(f.licence, 'public domain in the USA')
+  assert.match(f.link, /^https:\/\/www\.gutenberg\.org\/ebooks\/\d+$/)
+  assert.deepEqual(f.blocks.map((b) => b.text), [
+    '_Did you ever wonder at the lonely life the bird in a cuckoo clock has to lead?_',
+    'Larry Thomas bought a cuckoo clock for his wife.',
+    'That night at the dinner table he brought it out and set it down _there_.',
+    '"Well," Doris said.',
+    'THE END',
+  ], 'no "Produced by", no title block, no byline line, no transcriber\'s note')
+})
+
+test('on a Sunday with Gutenberg down, the Feature falls back to the weekday piece', async () => {
+  const { fetch } = network([[/gutenberg/, new Error('down')], [/theconversation\.com/, ATOM]])
+  const wires = await gatherWires({ ...off, feature: true }, { fetch, now: SUNDAY })
+  assert.equal(wires.feature.kind, 'conversation')
+})

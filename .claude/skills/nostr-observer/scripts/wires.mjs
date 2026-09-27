@@ -306,6 +306,90 @@ async function serial (fetch, id, now) {
   }
 }
 
+// The Feature: one thoughtful piece a day, printed whole. On weekdays, the
+// newest article on The Conversation's technology feed that is licensed
+// CC BY-ND (researchers writing for the public, meant to be republished whole
+// and unedited); on Sundays, a complete public-domain science-fiction story
+// from Project Gutenberg, a different one each week. Pictures and the
+// republisher's counter pixel are left out: the paper takes text only. The
+// text itself is set by resolve.mjs, word for word, never retyped by the writer.
+const FEATURE_FEED = 'https://theconversation.com/us/technology/articles.atom'
+const FEATURE_CREDIT = 'This article is republished from The Conversation under a Creative Commons license. Read the original article.'
+// Philip K. Dick's early magazine stories, public domain in the USA, each
+// short enough for a Sunday back page (2,500 to 8,700 words). Checked against
+// gutenberg.org, 2026-09-26.
+export const SUNDAY_STORIES = [28644, 28554, 40964, 29132, 41562, 28698, 30255, 28767]
+
+const decodeEntities = (text) => String(text).replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (whole, body) => {
+  if (body[0] === '#') {
+    const code = body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10)
+    return Number.isFinite(code) ? String.fromCodePoint(code) : whole
+  }
+  return XML_ENTITIES[body.toLowerCase()] ?? whole
+})
+const plainText = (html) => decodeEntities(String(html).replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim()
+
+async function conversation (fetch) {
+  const xml = await getText(fetch, FEATURE_FEED)
+  for (const entry of [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/gi)].map((m) => m[1])) {
+    const rights = (firstTag(entry, ['rights']) || {}).body || ''
+    if (!/creative commons/i.test(rights) || !/no derivatives/i.test(rights)) continue
+    const content = decodeEntities((firstTag(entry, ['content']) || {}).body || '')
+      .replace(/<figure[\s\S]*?<\/figure>/gi, '').replace(/<img[^>]*>/gi, '')
+    const blocks = [...content.matchAll(/<(p|h2|h3)(?:\s[^>]*)?>([\s\S]*?)<\/\1>/gi)]
+      .map((m) => ({ type: m[1].toLowerCase() === 'p' ? 'p' : 'h', text: plainText(m[2]) }))
+      .filter((b) => b.text)
+    const link = (/<link[^>]*rel="alternate"[^>]*href="(https:\/\/theconversation\.com\/[^"\s<>]+)"/i.exec(entry) || [])[1] || null
+    const title = xmlText((firstTag(entry, ['title']) || {}).body || '')
+    if (!title || !blocks.length || !link) continue
+    return {
+      kind: 'conversation',
+      title: title.slice(0, 200),
+      authors: [...entry.matchAll(/<author>[\s\S]*?<name>([\s\S]*?)<\/name>/gi)].map((m) => xmlText(m[1]).slice(0, 160)),
+      published: (xmlText((firstTag(entry, ['published']) || {}).body || '').match(/^\d{4}-\d{2}-\d{2}/) || [null])[0],
+      summary: xmlText((firstTag(entry, ['summary']) || {}).body || '').slice(0, 300) || null,
+      blocks: blocks.slice(0, 80),
+      link,
+      source: 'The Conversation',
+      licence: 'CC BY-ND 4.0',
+      credit: FEATURE_CREDIT,
+    }
+  }
+  throw new Error('no republishable piece in the feed')
+}
+
+async function sundayStory (fetch, now) {
+  const week = Math.floor(now / 86400 / 7)
+  const id = SUNDAY_STORIES[week % SUNDAY_STORIES.length]
+  const raw = (await getText(fetch, `https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`)).replace(/\r/g, '')
+  const head = raw.split(/\*\*\* ?START OF/i)[0]
+  const field = (name) => (new RegExp(`^${name}:\\s*(.+)$`, 'mi').exec(head) || [])[1]?.trim() || null
+  const start = raw.search(/\*\*\* ?START OF[^\n]*\*\*\*/i)
+  const end = raw.search(/\*\*\* ?END OF/i)
+  if (start === -1 || end === -1 || end <= start) throw new Error('not a Gutenberg text')
+  const title = field('Title')
+  const squash = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '')
+  const paragraphs = raw.slice(raw.indexOf('\n', start) + 1, end).split(/\n\s*\n/)
+    .map((p) => p.replace(/\s+/g, ' ').trim()).filter(Boolean)
+  const note = paragraphs.findIndex((p) => /^transcriber'?s note/i.test(p))
+  const blocks = (note > -1 ? paragraphs.slice(0, note) : paragraphs)
+    .filter((p) => !/^produced by\b/i.test(p) && squash(p) !== squash(title) && !/^_?by\b/i.test(p))
+    .map((text) => ({ type: 'p', text }))
+  if (!title || !blocks.length) throw new Error('an empty story')
+  return {
+    kind: 'story',
+    title: title.slice(0, 200),
+    authors: [field('Author')].filter(Boolean),
+    published: null,
+    summary: null,
+    blocks,
+    link: `https://www.gutenberg.org/ebooks/${id}`,
+    source: 'Project Gutenberg',
+    licence: 'public domain in the USA',
+    credit: 'From Project Gutenberg. This story is in the public domain in the USA.',
+  }
+}
+
 // Markets: bitcoin in three currencies, the fee to get into the next block,
 // the block height, and the ECB's reference rates. Readings as of the fetch,
 // stamped by the digest — a paper prints the close, not a ticker.
@@ -574,7 +658,7 @@ async function saying (fetch) {
  */
 export async function gatherWires (settings, { fetch = globalThis.fetch, now = Math.floor(Date.now() / 1000), nextArt = 1 } = {}) {
   if (!settings) return null
-  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, markets: null, world: null, picture: null, recipe: null, recipes: [], health: null, launches: null, lookedUp: null, tabloid: null, art: [], notes: [] }
+  const wires = { asOf: now, weather: null, sports: null, almanac: null, headlines: [], cartoon: null, archive: null, serial: null, feature: null, markets: null, world: null, picture: null, recipe: null, recipes: [], health: null, launches: null, lookedUp: null, tabloid: null, art: [], notes: [] }
   const reason = (error) => String(error && error.message ? error.message : error).slice(0, 120)
   // Pictures the wires bring, numbered after the corpus's own shortlist.
   let artN = nextArt
@@ -629,6 +713,18 @@ export async function gatherWires (settings, { fetch = globalThis.fetch, now = M
       wires.serial = await serial(fetch, settings.serial, now)
     } catch (error) {
       wires.notes.push(`Serial: could not reach Project Gutenberg (${reason(error)})`)
+    }
+  }
+  if (settings.feature) {
+    const sunday = new Date(now * 1000).getUTCDay() === 0
+    try {
+      wires.feature = sunday ? await sundayStory(fetch, now) : await conversation(fetch)
+    } catch (error) {
+      try {
+        wires.feature = await conversation(fetch)
+      } catch {
+        wires.notes.push(`Feature: could not reach ${sunday ? 'Project Gutenberg or ' : ''}The Conversation (${reason(error)})`)
+      }
     }
   }
   if (settings.picture || settings.culture) {

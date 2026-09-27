@@ -618,6 +618,10 @@ export function dress (html, corpus, assets) {
   // a new tab, like the colophon's wordmark), and the text the writer typed is
   // untouched around it.
   if (brand) out = out.replace(/(<div class="folio">\s*<span>No\.?\s*)(?=[0-9A-Z])/, '$1<a class="lv-issue-mark" href="https://brainstorm.world" target="_blank" rel="noopener noreferrer" aria-label="Brainstorm"></a>')
+  // Gutenberg marks italics with underscores; in the serial they read as
+  // italics. Only inside the serial's text, never a word like snake_case.
+  out = out.replace(/(<div class="serial-text">)([\s\S]*?)(<\/div>)/, (_, open, text, close) =>
+    open + text.replace(/(^|[^\w])_([^_<>]+?)_(?=[^\w]|$)/g, '$1<em class="lv-gutenberg">$2</em>') + close)
   out = indexRow(out)
 
   // The colophon is the last thing on the sheet, inside its margins; with no

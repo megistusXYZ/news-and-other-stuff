@@ -498,3 +498,30 @@ test('an article\'s own summary may be quoted word for word; a reworded one may 
   assert.deepEqual(shelfKinds('<q>Why the easiest part of mining is the part nobody measures.</q>'), ['QUOTE'])
   assert.deepEqual(shelfKinds('<q>A tag on a note is not something anyone said.</q>'), ['QUOTE'])
 })
+
+// --- the Feature is set by the printer, 2026-09-26 -------------------------------------
+
+test('resolve sets the Feature\'s text exactly from the corpus, escaped, whatever the writer left in its place', () => {
+  const feature = {
+    kind: 'conversation', title: 'T', authors: ['A'], link: 'https://theconversation.com/x-1', source: 'The Conversation', licence: 'CC BY-ND 4.0', credit: 'c',
+    blocks: [{ type: 'p', text: 'Tariffs & <tricks>, said nobody.' }, { type: 'h', text: 'A race?' }, { type: 'p', text: 'Last word.' }],
+  }
+  const withFeature = { ...corpus, wires: { feature } }
+  const empty = '<article class="feature"><h3 class="sub-head">T</h3><div class="feature-text"></div><p class="note">c</p></article>'
+  const set = resolve(empty, withFeature).html
+  assert.match(set, /<div class="feature-text">\n?<p>Tariffs &amp; &lt;tricks&gt;, said nobody\.<\/p>\n?<h3 class="feature-sub">A race\?<\/h3>\n?<p>Last word\.<\/p>\n?<\/div>/)
+  const typed = resolve(empty.replace('<div class="feature-text"></div>', '<div class="feature-text"><p>A paraphrase the licence forbids.</p></div>'), withFeature).html
+  assert.equal(typed, set, 'what the writer typed is replaced by the text itself')
+  assert.deepEqual(check(set, withFeature).violations, [], 'the set page passes the boundary')
+  assert.equal(resolve(empty, corpus).html, empty, 'no Feature in the corpus, nothing set')
+})
+
+test('a Sunday story keeps Gutenberg\'s italics as italics', () => {
+  const feature = { kind: 'story', title: 'Beyond the Door', authors: ['Philip K. Dick'], link: 'https://www.gutenberg.org/ebooks/28644', source: 'Project Gutenberg', licence: 'public domain in the USA', credit: 'c',
+    blocks: [{ type: 'p', text: '_Did you ever wonder at the bird in a cuckoo clock?_' }, { type: 'p', text: 'He set it down _there_, not_here.' }] }
+  const html = resolve('<div class="feature-text"></div>', { ...corpus, wires: { feature } }).html
+  assert.match(html, /<p><em>Did you ever wonder at the bird in a cuckoo clock\?<\/em><\/p>/)
+  assert.match(html, /<p>He set it down <em>there<\/em>, not_here\.<\/p>/, 'an underscore inside a word is left alone')
+  const dashed = resolve('<div class="feature-text"></div>', { ...corpus, wires: { feature: { ...feature, blocks: [{ type: 'p', text: 'a clock for his wife--without knowing, and "I wouldn\'t have--"' }] } } }).html
+  assert.match(dashed, /wife—without knowing, and "I wouldn't have—"/, 'Gutenberg\'s double hyphen is set as a dash')
+})

@@ -521,12 +521,25 @@ table.sudoku td.lv-revealed { color: var(--ink-3); }
   .band.back .back-grid:has(> .cartoon):has(> .five):has(> .recipe) > .puzzle { grid-column: 9 / span 4; grid-row: 1 / span 2; }
   .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five) > .recipe { grid-column: 1 / span 8; grid-row: 2 / span 2; }
   .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .recipe) > .five { grid-column: 9 / span 4; grid-row: 3; }
-  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five):has(> .recipe) > .serial { grid-row: 4; }
+  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five):has(> .recipe) > .serial,
+  .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five):has(> .recipe) > .feature { grid-row: 4; }
   .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five) > .recipe .recipe-method { columns: 2; }
   .band.back .back-grid:has(> .cartoon):has(> .puzzle):has(> .five) > .recipe .recipe-head figure img { aspect-ratio: 1 / 1; }
 }
 
 .serial { grid-column: 1 / -1; border-top: 1px solid var(--ink); padding-top: 14px; }
+/* The Feature is set like the serial: the width of the page, three columns,
+ * a dropped initial. Its crossheads run in the column; its credit sits under
+ * it, small, as the licence asks. */
+.feature { grid-column: 1 / -1; border-top: 1px solid var(--ink); padding-top: 14px; }
+.feature .kicker { margin-bottom: 4px; }
+.feature .sub-head { margin: 0 0 4px; font-size: 1.5rem; line-height: 1.15; }
+.feature .byline { margin-bottom: 12px; }
+.feature .feature-text { columns: 3; column-gap: 26px; column-rule: 1px solid var(--rule-soft); }
+.feature .feature-text p { font-size: .9rem; line-height: 1.52; text-align: justify; hyphens: auto; margin: 0 0 .7em; }
+.feature .feature-text p:first-child::first-letter { float: left; font-family: var(--serif); font-weight: 700; font-size: 2.6em; line-height: .8; padding: .04em .08em 0 0; }
+.feature .feature-text .feature-sub { break-after: avoid; margin: .9em 0 .35em; font-family: var(--serif); font-weight: 700; font-size: 1rem; line-height: 1.25; }
+.feature .note { margin-top: 10px; }
 .serial .kicker { margin-bottom: 8px; }
 .serial .serial-text { columns: 3; column-gap: 26px; column-rule: 1px solid var(--rule-soft); }
 .serial .serial-text p { font-size: .9rem; line-height: 1.52; text-align: justify; hyphens: auto; margin: 0 0 .7em; break-inside: avoid; }
@@ -536,11 +549,11 @@ table.sudoku td.lv-revealed { color: var(--ink-3); }
   .band.back .span-8, .band.back .span-4 { grid-column: span 12; }
   .band.back .recipe-method { columns: 1; }
   .band.back .recipe-head { grid-template-columns: 1fr; }
-  .serial .serial-text { columns: 2; }
+  .serial .serial-text, .feature .feature-text { columns: 2; }
 }
 @media (max-width: 720px) {
   .band.back .back-grid { display: flex; flex-direction: column; }
-  .serial .serial-text { columns: 1; }
+  .serial .serial-text, .feature .feature-text { columns: 1; }
   .band.tabloid .cols2 { display: flex; flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { .lv-shake { animation: none; } .lv-tile { transition: none; } }

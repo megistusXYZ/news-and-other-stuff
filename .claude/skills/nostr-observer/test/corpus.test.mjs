@@ -183,7 +183,7 @@ test('readPaper takes the reader\'s place, teams and feeds, and nothing it shoul
     teams: ['FC Barcelona', 'Arsenal', 'a', 'b', 'c'],
     feeds: [{ url: 'https://feeds.bbci.co.uk/news/world/rss.xml', section: 'Wider World' }],
     almanac: true,
-    cartoon: false, puzzle: false, recipe: false, serial: null, picture: false, markets: false, world: false, sky: false, culture: false, tabloid: false, five: false, health: false, launches: false, country: null,
+    cartoon: false, puzzle: false, recipe: false, serial: null, picture: false, markets: false, world: false, sky: false, culture: false, tabloid: false, five: false, health: false, launches: false, feature: false, country: null,
   }, 'markup refused, at most five teams, https feeds only; the back page and readings off unless asked for')
 
   writeFileSync(file, JSON.stringify({ name: 'Plain' }))
@@ -279,10 +279,10 @@ test('readPaper takes the back page and the readings as switches, and the serial
   const { join } = await import('node:path')
   const { tmpdir } = await import('node:os')
   const file = join(mkdtempSync(join(tmpdir(), 'observer-')), 'observer.config.json')
-  writeFileSync(file, JSON.stringify({ place: 'Chicago', cartoon: true, puzzle: true, recipe: true, serial: 1342, picture: true, markets: true, world: true, sky: true, country: 'US', tabloid: true, five: true, health: true, launches: true }))
+  writeFileSync(file, JSON.stringify({ place: 'Chicago', cartoon: true, puzzle: true, recipe: true, serial: 1342, picture: true, markets: true, world: true, sky: true, country: 'US', tabloid: true, five: true, health: true, launches: true, feature: true }))
   const w = readPaper(file).wires
-  assert.deepEqual({ cartoon: w.cartoon, puzzle: w.puzzle, recipe: w.recipe, serial: w.serial, picture: w.picture, markets: w.markets, world: w.world, sky: w.sky, country: w.country, tabloid: w.tabloid, five: w.five, health: w.health, launches: w.launches },
-    { cartoon: true, puzzle: true, recipe: true, serial: 1342, picture: true, markets: true, world: true, sky: true, country: 'US', tabloid: true, five: true, health: true, launches: true })
+  assert.deepEqual({ cartoon: w.cartoon, puzzle: w.puzzle, recipe: w.recipe, serial: w.serial, picture: w.picture, markets: w.markets, world: w.world, sky: w.sky, country: w.country, tabloid: w.tabloid, five: w.five, health: w.health, launches: w.launches, feature: w.feature },
+    { cartoon: true, puzzle: true, recipe: true, serial: 1342, picture: true, markets: true, world: true, sky: true, country: 'US', tabloid: true, five: true, health: true, launches: true, feature: true })
   writeFileSync(file, JSON.stringify({ place: 'Chicago', serial: 'https://evil.example/book.txt', country: 'united states' }))
   const bad = readPaper(file).wires
   assert.equal(bad.serial, null, 'a serial is a Gutenberg number, never an address')
@@ -520,4 +520,34 @@ test('the digest hands the writer What\'s On: near the reader first, then online
 
   const none = digest({ ...corpus, desks: { calendar: [] } })
   assert.doesNotMatch(none, /## What's On/, 'nothing posted, nothing on')
+})
+
+test('the digest hands the writer the Feature: what it is and how to credit it, but never the text to retype', async () => {
+  const { digest } = await import('../scripts/corpus.mjs')
+  const feature = {
+    kind: 'conversation',
+    title: 'Trump frames unregulated AI as a way to keep ahead of China',
+    authors: ['Stephen Collins, Professor of Government, Kennesaw State University'],
+    published: '2026-09-25',
+    summary: 'An unregulated sector has risks in itself.',
+    blocks: [{ type: 'p', text: 'Amid the chorus, one voice stands out.' }, { type: 'h', text: 'A race?' }, { type: 'p', text: 'A SECRET SECOND PARAGRAPH.' }],
+    link: 'https://theconversation.com/x-1',
+    source: 'The Conversation',
+    licence: 'CC BY-ND 4.0',
+    credit: 'This article is republished from The Conversation under a Creative Commons license. Read the original article.',
+  }
+  const corpus = { code: 'ABC123', since: 1790222949, until: 1790309349, desks: {}, control: [], profiles: {}, art: [],
+    wires: { asOf: 1790309349, weather: null, sports: null, almanac: null, headlines: [], notes: [], feature } }
+  const out = digest(corpus)
+  assert.match(out, /^### The Feature$/m)
+  assert.match(out, /^From The Conversation, Technology: Trump frames unregulated AI as a way to keep ahead of China$/m)
+  assert.match(out, /^By Stephen Collins, Professor of Government, Kennesaw State University · 2026-09-25 · about 13 words$/m)
+  assert.match(out, /^Summary: An unregulated sector has risks in itself\.$/m)
+  assert.match(out, /^Credit, exactly: This article is republished from The Conversation under a Creative Commons license\. Read the original article\. https:\/\/theconversation\.com\/x-1$/m)
+  assert.match(out, /<div class="feature-text"><\/div>/, 'the writer leaves the place for the text; the printer sets it')
+  assert.doesNotMatch(out, /A SECRET SECOND PARAGRAPH/, 'the text is not in the digest: nobody retypes a no-derivatives article')
+
+  const story = digest({ ...corpus, wires: { ...corpus.wires, feature: { ...feature, kind: 'story', title: 'Beyond the Door', authors: ['Philip K. Dick'], published: null, summary: null, source: 'Project Gutenberg', licence: 'public domain in the USA', credit: 'From Project Gutenberg. This story is in the public domain in the USA.', link: 'https://www.gutenberg.org/ebooks/28644' } } })
+  assert.match(story, /^The Sunday Story: Beyond the Door$/m)
+  assert.match(story, /^By Philip K\. Dick · about 13 words$/m)
 })

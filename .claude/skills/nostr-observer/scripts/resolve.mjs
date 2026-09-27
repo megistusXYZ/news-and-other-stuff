@@ -248,6 +248,27 @@ export function resolve (html, corpus) {
   }
   changes.reverse()
 
+  // --- the Feature --------------------------------------------------------
+  // A no-derivatives article has to be printed exactly as published, so the
+  // writer only leaves its place (<div class="feature-text"></div>) and the
+  // text is set here, from the corpus, escaped. Anything typed in its place is
+  // replaced. A Sunday story's Gutenberg _italics_ become real italics.
+  const feature = corpus.wires && corpus.wires.feature
+  if (feature && Array.isArray(feature.blocks)) {
+    const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const italics = (t) => (feature.kind === 'story'
+      ? t.replace(/(^|[^\w])_([^_]+?)_(?=[^\w]|$)/g, '$1<em>$2</em>').replace(/--/g, '—')
+      : t)
+    const body = feature.blocks.map((b) => (b.type === 'h'
+      ? `<h3 class="feature-sub">${esc(b.text)}</h3>`
+      : `<p>${italics(esc(b.text))}</p>`)).join('\n')
+    const place = /<div class="feature-text">[\s\S]*?<\/div>/
+    if (place.test(out)) {
+      out = out.replace(place, () => `<div class="feature-text">\n${body}\n</div>`)
+      changes.push({ kind: 'feature', detail: `set ${feature.blocks.length} blocks of ${feature.title}` })
+    }
+  }
+
   return { html: out, changes }
 }
 
@@ -270,12 +291,13 @@ function main () {
   if (counts.stream) console.log(`  Encoded ${counts.stream} stream watch link(s) to zap.stream.`)
   if (counts.listing) console.log(`  Encoded ${counts.listing} classified listing link(s) to Shopstr.`)
   if (counts.calendar) console.log(`  Encoded ${counts.calendar} calendar link(s) to Brainstorm.`)
+  for (const c of changes.filter((c) => c.kind === 'feature')) console.log(`  Feature: ${c.detail}, word for word.`)
   if (counts.dropped || counts.unwrapped) {
     console.log('')
     console.log('  CHANGES WORTH READING - each of these is the page trying to do something')
     console.log('  the paper does not do. Look at them before you ship:')
     console.log('')
-    for (const change of changes.filter((c) => c.kind !== 'resolved' && c.kind !== 'permalink' && c.kind !== 'article' && c.kind !== 'profile' && c.kind !== 'stream' && c.kind !== 'listing' && c.kind !== 'calendar')) {
+    for (const change of changes.filter((c) => c.kind !== 'resolved' && c.kind !== 'permalink' && c.kind !== 'article' && c.kind !== 'profile' && c.kind !== 'stream' && c.kind !== 'listing' && c.kind !== 'calendar' && c.kind !== 'feature')) {
       console.log(`  ${change.kind.toUpperCase()}: ${change.detail}`)
     }
   }

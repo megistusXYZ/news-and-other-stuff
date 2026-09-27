@@ -483,6 +483,22 @@ function printWires (p, wires) {
     }
     p('')
   }
+  if (wires.feature) {
+    // The text is not here, on purpose: a no-derivatives article must be
+    // printed exactly, so resolve.mjs sets it from the corpus. The writer
+    // gets what it needs to head it and credit it.
+    const f = wires.feature
+    const words = f.blocks.reduce((n, b) => n + b.text.split(/\s+/).filter(Boolean).length, 0)
+    p('### The Feature')
+    p(f.kind === 'story' ? `The Sunday Story: ${f.title}` : `From ${f.source}, Technology: ${f.title}`)
+    p(`By ${f.authors.join('; ') || 'an unnamed author'}${f.published ? ` · ${f.published}` : ''} · about ${words.toLocaleString('en-US')} words`)
+    if (f.summary) p(`Summary: ${f.summary}`)
+    p(`Credit, exactly: ${f.credit} ${f.link}`)
+    p('Set it as <article class="feature">: a kicker, the title as a sub-head word for word, the byline,')
+    p('then <div class="feature-text"></div> left EMPTY (the printer sets the whole text, word for word),')
+    p('then the credit in a <p class="note">. Never type, cut or summarise the text yourself.')
+    p('')
+  }
   if (wires.sports) {
     p('### Sports')
     p(`Credit: ${wires.sports.source}`)
@@ -732,9 +748,10 @@ export function readPaper (path = 'observer.config.json') {
     five: raw.five === true,
     health: raw.health === true,
     launches: raw.launches === true,
+    feature: raw.feature === true,
     country: typeof raw.country === 'string' && /^[A-Z]{2}$/.test(raw.country) ? raw.country : null,
   }
-  const asked = ['place', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'sky', 'culture', 'tabloid', 'five', 'health', 'launches']
+  const asked = ['place', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'sky', 'culture', 'tabloid', 'five', 'health', 'launches', 'feature']
   paper.wires = wires.teams.length || wires.feeds.length || asked.some((k) => wires[k]) ? wires : null
   return paper.name || paper.brand || paper.wires ? paper : null
 }
@@ -835,7 +852,7 @@ async function main () {
       wires.five = { name: 'Five', day: dayNumber(until), answer: dailyWord(until, answers) }
     }
     art.push(...wires.art)
-    const got = ['weather', 'sports', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'tabloid', 'five', 'health', 'launches'].filter((k) => wires[k]).concat(wires.headlines.length ? ['headlines'] : [])
+    const got = ['weather', 'sports', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'tabloid', 'five', 'health', 'launches', 'feature'].filter((k) => wires[k]).concat(wires.headlines.length ? ['headlines'] : [])
     process.stderr.write(`  Wires: ${got.join(', ') || 'nothing'}${wires.notes.length ? ` (${wires.notes.length} note(s))` : ''}.\n`)
   }
 

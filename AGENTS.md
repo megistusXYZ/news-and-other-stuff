@@ -330,6 +330,22 @@ would a `CLAUDE_CODE_OAUTH_TOKEN` pasted into anything of ours.
   five minutes while visible. What Brainstorm would need to make this seamless
   is written up for its team in `BRAINSTORM-TEAM-REQUEST.md` (local).
 
+- **The Feature replaces the serial (2026-09-26).** Benjamin found a novel in
+  204 slices a hard sell. `feature: true` prints one thoughtful piece a day,
+  whole: on weekdays the newest article on The Conversation's technology feed
+  that carries CC BY-ND in its `<rights>` (researchers writing for the public,
+  meant to be republished whole and unedited; figures and the counter pixel
+  are left out, text only); on Sundays a complete Philip K. Dick story from
+  Project Gutenberg, public domain in the USA, one of eight checked for length
+  (`SUNDAY_STORIES`, 2,500–8,700 words), a different one each week. The writer
+  never types it: the digest gives the title, byline, word count and the exact
+  credit, the writer leaves `<div class="feature-text"></div>` empty, and
+  resolve.mjs sets the text word for word from the corpus (escaped; a story's
+  Gutenberg `_italics_` become `<em>` and `--` a dash). That is both what a
+  no-derivatives licence needs and cheaper than retyping 2,000 words. The
+  serial still works for a paper that asks for it, and its `_italics_` now read
+  as italics in the living copy.
+
 - **Pictures open their post (2026-09-26).** dress marks every picture that
   came with a post the corpus holds (`data-ev`, from the art shortlist's
   `eventId`) and every wire picture with its own page (`data-href`: the xkcd

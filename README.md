@@ -1,3 +1,33 @@
+# News and Other Stuff
+
+*The observer for your network.* A personal daily paper, printed each morning
+from what the people you trust on Nostr actually said, ranked by
+[Brainstorm](https://brainstorm.world). Everything runs on your own machine,
+through your own Claude Code.
+
+This is a fork of [NosFabrica/the-nostr-observer](https://github.com/NosFabrica/the-nostr-observer)
+(MIT), kept by [Megistus XYZ](https://www.megistus.xyz). It adds the Brainstorm
+edition and a living copy with accessible reader settings, credits in one
+"Sources & licences" list, issue numbers, the Feature and the back page.
+Improvements that help any Observer reader are offered back upstream as small
+pull requests; the brand and the edition's own choices stay here. See
+[NOTICE](NOTICE) for the marks and pictures, which the MIT licence does not
+cover.
+
+**Run it.** Copy `observer.config.example.json` to `observer.config.json`, set
+your place, teams and feeds, then open this repository in Claude Code and ask
+`print my Nostr Observer`. Your papers land in `editions/`, which is never
+committed. The Tape (share closes) is off by default: Yahoo's terms do not
+permit automated collection, so turning it on is for personal use at your own
+risk.
+
+**Keeping up with upstream.** `git fetch upstream && git merge upstream/main`
+into `megistus-edition`.
+
+The original project's README follows.
+
+---
+
 # The Nostr Observer
 
 Your own daily newspaper, printed from your corner of Nostr.

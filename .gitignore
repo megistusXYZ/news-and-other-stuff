@@ -16,6 +16,12 @@ hs_err_pid*
 .vscode/
 
 # Local config and secrets
+# The reader's own settings (place, teams, founding date): copy
+# observer.config.example.json to start.
+observer.config.json
+.claude/launch.json
+MEGISTUS-PLAN.md
+BRAINSTORM-TEAM-REQUEST.md
 .env
 .env.*
 local.properties

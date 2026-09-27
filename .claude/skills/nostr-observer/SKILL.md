@@ -102,7 +102,10 @@ again:
 The keys are `place`, `teams`, `feeds` (https only), `almanac`, `cartoon`,
 `puzzle`, `recipe`, `serial` (a Gutenberg number), `picture`, `markets`,
 `world`, `sky`, `culture`, and `units` (`us` or `metric`). Never ask for `founded`: the first print writes the date of the paper's
-first issue there itself, and every issue number counts from it. "No thanks" is an answer: write
+first issue there itself, and every issue number counts from it. Never turn on `tape`
+(share closes from Yahoo Finance) unless the reader asks for it by name:
+Yahoo's terms do not permit automated collection, so it is theirs to choose,
+for personal use. "No thanks" is an answer: write
 `"wiresAsked": true` alone. Step 3 fetches whatever is set.
 
 ---

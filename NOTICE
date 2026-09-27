@@ -1,0 +1,47 @@
+News and Other Stuff
+====================
+
+A personal daily paper built on the Nostr Observer
+(https://github.com/NosFabrica/the-nostr-observer), Copyright (c) 2026
+NosFabrica, released under the MIT License (see LICENSE). The changes in
+this fork are released under the same licence.
+
+The MIT License covers the code. It does not grant rights to the names,
+marks and pictures below, which are listed here with where they came from.
+
+Marks
+-----
+- Brainstorm mark, wordmark and design tokens
+  (.claude/skills/nostr-observer/reference/brands/brainstorm/)
+  Brainstorm and its marks belong to NosFabrica. Taken from
+  NosFabrica/Brainstorm-UI for the Brainstorm-branded edition.
+- Megistus imprint (.claude/skills/nostr-observer/reference/imprints/megistus.webp)
+  The mark of Megistus XYZ. All rights reserved.
+
+Pictures
+--------
+- Ostrich stamps (.claude/skills/nostr-observer/reference/stamps/)
+  ostrich-portrait.webp: generated with Grok (xAI) for this paper; xAI's
+  terms assign the output to the user who made it.
+  ostrich-profile.webp: an engraved ostrich supplied by Megistus XYZ.
+
+Third-party files, each with its own licence beside it
+------------------------------------------------------
+- Fonts: Figtree, IBM Plex Mono, Playfair Display, Source Serif 4
+  (reference/fonts/*.woff2), SIL Open Font License 1.1 (fonts/*.LICENSE).
+- hls.js light build (reference/vendor/hls.light.min.js), Apache-2.0,
+  Dailymotion (vendor/hls.LICENSE).
+- Five's guess list (reference/five-guesses.txt): five-letter words from
+  Webster's Second International, public domain (five-guesses.LICENSE).
+  The answer list (reference/five-answers.txt) was curated for this project
+  and is MIT like the code.
+
+Data services
+-------------
+The wires fetch from outside services on the reader's own machine; each is
+credited in the paper's "Sources & licences" list, as its terms ask. Some
+are for personal or non-commercial use only (Open-Meteo, xkcd, TheMealDB's
+test key). The Tape (share closes from Yahoo Finance) is off unless the
+reader turns it on: Yahoo's terms do not permit automated collection, so it
+is for personal use at the reader's own risk, until a licensed feed
+replaces it.

@@ -1,0 +1,38 @@
+{
+  "name": "News and Other Stuff",
+  "motto": "The observer for your network.",
+  "brand": "brainstorm",
+  "place": "London",
+  "units": "metric",
+  "teams": [
+    "Arsenal"
+  ],
+  "feeds": [
+    {
+      "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "section": "Wider World"
+    },
+    {
+      "url": "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml",
+      "section": "Culture"
+    }
+  ],
+  "almanac": true,
+  "cartoon": true,
+  "puzzle": true,
+  "five": true,
+  "recipe": true,
+  "picture": true,
+  "markets": true,
+  "world": true,
+  "sky": true,
+  "culture": true,
+  "tabloid": true,
+  "health": true,
+  "launches": true,
+  "feature": true,
+  "tape": false,
+  "stamp": "ostrich-portrait",
+  "stampDark": "ostrich-profile",
+  "wiresAsked": true
+}

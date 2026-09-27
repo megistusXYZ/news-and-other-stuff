@@ -87,6 +87,18 @@ few steps differ from the brief above:
   Tell the reader what led and anything the printer changed.
 `
 
+// Sent to the reader's Claude when it connects, so the routine is known before
+// the reader's prompt says a word: a short prompt is then enough, and an
+// unattended morning run still follows it.
+export const INSTRUCTIONS = `You print the reader's daily newspaper, News and Other Stuff, from what the people they trust on Nostr said in the last 24 hours. Each time:
+1. Call get_readiness. If the lens is not ready, stop and tell the reader exactly what it says to do.
+2. Call get_brief once and follow it: it is the house style and the rules.
+3. Call get_digest, passing the reader's favourite topics as short phrases if they named any, then fetch every part with the code it gives.
+4. Write the full paper the brief describes: the fold, a "Your topics" band when there are topics, a band or box for every desk worth printing, pictures by id. Quote only words the posts contain.
+5. Call submit_edition with the code and the whole page. If it is refused, fix exactly what each reason says and hand it in again until it is accepted.
+6. Finish by telling the reader what led, anything the printer changed, and the link to today's paper.
+If get_readiness says today's paper is already in, tell the reader and print a fresh edition only if they asked for one.`
+
 export const TOOLS = [
   {
     name: 'get_readiness',
@@ -125,6 +137,20 @@ export const TOOLS = [
     },
   },
 ]
+
+// What to do about each kind of refusal, in the writer's terms.
+const FIX = {
+  QUOTE: 'quote only words the post contains, exactly as written (an ellipsis may join fragments of one post), or paraphrase without quote marks.',
+  IMAGE: 'use a picture id from the art shortlist (src="art-N"), never a URL; drop the figure if no id fits.',
+  LINK: 'cite a post as https://brainstorm.world/e/<event id from the digest> and a person as https://brainstorm.world/p/<one of their post ids>; use the watch:, listing: and calendar: lines exactly as the digest printed them; write any other address as plain text.',
+  MARKUP: 'remove scripts, iframes, forms, event handlers and javascript: links; the printer adds everything interactive.',
+  TOPICS: 'add <section class="band your-topics"> near the top with one cell per topic, citing at least one post listed under that topic in "Your topics: the posts".',
+  MASTHEAD: 'set the paper\'s name from the digest\'s Masthead in the nameplate <h1> and at the start of the <title>.',
+  FOLIO: 'make the folio\'s first span the digest\'s Issue: line, exactly.',
+  LAYOUT: 'give the front page exactly one lead headline (class lead-head) inside <section class="fold">.',
+  CODE: 'call get_digest for today first, then hand in the page with the code it gave you.',
+  PAGE: 'hand in the whole page, <!doctype html> to </html>.',
+}
 
 const say = (text, extra = {}) => ({ content: [{ type: 'text', text }], ...extra })
 const fail = (text) => say(text, { isError: true })
@@ -168,8 +194,14 @@ export async function callTool (name, args, reader, deps) {
   // The setup page's "connected" comes from this: the reader's Claude called.
   if (deps.store.touch) deps.store.touch(reader)
   switch (name) {
-    case 'get_readiness':
-      return say(verdictText(await deps.readiness(reader)))
+    case 'get_readiness': {
+      // Today's paper, by the same UTC date an edition is filed under.
+      const now = deps.now ? deps.now() : Math.floor(Date.now() / 1000)
+      const today = new Date(now * 1000).toISOString().slice(0, 10)
+      const done = deps.store.editions ? deps.store.editions(reader).find((e) => e.date === today) : null
+      const stamp = (ts) => new Date(ts * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC'
+      return say(verdictText(await deps.readiness(reader)) + (done ? `\nToday's paper is already in: edition ${done.code}, printed ${stamp(done.printedAt)}. Print a fresh edition only if the reader asked for one.` : ''))
+    }
     case 'get_brief':
       return say(EDITORIAL + CONNECTOR_NOTE)
     case 'get_digest': {
@@ -193,7 +225,7 @@ export async function callTool (name, args, reader, deps) {
     case 'submit_edition': {
       const out = await submitEdition({ reader, code: args.code, html: args.html }, { store: deps.store })
       if (!out.accepted) {
-        return fail('Refused. Fix these and hand it in again:\n' + out.violations.map((v) => `- ${v.kind}: ${v.detail}${v.excerpt ? `\n    ${v.excerpt}` : ''}`).join('\n'))
+        return fail('Refused. Fix these and hand it in again:\n' + out.violations.map((v) => `- ${v.kind}: ${v.detail}${v.excerpt ? `\n    ${v.excerpt}` : ''}${FIX[v.kind] ? `\n    How to fix: ${FIX[v.kind]}` : ''}`).join('\n'))
       }
       // Only what the reader should hear about: a picture dropped or a link
       // unwrapped. Resolving citations and names is the printer's job, not news.
@@ -201,7 +233,8 @@ export async function callTool (name, args, reader, deps) {
       const f = out.fullness
       const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
       const full = `\nThe page has ${plural(f.sections, 'section')} and ${plural(f.pictures, 'picture')}; the digest held ${plural(f.desks, 'desk')} with posts and ${plural(f.shortlist, 'picture')} on the shortlist.`
-      return say(`Accepted: edition ${out.edition} for ${out.date}, on the reader's Observer page.` + full + (worth.length ? `\nThe printer ${worth.map((c) => `${c.kind} ${c.detail || ''}`.trim()).slice(0, 8).join('; ')}.` : ''), { structuredContent: { edition: out.edition, date: out.date, ...out.fullness } })
+      const url = deps.paperUrl ? deps.paperUrl(reader, out.date, out.edition) : null
+      return say(`Accepted: edition ${out.edition} for ${out.date}, on the reader's Observer page.` + (url ? `\nRead it: ${url}` : '') + full + (worth.length ? `\nThe printer ${worth.map((c) => `${c.kind} ${c.detail || ''}`.trim()).slice(0, 8).join('; ')}.` : ''), { structuredContent: { edition: out.edition, date: out.date, ...(url ? { url } : {}), ...out.fullness } })
     }
     default:
       return fail(`No tool called ${name}.`)

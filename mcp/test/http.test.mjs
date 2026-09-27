@@ -58,3 +58,15 @@ test('one reader\'s token cannot read another reader\'s digest', async () => {
   assert.match(theirs.content[0].text, /No digest with that code for you/)
   await b.close()
 })
+
+test('on connecting, Claude is told the whole routine, so a short prompt is enough', async () => {
+  const client = await connect('token-a')
+  const how = client.getInstructions() || ''
+  const order = ['get_readiness', 'get_brief', 'get_digest', 'submit_edition'].map((tool) => how.indexOf(tool))
+  assert.ok(order.every((at, i) => at > -1 && (i === 0 || at > order[i - 1])), `the four tools, in the order to call them: ${order}`)
+  assert.match(how, /every part/i)
+  assert.match(how, /refused/i, 'what to do when a page is refused')
+  assert.match(how, /link/i, 'end by giving the reader the paper\'s link')
+  assert.ok(how.length < 2000, 'short enough to always be read')
+  await client.close()
+})

@@ -117,3 +117,36 @@ test('the brief asks for the whole paper, and an accepted page says how full it 
   assert.match(out, /The page has 2 sections and 1 picture; the digest held 2 desks with posts and 2 pictures on the shortlist\./,
     'the front page and one band, against the notes and long-form it was given')
 })
+
+test('a refusal says how to fix each kind of problem, not only what the rule is', async () => {
+  const d = deps()
+  const note = { id: '1'.repeat(64), kind: 1, pubkey: ADA, created_at: 1790300000, content: 'Noon bread.', tags: [] }
+  const bread = { id: '2'.repeat(64), kind: 1, pubkey: ADA, created_at: 1790300001, content: 'Sourdough rose.', tags: [] }
+  d.store.keepCorpus(READER, { ...busyCorpus(), code: 'FIX001', desks: { notes: [note], topics: [bread] }, topics: [{ topic: 'sourdough', events: [bread] }] })
+  const html = '<!doctype html><html><head><title>The Nostr Observer — Sunday</title></head><body><main class="sheet"><section class="fold"><article><h2 class="lead-head">Bread</h2>'
+    + `<p><q>Bread at noon, the best in town.</q> <a href="https://brainstorm.world/e/${note.id}">Read</a></p></article></section></main></body></html>`
+  const out = text(await callTool('submit_edition', { code: 'FIX001', html }, READER, d))
+  assert.match(out, /QUOTE: .*\n.*\n\s+How to fix: quote only words the post contains/)
+  assert.match(out, /TOPICS: .*\n.*\n\s+How to fix: add <section class="band your-topics">/)
+})
+
+test('an accepted page comes back with the link to read it, so the morning ends one tap from the paper', async () => {
+  const d = { ...deps(), paperUrl: (reader, date, code) => `https://observer.test/observer/${reader.slice(0, 4)}/${date}-${code}` }
+  const note = { id: '1'.repeat(64), kind: 1, pubkey: ADA, created_at: 1790300000, content: 'Noon bread.', tags: [] }
+  d.store.keepCorpus(READER, { ...busyCorpus(), code: 'LINK02', desks: { notes: [note] } })
+  const html = '<!doctype html><html><head><title>The Nostr Observer — Sunday</title></head><body><main class="sheet"><section class="fold"><article><h2 class="lead-head">Bread</h2>'
+    + `<p><q>Noon bread.</q> <a href="https://brainstorm.world/e/${note.id}">Read</a></p></article></section></main></body></html>`
+  const out = await callTool('submit_edition', { code: 'LINK02', html }, READER, d)
+  assert.match(text(out), /Read it: https:\/\/observer\.test\/observer\/aaaa\/2026-09-25-LINK02/)
+  assert.equal(out.structuredContent.url, 'https://observer.test/observer/aaaa/2026-09-25-LINK02')
+})
+
+test('readiness says when today\'s paper is already in, so a second run does not print a duplicate unasked', async () => {
+  const d = { ...deps(), now: () => 1790309349 } // 2026-09-25 04:09 UTC
+  assert.doesNotMatch(text(await callTool('get_readiness', {}, READER, d)), /already in/)
+  d.store.putEdition(READER, { date: '2026-09-25', code: 'SEEN01', html: '<p></p>', living: '<p></p>', printedAt: 1790305000 })
+  d.store.putEdition(READER, { date: '2026-09-24', code: 'OLD001', html: '<p></p>', living: '<p></p>', printedAt: 1790220000 })
+  const said = text(await callTool('get_readiness', {}, READER, d))
+  assert.match(said, /^READY/)
+  assert.match(said, /Today's paper is already in: edition SEEN01, printed 2026-09-25 02:56 UTC\. Print a fresh edition only if the reader asked for one\./)
+})

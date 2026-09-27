@@ -15,7 +15,7 @@ import { pathToFileURL } from 'node:url'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js'
-import { TOOLS, callTool } from './observer.mjs'
+import { TOOLS, INSTRUCTIONS, callTool } from './observer.mjs'
 import { memoryStore, fileStore } from './store.mjs'
 import { toHex, toNpub } from '../.claude/skills/nostr-observer/scripts/nostr.mjs'
 import { gather } from '../.claude/skills/nostr-observer/scripts/readiness.mjs'
@@ -31,7 +31,7 @@ export function tokenAuth (tokens) {
 }
 
 function mcpServer (reader, deps) {
-  const server = new Server({ name: 'brainstorm-observer', version: '0.1.0' }, { capabilities: { tools: {} } })
+  const server = new Server({ name: 'brainstorm-observer', version: '0.1.0' }, { capabilities: { tools: {} }, instructions: INSTRUCTIONS })
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }))
   server.setRequestHandler(CallToolRequestSchema, async (request) => callTool(request.params.name, request.params.arguments || {}, reader, deps))
   return server
@@ -111,9 +111,11 @@ export function createConnector ({ authenticate, deps, readers = new Set() }) {
 }
 
 // The real thing: the lens check and the pull against the ranked relay.
-export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paperFor = () => null } = {}) {
+export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), paperFor = () => null, publicUrl = null } = {}) {
   return {
     store,
+    // Where the reader reads an accepted paper: this service's Observer page.
+    paperUrl: publicUrl ? (reader, date, code) => `${publicUrl}/observer/${toNpub(reader)}/${date}-${code}` : null,
     readiness: async (reader) => {
       const until = Math.floor(Date.now() / 1000)
       const verdict = assess(await gather(reader, relay, until - 86400))
@@ -141,7 +143,7 @@ function main () {
   // Accepted editions are also written under OBSERVER_EDITIONS, if set, so a
   // local reader can open them.
   const store = process.env.OBSERVER_EDITIONS ? fileStore(process.env.OBSERVER_EDITIONS) : memoryStore()
-  createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ store, paperFor: () => paper }), readers: new Set(tokens.values()) })
+  createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ store, paperFor: () => paper, publicUrl: (process.env.OBSERVER_PUBLIC_URL || `http://127.0.0.1:${port}`).replace(/\/$/, '') }), readers: new Set(tokens.values()) })
     .listen(port, '127.0.0.1', () => console.log(`Brainstorm Observer connector on http://127.0.0.1:${port}/mcp, with /setup and /observer, for ${tokens.size} reader(s)`))
 }
 

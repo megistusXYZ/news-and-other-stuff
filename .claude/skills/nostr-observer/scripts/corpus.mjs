@@ -24,7 +24,7 @@ import { dailyWord, dayNumber } from './five.mjs'
 import { dayOf, issueOf } from './issue.mjs'
 import { fileURLToPath } from 'node:url'
 
-const DEFAULT_RELAY = 'wss://search-staging.brainstorm.world'
+export const DEFAULT_RELAY = 'wss://search-staging.brainstorm.world'
 const WINDOW_SECONDS = 24 * 60 * 60
 
 /**

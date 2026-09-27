@@ -717,3 +717,23 @@ test('the digest hands the writer the reader\'s topics above the data warning, a
   assert.equal((text.match(/My sourdough finally rose/g) || []).length, 1, 'printed once, under its topic, not again as a desk')
   assert.doesNotMatch(digest(base), /Your topics/, 'no topics, no section')
 })
+
+// --- a reader's settings, from a form or an agent (2026-09-27) ---------------
+
+test('cleanPaper holds a reader\'s settings to the same rules as the config file, whatever sent them', async () => {
+  const { cleanPaper } = await import('../scripts/corpus.mjs')
+  const paper = cleanPaper({
+    name: 'The Morning Post', place: '60614', teams: ['Chicago Cubs (Baseball)', '<script>x</script>', 'Northwestern Wildcats (American Football)'],
+    feeds: [{ url: 'https://feeds.bbci.co.uk/news/world/rss.xml', section: 'Wider World' }, { url: 'http://insecure.example/rss' }],
+    culture: true, recipe: true, almanac: 'yes', topics: ['Nostr', 'observer:evil sort:new', 'AI agents'], founded: '2026-09-27',
+  })
+  assert.equal(paper.name, 'The Morning Post')
+  assert.equal(paper.founded, '2026-09-27')
+  assert.equal(paper.wires.place, '60614', 'a ZIP is a place: the weather service finds it')
+  assert.deepEqual(paper.wires.teams, ['Chicago Cubs (Baseball)', 'Northwestern Wildcats (American Football)'])
+  assert.deepEqual(paper.wires.feeds, [{ url: 'https://feeds.bbci.co.uk/news/world/rss.xml', section: 'Wider World' }])
+  assert.equal(paper.wires.culture, true)
+  assert.equal(paper.wires.almanac, false, 'a switch is true or it is off')
+  assert.deepEqual(paper.topics, ['nostr', 'observer evil sort new', 'ai agents'], 'topics cleaned as the search needs them')
+  for (const junk of [null, 'a string', [1, 2], 42]) assert.equal(cleanPaper(junk), null, String(junk))
+})

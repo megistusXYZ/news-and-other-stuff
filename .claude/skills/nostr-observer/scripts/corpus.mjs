@@ -753,7 +753,16 @@ export function digest (corpus, budget = DEFAULT_DIGEST_BUDGET) {
  */
 export function readPaper (path = 'observer.config.json') {
   if (!existsSync(path)) return null
-  const raw = JSON.parse(readFileSync(path, 'utf8'))
+  return cleanPaper(JSON.parse(readFileSync(path, 'utf8')))
+}
+
+/**
+ * A reader's settings, held to one set of rules whoever sent them: the config
+ * file, the setup page's form, or the reader's own Claude. Only known keys, of
+ * the right shape; everything else is dropped.
+ */
+export function cleanPaper (raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const clean = (value, max) => (typeof value === 'string' && value.trim() && !/[<>]/.test(value) ? value.trim().slice(0, max) : null)
   const paper = { name: clean(raw.name, 60), motto: clean(raw.motto, 80), brand: clean(raw.brand, 24) }
   // The date of the paper's first issue, which its issue numbers count from.
@@ -811,7 +820,9 @@ export function readPaper (path = 'observer.config.json') {
   }
   const asked = ['place', 'almanac', 'cartoon', 'puzzle', 'recipe', 'serial', 'picture', 'markets', 'world', 'sky', 'culture', 'tabloid', 'five', 'health', 'launches', 'feature']
   paper.wires = wires.teams.length || wires.feeds.length || wires.tape.length || asked.some((k) => wires[k]) ? wires : null
-  return paper.name || paper.brand || paper.wires ? paper : null
+  // The reader's favourite topics, as the search needs them.
+  paper.topics = cleanTopics(raw.topics)
+  return paper.name || paper.brand || paper.wires || paper.topics.length ? paper : null
 }
 
 /**

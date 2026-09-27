@@ -185,7 +185,7 @@ textarea.field { min-height: 76px; resize: vertical; }
         <h3>What do you love reading about?</h3>
         <p class="hint">A few favourite topics. Your paper gets a "Your topics" band from them every day.</p>
         <label class="sr" for="topics">Your favourite topics</label>
-        <textarea class="field" id="topics" placeholder="Live music, barbecue, Bitcoin, AI agents"></textarea>
+        <textarea class="field" id="topics" placeholder="Architecture, jazz, startups, the Great Lakes"></textarea>
         <div class="chips" id="chips" aria-label="Add a topic">
           <button class="chip" type="button">Bitcoin</button><button class="chip" type="button">Nostr</button><button class="chip" type="button">AI agents</button><button class="chip" type="button">Cooking</button><button class="chip" type="button">Music</button><button class="chip" type="button">Space</button><button class="chip" type="button">Gardening</button><button class="chip" type="button">Startups</button>
         </div>
@@ -227,7 +227,7 @@ textarea.field { min-height: 76px; resize: vertical; }
           <button class="btn solid" type="submit" id="save">Save my paper</button>
           <span class="saved mono" id="saved" role="status" aria-live="polite"></span>
         </div>
-        <p class="talk" id="talk">Rather talk than type? Once your Claude is connected, just tell it, for example: "I live in 60614, I follow the Cubs, and I love live music and Bitcoin." It fills this in for you.</p>
+        <p class="talk" id="talk">Rather talk than type? Once your Claude is connected, just tell it, for example: "I live in 60614, I follow the Cubs, and I love jazz and architecture." It fills this in for you.</p>
       </div>
     </form>
   </section>
@@ -306,22 +306,8 @@ textarea.field { min-height: 76px; resize: vertical; }
   }))
 
   // --- 1. Your paper -------------------------------------------------------
-  // One believable reader's answers as the examples, a different one each
-  // visit. Every place and team here is one the lookups find (checked live).
-  const READERS = [
-    { place: 'Chicago, or 60614', teams: 'Chicago Cubs, Chicago Bulls…', topics: 'Live music, barbecue, Bitcoin, AI agents', say: 'I live in 60614, I follow the Cubs, and I love live music and Bitcoin.' },
-    { place: 'Chicago, or 60614', teams: 'Chicago Cubs, Chicago Bulls…', topics: 'Architecture, jazz, startups, the Great Lakes', say: 'I live in 60614, I follow the Cubs, and I love jazz and architecture.' },
-    { place: 'Seattle, or 98101', teams: 'Seattle Seahawks, Seattle Mariners…', topics: 'Coffee, hiking, open source, space', say: 'I live in Seattle, I follow the Seahawks, and I love hiking and open source.' },
-    { place: 'Miami, or 33130', teams: 'Miami Heat, Inter Miami…', topics: 'Boating, Latin music, real estate, Bitcoin', say: 'I live in 33130, I follow the Heat, and I love boating and Bitcoin.' },
-    { place: 'Denver, or 80202', teams: 'Denver Broncos, Colorado Avalanche…', topics: 'Skiing, craft beer, the climate, Nostr', say: 'I live in Denver, I follow the Broncos, and I love skiing and Nostr.' },
-    { place: 'Brooklyn, or 11211', teams: 'New York Yankees, New York Knicks…', topics: 'Theater, food, design, AI', say: 'I live in 11211, I follow the Knicks, and I love theater and design.' },
-    { place: 'Nashville, or 37203', teams: 'Tennessee Titans, Nashville SC…', topics: 'Country music, songwriting, college football, gardening', say: 'I live in Nashville, I follow the Titans, and I love songwriting and gardening.' },
-  ]
-  const example = READERS[Math.floor(Math.random() * READERS.length)]
-  $('place').placeholder = example.place
-  $('team').placeholder = example.teams
-  $('topics').placeholder = example.topics
-  $('talk').textContent = `Rather talk than type? Once your Claude is connected, just tell it, for example: "${example.say}" It fills this in for you.`
+  // The examples are one Chicago reader's answers (the place and teams checked
+  // against the lookups).
   // The pages a reader ticks, as the paper's settings. "World news" and
   // "Culture" bring the house's feeds with them.
   const WORLD_FEEDS = [

@@ -1397,6 +1397,19 @@ fetch, since they signed nothing in the window and would otherwise be hex.
 The open questions live at the end of `docs/PLAN.md`. The one that gates the
 timeline is whether `nip85.nosfabrica.com` can onboard new observers on demand.
 
+**Where this fork lives (2026-09-26).** News and Other Stuff is its own
+product on the Observer engine, published as the public GitHub fork
+`megistusXYZ/news-and-other-stuff`. Its default branch is `megistus-edition`,
+and its `main` mirrors NosFabrica's untouched. In this clone, `origin` is the
+fork and `upstream` is NosFabrica, whose push address stays disabled. Engine
+improvements go back as small PRs, each cut fresh from `upstream/main`,
+brand-free, with tests, and reviewed by someone else, after a proposal issue on
+NosFabrica. Proposed order: accessibility, credits, issue numbers, Stop Press
+and the reader panel, then each new wire. These stay downstream: the Brainstorm
+brand files, the Megistus imprint, the ostrich stamps, this decision log,
+`docs/QA-*` and The Tape. NOTICE records what the MIT licence does not cover.
+Stay current with `git fetch upstream && git merge upstream/main`.
+
 ## Conventions
 
 Mirror vespa-relay: Kotlin, Gradle version catalog, spotless + ktlint, git hooks

@@ -1983,16 +1983,17 @@ function featureTabs () {
 // --- the reading settings panel -------------------------------------------------
 //
 // "Aa" on the date line opens a small panel: text size in four steps, standard
-// or high contrast, motion on or reduced. Each choice is a toggle button that
-// says whether it is on; the choice is kept on this device and applied at once.
-// Escape or a click elsewhere closes it and gives focus back to "Aa".
+// or high contrast, motion on or reduced, and dark mode. Each choice is a toggle
+// button that says whether it is on, and dark mode a single switch; the choice
+// is kept on this device and applied at once. Escape or a click elsewhere
+// closes it and gives focus back to "Aa".
 
 function readingPanel () {
   const folio = document.querySelector('.sheet > .folio')
   if (!folio) return
   const button = el('button', 'lv-aa', 'Aa')
   button.type = 'button'
-  button.setAttribute('aria-label', 'Reading settings: text size, contrast and motion')
+  button.setAttribute('aria-label', 'Reading settings: text size, contrast, motion and dark mode')
   button.setAttribute('aria-expanded', 'false')
   button.setAttribute('aria-controls', 'lv-reading')
   const panel = el('div', 'lv-reading')
@@ -2029,9 +2030,24 @@ function readingPanel () {
     row.append(head, set)
     panel.append(row)
   }
+  // Dark mode is one switch, not a pair of choices: it says on or off.
+  const darkRow = el('div', 'lv-reading-row lv-reading-switch')
+  const darkLabel = el('p', 'lv-reading-label', 'Dark mode')
+  darkLabel.id = 'lv-reading-theme'
+  const dark = el('button', 'lv-switch')
+  dark.type = 'button'
+  dark.setAttribute('role', 'switch')
+  dark.setAttribute('aria-labelledby', darkLabel.id)
+  dark.addEventListener('click', () => chooseTheme(themeNow() === 'dark' ? 'light' : 'dark'))
+  const paintDark = () => dark.setAttribute('aria-checked', String(themeNow() === 'dark'))
+  themeListeners.push(paintDark)
+  paintDark()
+  darkRow.append(darkLabel, dark)
+  panel.append(darkRow)
   const paint = () => {
     const now = readingSettings(savedReading(), deviceReading())
     for (const c of choices) c.b.setAttribute('aria-pressed', String(now[c.key] === c.value))
+    paintDark()
   }
   const open = (yes) => {
     panel.hidden = !yes
@@ -2118,18 +2134,26 @@ function pictureLinks () {
 // they have read a line of it.
 const THEME_KEY = 'lv-theme'
 const themeNow = () => (document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light')
-function theme () {
+// Two switches turn the paper: the ostrich, and "Dark mode" in the reading
+// panel. Each listens here, so whichever is used, both say the same.
+const themeListeners = []
+// The browser's own toolbar follows the paper's colour, chosen or not.
+function applyTheme (mode) {
   const root = document.documentElement
+  root.setAttribute('data-theme', mode)
+  const paper = getComputedStyle(root).getPropertyValue('--paper').trim()
+  if (paper) for (const meta of $$('meta[name="theme-color"]')) meta.setAttribute('content', paper)
+  for (const listen of themeListeners) listen()
+}
+function chooseTheme (mode) {
+  applyTheme(mode)
+  store.set(THEME_KEY, mode)
+}
+function theme () {
   const system = matchMedia('(prefers-color-scheme: dark)')
   const chosen = store.get(THEME_KEY)
-  // The browser's own toolbar follows the paper's colour, chosen or not.
-  const apply = (mode) => {
-    root.setAttribute('data-theme', mode)
-    const paper = getComputedStyle(root).getPropertyValue('--paper').trim()
-    if (paper) for (const meta of $$('meta[name="theme-color"]')) meta.setAttribute('content', paper)
-  }
-  apply(chosen === 'dark' || chosen === 'light' ? chosen : system.matches ? 'dark' : 'light')
-  if (!chosen) system.addEventListener('change', (e) => { if (!store.get(THEME_KEY)) apply(e.matches ? 'dark' : 'light'); label() })
+  applyTheme(chosen === 'dark' || chosen === 'light' ? chosen : system.matches ? 'dark' : 'light')
+  if (!chosen) system.addEventListener('change', (e) => { if (!store.get(THEME_KEY)) applyTheme(e.matches ? 'dark' : 'light') })
 
   const mark = document.querySelector('.sheet > .masthead .lv-cut')
   if (!mark) return
@@ -2141,12 +2165,8 @@ function theme () {
     mark.setAttribute('aria-label', `Switch to the ${next} edition`)
     mark.title = `Switch to the ${next} edition`
   }
-  const flip = () => {
-    const next = themeNow() === 'dark' ? 'light' : 'dark'
-    apply(next)
-    store.set(THEME_KEY, next)
-    label()
-  }
+  const flip = () => chooseTheme(themeNow() === 'dark' ? 'light' : 'dark')
+  themeListeners.push(label)
   label()
   mark.addEventListener('click', flip)
   mark.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip() } })

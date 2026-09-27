@@ -914,7 +914,18 @@ a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72
 .lv-reading-options button { min-height: 34px; min-width: 48px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 6px;
   background: transparent; color: var(--ink); font: .84rem/1.1 var(--body); cursor: pointer; }
 .lv-reading-options button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-@media (pointer: coarse) { .lv-aa { min-height: 36px; min-width: 44px; } .lv-reading-options button { min-height: 44px; } }
+/* Dark mode: one switch on the label's line, its knob to the right when on. */
+.lv-reading-switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lv-reading-switch .lv-reading-label { margin: 0; }
+.lv-switch { position: relative; flex: none; width: 48px; height: 28px; padding: 0; border: 1px solid var(--ink-3);
+  border-radius: 999px; background: transparent; cursor: pointer; transition: background-color .15s ease; }
+.lv-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--ink-3); transition: transform .15s ease; }
+.lv-switch[aria-checked="true"] { background: var(--ink); border-color: var(--ink); }
+.lv-switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--paper); }
+@media (pointer: coarse) { .lv-aa { min-height: 36px; min-width: 44px; } .lv-reading-options button { min-height: 44px; }
+  .lv-switch { width: 56px; height: 32px; } .lv-switch::after { width: 24px; height: 24px; }
+  .lv-switch[aria-checked="true"]::after { transform: translateX(24px); } }
 
 /* Tap targets: the small controls reach at least 24px, WCAG 2.2's floor. */
 .lv-tab { min-height: 24px; }
@@ -957,6 +968,10 @@ html:root[data-lv-contrast="high"][data-theme="dark"] {
   .lv-tab[aria-selected="true"], .lv-reading-options button[aria-pressed="true"] { outline: 2px solid Highlight; }
   .lv-cut { forced-color-adjust: none; }
   .lv-skip:focus, .lv-aa:focus-visible { outline: 2px solid Highlight; }
+  .lv-switch { border-color: ButtonText; }
+  .lv-switch::after { background: ButtonText; }
+  .lv-switch[aria-checked="true"] { background: Highlight; border-color: Highlight; }
+  .lv-switch[aria-checked="true"]::after { background: HighlightText; }
 }
 /* On a phone or a tablet the folio is two rows: the issue number (and, where
  * it fits, the window) with "Aa" at the far end, then the date beneath the

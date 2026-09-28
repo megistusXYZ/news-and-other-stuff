@@ -803,9 +803,9 @@ a.lv-panel-note-out { color: var(--accent); border-bottom: 1px solid var(--accen
 /* A story this reader has opened, marked where the paper links it. */
 a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72em; color: var(--ink-3); }
 
-/* The story you came from keeps a thin bar at its edge. */
-.lv-reading { box-shadow: inset 3px 0 0 var(--accent); transition: box-shadow .3s ease; }
-.col > .lv-reading, .cell.lv-reading { padding-left: 12px; }
+/* The story being read keeps a thin bar at its edge, and for a moment after closing. */
+.lv-current { box-shadow: inset 3px 0 0 var(--accent); transition: box-shadow .3s ease; }
+.col > .lv-current, .cell.lv-current { padding-left: 12px; }
 
 @media (max-width: 720px) {
   .lv-panel {

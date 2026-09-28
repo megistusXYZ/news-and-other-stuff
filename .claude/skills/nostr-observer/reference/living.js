@@ -584,6 +584,13 @@ function reader () {
   let index = -1
   let source = null
   let opener = null
+  // The link of whatever the panel shows now. Stepping with ‹ › moves the
+  // paper to each story, so closing lands the reader THERE, not back at the
+  // link they first clicked several stories ago.
+  let landing = null
+  // Closing pops the panel's history entry, and the browser would restore the
+  // scroll from when it was pushed: the same jump back, done by the browser.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
 
   const pathOf = (url) => {
     const u = new URL(url, BRAINSTORM)
@@ -706,9 +713,10 @@ function reader () {
       if (!document.body.classList.contains('lv-reading-open')) store.set(NOTE_KEY, { shown: (seen.shown || 0) + 1 })
     }
 
-    if (source) source.classList.remove('lv-reading')
+    if (source) source.classList.remove('lv-current')
     source = anchor ? anchor.closest('.story, .band .cell, .box') : null
-    if (source) source.classList.add('lv-reading')
+    if (source) source.classList.add('lv-current')
+    if (anchor) landing = anchor
 
     if (!document.body.classList.contains('lv-reading-open')) {
       opener = document.activeElement
@@ -719,15 +727,27 @@ function reader () {
 
   function hide () {
     document.body.classList.remove('lv-reading-open')
-    if (source) source.classList.remove('lv-reading')
+    const was = source
     source = null
     clear()
     for (const f of waiting.values()) f.remove()
     waiting.clear()
+    // Land on the story last read: bring it into view if it is not, and let
+    // its bar linger a moment so the eye finds it, then fade.
+    const back = landing && landing.isConnected ? landing : opener
+    landing = null
+    const block = was || (back && back.closest && back.closest('.story, .band .cell, .box'))
+    if (block) {
+      const r = block.getBoundingClientRect()
+      if (r.bottom < 0 || r.top > innerHeight) block.scrollIntoView({ block: 'center', behavior: 'auto' })
+      block.classList.add('lv-current')
+      setTimeout(() => { if (block !== source) block.classList.remove('lv-current') }, 1800)
+    }
+    // Focus follows without scrolling: the page is already where it should be.
     // After history.back() the browser may focus the fragment it returns to
-    // (the skip link's heading); the opener gets it back a frame later.
-    const back = opener
-    if (back && back.focus) { back.focus(); requestAnimationFrame(() => { if (document.activeElement !== back && back.isConnected) back.focus() }) }
+    // (the skip link's heading); ours gets it back a frame later.
+    const focus = () => { try { back.focus({ preventScroll: true }) } catch {} }
+    if (back && back.focus) { focus(); requestAnimationFrame(() => { if (document.activeElement !== back && back.isConnected) focus() }) }
   }
 
   // `#read=` names a PATH on brainstorm.world, or one of this edition's own

@@ -71,12 +71,13 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   assert.match(html, /id="full-btn"[^>]*>Full screen</, 'full screen, one press')
   assert.match(html, /id="more-btn"[^>]*aria-expanded="false"/)
   for (const item of ['Print a fresh edition', 'Open in new tab', 'Publish to my Blossom']) assert.match(html, new RegExp(item), item + ' is under More')
-  // Two rows, not six: the name and the tabs, then the bar with the paper's own folio facts.
-  assert.doesNotMatch(html, /class="folio|class="oxford"|id="today"/, 'no second date line or double rule above the paper')
-  assert.match(html, /class="[^"]*\bbrandrow\b"[\s\S]*News and Other Stuff[\s\S]*Set up[\s\S]*Your papers/, 'the name and the tabs share one row')
-  assert.match(html, /class="[^"]*\bbar\b[\s\S]*id="facts"/, 'the issue number and window ride in the bar')
+  // The paper's own header is the header: the page adds no name, no tabs and no date line of its own.
+  assert.doesNotMatch(html, /class="folio|class="oxford"|brandrow|class="sections/, 'nothing above the paper says what the paper says')
+  assert.match(html, /class="[^"]*\bbar\b[\s\S]*id="facts"/, 'once the paper\'s header has scrolled away, the bar carries its issue and window')
   assert.match(html, /id="aa-btn"[^>]*aria-label="Reading settings[^"]*"[^>]*>Aa</, 'Aa in the bar')
-  assert.match(html, /id="today-mark"[^>]*hidden/, '"not in yet" is a small mark, shown only when true')
+  assert.match(html, /id="more-menu"[\s\S]*Set up your paper/, 'set-up lives under More')
+  assert.match(html, /id="more-dot"[^>]*hidden/, '"not in yet" is a dot on More, shown only when true')
+  assert.match(html, /id="more-menu"[\s\S]*id="today-line"[^>]*hidden/, 'and its sentence the first line inside')
   assert.match(html, /<aside[^>]*id="issues"[\s\S]*id="printed"/, 'when and which edition: in the Issues drawer')
   assert.match(html, /<script type="module">[\s\S]*from '\/assets\/observer\.js'/, 'the page runs on its tested decisions')
   const script = await get('/assets/observer.js')

@@ -2,22 +2,24 @@
 // tested: the page (observer.html) imports this from /assets/observer.js.
 // Nothing here touches the DOM beyond what it is handed.
 
-// Reading has begun once the paper is this far down.
+// Without a measured masthead, reading has begun this far down.
 const READING = 40
 // Smaller moves than this, on a phone, are a thumb resting, not a direction.
 const JITTER = 6
 
 /**
- * How much of the header shows at scroll position y. At the top: all of it.
- * Reading on a desktop: a slim bar. On a phone the bar goes on the way down
- * and comes back on the way up; a jitter leaves it as it is (`now`).
+ * Whether the page's bar shows at scroll position y. While the paper's own
+ * header is in view (above `top`, where its masthead ends) there is no bar:
+ * the paper's header is the header, and nothing is said twice. Past it, a
+ * slim bar on a desktop; on a phone the bar goes on the way down and comes
+ * back on the way up, and a jitter leaves it as it is (`now`).
  */
-export function headState ({ y, lastY, phone, now }) {
-  if (y < READING) return 'full'
+export function headState ({ y, lastY, phone, now, top = READING }) {
+  if (y < top) return 'top'
   if (!phone) return 'slim'
   if (y > lastY + JITTER) return 'hidden'
   if (y < lastY - JITTER) return 'slim'
-  return now === 'full' ? 'slim' : now
+  return now === 'top' ? 'slim' : now
 }
 
 // One paper a day: each date's latest, newest first, as /api/editions lists them.

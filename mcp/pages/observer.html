@@ -36,50 +36,26 @@ a:hover { text-decoration-color: currentColor; }
 button { font: inherit; color: inherit; }
 .mono { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
 /* The paper's own measure (house.css .sheet: 1240px, 22px sides; 15px on a
- * phone), so the header's edges stand on the paper's columns. */
+ * phone), so the bar's edges stand on the paper's columns. */
 .wrap { max-width: 1240px; margin: 0 auto; padding: 0 22px; }
 
-/* --- the header, which gives way as the reader reads ---------------------- */
-/* Each part folds on its own row, so it slides shut rather than jumping. */
-.top { flex: none; background: var(--paper); position: relative; z-index: 5; }
-.fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .22s ease; }
+/* --- the bar: only once the paper's own header has scrolled away ---------------- */
+/* At the top the paper's own folio and masthead are the header, with this
+ * page's few controls set into the folio line; nothing is said twice. Past
+ * the masthead, a slim bar carries the name, the date and the issue. It lies
+ * over the paper, so its coming and going never moves a line of it. */
+.top { position: absolute; z-index: 5; top: 0; left: 0; right: 0; background: var(--paper); }
+.fold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .22s ease; }
 .fold > div { overflow: hidden; min-height: 0; }
-body[data-head="slim"] .lead,
-body[data-head="hidden"] .fold, body.full .fold { grid-template-rows: 0fr; }
-/* The bar clips only while it is away, so the More menu can hang below it. */
-.barfold > div { overflow: visible; }
-body[data-head="hidden"] .barfold > div, body.full .barfold > div { overflow: hidden; }
-
-.brandrow { display: flex; align-items: center; gap: 16px; min-height: 48px; }
-.name { margin: 0; font: 900 1.3rem/1 var(--display); letter-spacing: -.01em; white-space: nowrap; }
-.sections { display: flex; margin-left: auto; }
-.sections a { padding: 16px 0 14px; margin-left: 22px; text-decoration: none; color: var(--ink-3); white-space: nowrap; }
-.sections a:hover { color: var(--ink); }
-.sections a[aria-current] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
-.fine { height: 2px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
-
-/* The bar: the one line that stays while reading. */
-.barline { border-bottom: 1px solid var(--rule); }
+body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
+.barline { border-bottom: 1px solid var(--rule); box-shadow: 0 6px 18px rgba(10, 14, 24, .06); }
 .bar { display: flex; align-items: center; gap: 10px; min-height: 46px; }
-/* Collapsed, the name steps into the bar so the reader never loses it. */
-.mini { display: none; font: 900 1.02rem/1 var(--display); white-space: nowrap; margin-right: 8px; padding-right: 16px;
+.mini { font: 900 1.02rem/1 var(--display); white-space: nowrap; margin-right: 8px; padding-right: 16px;
   border-right: 1px solid var(--hair); text-decoration: none; }
-body[data-head="slim"] .mini { display: inline; }
 .issue { display: flex; align-items: center; min-width: 0; margin-left: -8px; }
 .issue h2 { margin: 0 2px; font: 700 1.08rem/1.15 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* Collapsed (and always on a phone) the date is short and the mark a dot. */
-.issue .short { display: none; }
-body[data-head="slim"] .issue .long { display: none; }
-body[data-head="slim"] .issue .short { display: inline; }
-body[data-head="slim"] .mark span { display: none; }
 .facts { margin: 0 0 0 6px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .facts b { font-weight: 500; color: var(--ink); }
-.mark { flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 6px 8px; border: 0; background: none; cursor: pointer; color: var(--teal); }
-.mark::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
-.mark[hidden] { display: none; }
-.tip { position: absolute; z-index: 30; margin: 0; max-width: 360px; padding: 10px 14px; background: var(--paper-2); border: 1px solid var(--rule);
-  border-left: 3px solid var(--teal); font-style: italic; font-size: .92rem; color: var(--ink-2); box-shadow: 0 14px 34px rgba(10, 14, 24, .16); }
-.tip[hidden] { display: none; }
 .step { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid transparent; background: none; cursor: pointer;
   font: 400 1.2rem/1 var(--serif); color: var(--ink-2); }
 .step:hover:not([disabled]) { border-color: var(--hair); color: var(--ink); }
@@ -87,13 +63,17 @@ body[data-head="slim"] .mark span { display: none; }
 .tools { margin-left: auto; display: flex; align-items: center; }
 .tool { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; background: none; border: 0; cursor: pointer;
   padding: 10px 12px; color: var(--ink); white-space: nowrap; }
+.tool + .tool { border-left: 1px solid var(--hair); }
 .tool:last-child { padding-right: 0; }
+.tool:hover { text-decoration: underline; text-underline-offset: 3px; }
 .aa { font: 700 .95rem/1 var(--display); letter-spacing: 0; text-transform: none; }
 .aa[hidden] { display: none; }
-.tool + .tool, .tool + .more, .more + .tool { border-left: 1px solid var(--hair); }
-.tool:hover { text-decoration: underline; text-underline-offset: 3px; }
-.more { position: relative; }
-.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 250px; padding: 6px 0; background: var(--paper-2);
+/* "Today's paper isn't in yet": a teal dot on More; the sentence inside it. */
+.dot { display: inline-block; width: 7px; height: 7px; margin-left: 7px; border-radius: 50%; background: var(--teal); vertical-align: 1px; }
+.dot[hidden] { display: none; }
+
+/* More hangs from whichever More was pressed: the bar's, or the one in the paper's folio. */
+.menu { position: fixed; z-index: 30; min-width: 260px; padding: 6px 0; background: var(--paper-2);
   border: 1px solid var(--rule); box-shadow: 0 14px 34px rgba(10, 14, 24, .16); }
 .menu[hidden] { display: none; }
 .menu a, .menu button { display: block; width: 100%; text-align: left; padding: 11px 16px; background: none; border: 0; cursor: pointer;
@@ -102,7 +82,8 @@ body[data-head="slim"] .mark span { display: none; }
 .menu button[disabled] { color: var(--ink-3); cursor: not-allowed; }
 .menu .phone { display: none; }
 .menu hr { border: 0; border-top: 1px solid var(--hair); margin: 6px 0; }
-
+.menu-note { margin: 4px 16px 10px; padding: 2px 0 2px 12px; border-left: 3px solid var(--teal); font-style: italic; font-size: .92rem; color: var(--ink-2); max-width: 300px; }
+.menu-note[hidden] { display: none; }
 .printed { margin: 8px 0 0; color: var(--ink-3); line-height: 1.7; }
 .printed:empty { display: none; }
 
@@ -157,21 +138,16 @@ body[data-head="slim"] .mark span { display: none; }
 @media (prefers-reduced-motion: reduce) { .fold, .drawer, .scrim, .exit { transition: none; } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-/* --- phones: the date and More; the bar hides on the way down -------------------- */
+/* --- phones: the bar hides on the way down and comes back on the way up ------------ */
 @media (max-width: 720px) {
   .wrap { padding: 0 15px; }
-  .brandrow { min-height: 44px; }
-  .name { font-size: 1.12rem; }
-  .sections a { margin-left: 14px; padding: 14px 0 12px; letter-spacing: .1em; }
-  .bar { gap: 2px; min-height: 48px; }
+  .bar { gap: 2px; min-height: 45px; }
+  .mini { display: none; }
   .issue { margin-left: -10px; }
   .issue h2 { font-size: 1rem; }
   .issue .long { display: none; }
-  .issue .short { display: inline; }
-  .facts .window, .facts .sep, .facts .vol, .mark span { display: none; }
-  .mark { padding: 6px 4px; }
+  .facts .window, .facts .sep, .facts .vol { display: none; }
   .facts { margin-left: 2px; }
-  body[data-head="slim"] .mini { display: none; }
   .tools .wide { display: none; }
   .menu .phone { display: block; }
   .step { width: 36px; height: 44px; }
@@ -179,54 +155,46 @@ body[data-head="slim"] .mark span { display: none; }
   .menu a, .menu button { padding: 14px 16px; }
   .exit { top: max(10px, env(safe-area-inset-top)); }
 }
+/* The short date on a phone; the long one elsewhere. */
+.issue .short { display: none; }
+@media (max-width: 720px) { .issue .short { display: inline; } }
 </style>
 </head>
-<body data-head="full">
+<body data-head="top">
 <header class="top" id="top">
-  <div class="fold lead"><div>
-    <div class="wrap brandrow">
-      <h1 class="name">News and Other Stuff</h1>
-      <nav class="sections mono" aria-label="Your Observer"><a href="/setup" id="tab">Set up</a><a href="/observer" aria-current="page">Your papers</a></nav>
-    </div>
-    <div class="wrap"><div class="fine" aria-hidden="true"></div></div>
-  </div></div>
-
-  <div class="fold barfold"><div><div class="barline"><div class="wrap bar">
-    <a class="mini" href="#" id="mini" aria-hidden="true" tabindex="-1">News and Other Stuff</a>
+  <div class="fold"><div><div class="barline"><div class="wrap bar">
+    <a class="mini" href="#" id="mini" title="Back to the top of the paper">News and Other Stuff</a>
     <div class="issue">
       <button class="step" type="button" id="prev" aria-label="Previous issue" disabled>‹</button>
       <h2 id="date"><span class="long">Your papers</span><span class="short"></span></h2>
       <button class="step" type="button" id="next" aria-label="Next issue" disabled>›</button>
     </div>
-    <p class="facts mono" id="facts" aria-live="polite">Loading your papers…</p>
-    <button class="mark mono" type="button" id="today-mark" aria-expanded="false" aria-controls="today-note" hidden><span>Today's not in yet</span></button>
-    <p class="tip" id="today-note" hidden></p>
+    <p class="facts mono" id="facts" aria-live="polite"></p>
     <div class="tools">
       <button class="tool wide" type="button" id="issues-btn" aria-expanded="false" aria-controls="issues">Issues</button>
       <button class="tool wide" type="button" id="full-btn">Full screen</button>
       <button class="tool aa" type="button" id="aa-btn" aria-label="Reading settings: text size, contrast, motion and dark mode" aria-expanded="false" hidden>Aa</button>
-      <div class="more">
-        <button class="tool" type="button" id="more-btn" aria-expanded="false" aria-controls="more-menu">More</button>
-        <div class="menu" id="more-menu" hidden>
-          <button class="phone" type="button" id="issues-item">Issues</button>
-          <button class="phone" type="button" id="full-item">Full screen</button>
-          <hr class="phone">
-          <button type="button" id="fresh-item" aria-controls="fresh">Print a fresh edition</button>
-          <a id="open-tab" href="#" target="_blank" rel="noopener">Open in new tab ↗</a>
-          <a href="/setup" id="setup-link">Change your paper</a>
-          <hr>
-          <button type="button" disabled title="Coming next: you sign it, and it is kept on your own media server">Publish to my Blossom · soon</button>
-        </div>
-      </div>
+      <button class="tool" type="button" id="more-btn" aria-expanded="false" aria-controls="more-menu">More<span class="dot" id="more-dot" hidden><span class="sr">, today's paper isn't in yet</span></span></button>
     </div>
   </div></div></div></div>
-
 </header>
 
 <main class="reader" aria-label="The paper">
   <p class="empty" id="empty" hidden></p>
   <iframe id="frame" title="Your paper" hidden></iframe>
 </main>
+
+<div class="menu" id="more-menu" hidden>
+  <p class="menu-note" id="today-line" hidden>Today's paper isn't in yet. Your Claude usually prints it around seven, or print a fresh edition now. Showing your latest.</p>
+  <button class="phone" type="button" id="issues-item">Issues</button>
+  <button class="phone" type="button" id="full-item">Full screen</button>
+  <hr class="phone">
+  <button type="button" id="fresh-item" aria-controls="fresh">Print a fresh edition</button>
+  <a id="open-tab" href="#" target="_blank" rel="noopener">Open in new tab ↗</a>
+  <a href="/setup" id="setup-link">Set up your paper</a>
+  <hr>
+  <button type="button" disabled title="Coming next: you sign it, and it is kept on your own media server">Publish to my Blossom · soon</button>
+</div>
 
 <button class="exit" type="button" id="exit" hidden>Exit full screen · Esc</button>
 
@@ -258,15 +226,45 @@ const $ = (id) => document.getElementById(id)
 const body = document.body
 const phone = matchMedia('(max-width: 720px)')
 const npub = (new URLSearchParams(location.search).get('npub') || '').trim()
-if (npub) { $('tab').href = $('setup-link').href = '/setup?npub=' + encodeURIComponent(npub) }
+if (npub) $('setup-link').href = '/setup?npub=' + encodeURIComponent(npub)
+const frame = $('frame')
+const paperDoc = () => { try { return frame.contentDocument } catch { return null } }
+// The paper's html carries two marks for the style this page lends it: the bar is showing, full screen is on.
+const mark = (name, on) => { const d = paperDoc(); if (d) d.documentElement.toggleAttribute(name, on) }
 
-// --- the header: full at the top, slim (desktop) or gone (phone) once reading
+// --- the bar: none while the paper's own header shows; slim past it (desktop), or gone on the way down (phone)
 let lastY = 0
-const head = (state) => { if (body.dataset.head !== state) body.dataset.head = state }
-const onScroll = (y) => { head(headState({ y, lastY, phone: phone.matches, now: body.dataset.head })); lastY = y }
-$('mini').addEventListener('click', (e) => { e.preventDefault(); try { $('frame').contentWindow.scrollTo({ top: 0, behavior: 'smooth' }) } catch {} })
+let topLine = 40
+const head = (state) => {
+  if (body.dataset.head === state) return
+  body.dataset.head = state
+  mark('data-observer-bar', state === 'slim')
+}
+const onScroll = (y) => { head(headState({ y, lastY, phone: phone.matches, now: body.dataset.head, top: topLine })); lastY = y }
+$('mini').addEventListener('click', (e) => { e.preventDefault(); try { frame.contentWindow.scrollTo({ top: 0, behavior: 'smooth' }) } catch {} })
 
-// --- full screen: the paper alone; Esc or a quiet button brings the bar back
+// --- More: the occasional things, hung from whichever More was pressed
+let menuFrom = null
+const closeMenu = () => {
+  $('more-menu').hidden = true
+  for (const b of mores()) b.setAttribute('aria-expanded', 'false')
+}
+const mores = () => [$('more-btn'), paperDoc() && paperDoc().querySelector('.obs-more')].filter(Boolean)
+const openMenu = (button, inPaper) => {
+  const r = button.getBoundingClientRect()
+  const f = inPaper ? frame.getBoundingClientRect() : { top: 0, left: 0 }
+  const m = $('more-menu')
+  m.hidden = false
+  m.style.top = Math.round(f.top + r.bottom + 6) + 'px'
+  m.style.right = Math.max(8, Math.round(innerWidth - (f.left + r.right))) + 'px'
+  button.setAttribute('aria-expanded', 'true')
+  menuFrom = button
+}
+const toggleMenu = (button, inPaper) => { if ($('more-menu').hidden) openMenu(button, inPaper); else closeMenu() }
+$('more-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleMenu($('more-btn'), false) })
+document.addEventListener('click', (e) => { if (!e.target.closest('#more-menu')) closeMenu() })
+
+// --- full screen: the paper alone; Esc or a quiet button brings the page back
 let quietTimer
 const wake = () => {
   if (!body.classList.contains('full')) return
@@ -274,44 +272,25 @@ const wake = () => {
   clearTimeout(quietTimer)
   quietTimer = setTimeout(() => $('exit').classList.add('quiet'), 2000)
 }
-const closeMenu = () => { $('more-menu').hidden = true; $('more-btn').setAttribute('aria-expanded', 'false') }
 const full = (on) => {
   body.classList.toggle('full', on)
+  mark('data-observer-full', on)
   $('exit').hidden = !on
   closeMenu()
-  if (on) { wake(); $('exit').focus({ preventScroll: true }) } else { clearTimeout(quietTimer); $('full-btn').focus({ preventScroll: true }) }
+  if (on) { wake(); $('exit').focus({ preventScroll: true }) } else { clearTimeout(quietTimer); (body.dataset.head === 'slim' ? $('full-btn') : frame).focus({ preventScroll: true }) }
 }
 $('full-btn').addEventListener('click', () => full(true))
 $('full-item').addEventListener('click', () => full(true))
 $('exit').addEventListener('click', () => full(false))
 addEventListener('mousemove', wake)
 
-// --- "not in yet": a small mark that says its sentence when asked
-const tip = (on) => {
-  $('today-note').hidden = !on
-  $('today-mark').setAttribute('aria-expanded', String(on))
-  if (on) {
-    const m = $('today-mark').getBoundingClientRect(); const bar = $('today-mark').closest('.bar').getBoundingClientRect()
-    $('today-note').style.left = Math.max(0, Math.min(m.left - bar.left, bar.width - 360)) + 'px'
-    $('today-note').style.top = (m.bottom - bar.top + 6) + 'px'
-  }
-}
-$('today-mark').addEventListener('click', () => tip($('today-note').hidden))
-document.addEventListener('click', (e) => { if (!e.target.closest('#today-mark')) tip(false) })
-
-// --- More: a short list of the occasional things
-$('more-btn').addEventListener('click', () => {
-  const open = $('more-menu').hidden
-  $('more-menu').hidden = !open
-  $('more-btn').setAttribute('aria-expanded', String(open))
-})
-document.addEventListener('click', (e) => { if (!e.target.closest('.more')) closeMenu() })
-
 // --- Print a fresh edition
-const placeFresh = () => { $('fresh').style.top = ($('top').getBoundingClientRect().bottom + 8) + 'px' }
-const fresh = (on) => { $('fresh').hidden = !on; if (on) { placeFresh(); $('fresh-copy').focus() } }
+const fresh = (on) => {
+  $('fresh').hidden = !on
+  if (on) { $('fresh').style.top = (body.dataset.head === 'slim' ? $('top').getBoundingClientRect().bottom + 8 : 56) + 'px'; $('fresh-copy').focus() }
+}
 $('fresh-item').addEventListener('click', () => { closeMenu(); fresh(true) })
-$('fresh-close').addEventListener('click', () => { fresh(false); $('more-btn').focus() })
+$('fresh-close').addEventListener('click', () => { fresh(false); if (menuFrom) menuFrom.focus() })
 $('fresh-copy').addEventListener('click', async () => {
   const b = $('fresh-copy'); const was = b.textContent
   try { await navigator.clipboard.writeText($('fresh-prompt').textContent); b.textContent = 'Copied' } catch { b.textContent = 'Select and copy' }
@@ -319,13 +298,13 @@ $('fresh-copy').addEventListener('click', async () => {
 })
 
 // --- the Issues drawer: this week, then every paper; nothing behind it reachable
-const behind = [$('top'), document.querySelector('main'), $('exit'), $('fresh')]
+const behind = [$('top'), document.querySelector('main'), $('exit'), $('fresh'), $('more-menu')]
 let opener = null
 const drawer = (on) => {
   const d = $('issues'); const s = $('scrim')
   $('issues-btn').setAttribute('aria-expanded', String(on))
   // Who opened it, noted before the page behind goes inert and drops focus.
-  if (on) opener = document.activeElement && document.activeElement !== body ? document.activeElement : phone.matches ? $('more-btn') : $('issues-btn')
+  if (on) opener = document.activeElement && document.activeElement !== body ? document.activeElement : null
   shutBehind(on, behind, d)
   if (on) {
     closeMenu()
@@ -336,7 +315,8 @@ const drawer = (on) => {
   } else {
     d.classList.remove('on'); s.classList.remove('on')
     setTimeout(() => { d.hidden = s.hidden = true }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240)
-    if (opener && opener.focus) opener.focus({ preventScroll: true })
+    const back = opener === frame ? paperDoc() && paperDoc().querySelector('.obs-issues') : opener
+    if (back && back.focus) back.focus({ preventScroll: true })
   }
 }
 $('issues-btn').addEventListener('click', () => drawer(true))
@@ -349,8 +329,7 @@ const onKey = (e) => {
   if (e.key !== 'Escape') return
   if (!$('issues').hidden) drawer(false)
   else if (!$('fresh').hidden) fresh(false)
-  else if (!$('more-menu').hidden) { closeMenu(); $('more-btn').focus() }
-  else if (!$('today-note').hidden) { tip(false); $('today-mark').focus() }
+  else if (!$('more-menu').hidden) { closeMenu(); if (menuFrom) menuFrom.focus() }
   else if (body.classList.contains('full')) full(false)
 }
 document.addEventListener('keydown', onKey)
@@ -360,18 +339,44 @@ const wear = (doc) => {
   const theme = doc.documentElement.getAttribute('data-theme')
   if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme
 }
-let watching = null
 
-// --- inside this page the bar carries the paper's folio, so the paper's own
-// folio line steps aside; its reading panel stays, pinned under the bar and
-// opened by the bar's Aa. Opened on its own, the paper is untouched.
-const EMBEDDED = `
-  .sheet > .folio { height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border: 0 !important; overflow: visible !important; }
-  .sheet > .folio > :not(.lv-reading) { display: none !important; }
-  .lv-reading { position: fixed !important; top: 8px !important; right: max(15px, calc((100vw - 1240px) / 2 + 22px)) !important; }`
+// --- the style this page lends the paper: its folio takes the page's controls;
+// under the bar, the paper's section bar and reading panel sit below it. The
+// paper opened on its own never has this.
+const LENT = `
+  .obs-tools { display: inline-flex; align-items: center; order: 1; margin-left: 10px; }
+  .obs-tools button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink); background: none; border: 0;
+    padding: 4px 9px; min-height: 28px; cursor: pointer; }
+  .obs-tools button + button { border-left: 1px solid var(--rule); }
+  .obs-tools button:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .obs-tools button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .obs-tools .obs-more:last-child { padding-right: 0; }
+  .obs-dot::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: #267882; vertical-align: 1px; }
+  .lv-step.obs-off { opacity: .3; cursor: default; }
+  button.lv-step { background: none; border: 0; margin: 0; font: 400 1.05em/1 var(--body); color: var(--ink-3); padding: 0 .5em; }
+  button.lv-step.lv-prev { padding-left: 0; }
+  button.lv-step:hover:not(.obs-off) { color: var(--accent); }
+  button.lv-step:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .lv-step[role="button"] { cursor: pointer; }
+  html[data-observer-full] .obs-tools { display: none; }
+  html[data-observer-bar] .lv-reading { position: fixed !important; top: 54px !important; right: max(15px, calc((100vw - 1240px) / 2 + 22px)) !important; }
+  @media (max-width: 720px) {
+    .obs-tools { margin-left: 2px; }
+    .obs-tools .obs-wide { display: none; }
+    html[data-observer-bar] .lv-index { top: 45px !important; }
+  }`
+
+let paper = null // { editions, current, show }
 let aaWatch = null
-const embed = (doc) => {
+const button = (doc, cls, text, onClick) => {
+  const b = doc.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = text
+  b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClick(b) })
+  return b
+}
+const lend = (doc) => {
+  if (!doc.getElementById('observer-lent')) doc.head.append(Object.assign(doc.createElement('style'), { id: 'observer-lent', textContent: LENT }))
   const folio = doc.querySelector('.sheet > .folio')
+  // The folio's facts, for the bar once the folio has scrolled away.
   const facts = folioFacts(folio ? [...folio.children].filter((c) => c.tagName === 'SPAN').map((c) => c.textContent) : [])
   $('facts').replaceChildren()
   if (facts.issue) {
@@ -382,8 +387,47 @@ const embed = (doc) => {
   }
   if (facts.issue && facts.window) $('facts').append(Object.assign(document.createElement('span'), { className: 'sep', textContent: ' · ' }))
   if (facts.window) $('facts').append(Object.assign(document.createElement('span'), { className: 'window', textContent: facts.window }))
-  if (!doc.getElementById('observer-embedded')) doc.head.append(Object.assign(doc.createElement('style'), { id: 'observer-embedded', textContent: EMBEDDED }))
-  const aa = doc.querySelector('.lv-aa')
+  if (!folio) return
+
+  // The page's controls, in the folio line beside the paper's own Aa.
+  if (!folio.querySelector('.obs-tools')) {
+    const tools = doc.createElement('span'); tools.className = 'obs-tools'
+    tools.append(
+      button(doc, 'obs-issues obs-wide', 'Issues', () => { opener = frame; drawer(true) }),
+      button(doc, 'obs-full obs-wide', 'Full screen', () => full(true)),
+      button(doc, 'obs-more', 'More', (b) => toggleMenu(b, true)),
+    )
+    tools.querySelector('.obs-more').setAttribute('aria-controls', 'more-menu')
+    tools.querySelector('.obs-more').setAttribute('aria-expanded', 'false')
+    const aa = folio.querySelector('.lv-aa')
+    if (aa) aa.after(tools); else folio.append(tools)
+  }
+  folio.querySelector('.obs-more').classList.toggle('obs-dot', !$('today-line').hidden)
+
+  // The paper's own ‹ › step between this reader's issues here. A paper
+  // printed through the connector was dressed alone, with none: it gets them.
+  const issueSpan = [...folio.children].find((c) => c.tagName === 'SPAN' && /No\.\s/.test(c.textContent))
+  if (issueSpan && !folio.querySelector('.lv-prev')) {
+    issueSpan.prepend(Object.assign(doc.createElement('button'), { type: 'button', className: 'lv-step lv-prev', textContent: '‹' }))
+    issueSpan.append(Object.assign(doc.createElement('button'), { type: 'button', className: 'lv-step lv-next', textContent: '›' }))
+  }
+  if (paper) {
+    for (const [cls, by, word] of [['lv-prev', 1, 'Previous'], ['lv-next', -1, 'Next']]) {
+      const el = folio.querySelector('.' + cls)
+      if (!el) continue
+      const target = stepIssue(paper.editions, paper.current, by)
+      el.removeAttribute('href'); el.removeAttribute('rel')
+      el.setAttribute('role', 'button')
+      el.classList.toggle('obs-off', !target)
+      if (target) { el.tabIndex = 0; el.removeAttribute('aria-hidden'); el.setAttribute('aria-label', `${word} issue: ${short(target.date)}`) }
+      else { el.tabIndex = -1; el.setAttribute('aria-hidden', 'true') }
+      el.onclick = (e) => { e.preventDefault(); if (target) paper.show(target) }
+      el.onkeydown = (e) => { if ((e.key === 'Enter' || e.key === ' ') && target) { e.preventDefault(); paper.show(target) } }
+    }
+  }
+
+  // The bar's Aa presses the paper's own: one reading panel, one set of choices.
+  const aa = folio.querySelector('.lv-aa')
   $('aa-btn').hidden = !aa
   if (aaWatch) aaWatch.disconnect()
   if (aa) {
@@ -391,26 +435,34 @@ const embed = (doc) => {
     aaWatch = new MutationObserver(sync); aaWatch.observe(aa, { attributes: true, attributeFilter: ['aria-expanded'] }); sync()
   }
 }
-// The bar's Aa presses the paper's own: one reading panel, one set of choices.
 $('aa-btn').addEventListener('click', (e) => {
   e.stopPropagation()
-  try { const aa = $('frame').contentDocument.querySelector('.lv-aa'); if (aa) aa.click() } catch {}
+  const aa = paperDoc() && paperDoc().querySelector('.lv-aa')
+  if (aa) aa.click()
 })
+
 // The paper is served from here, so its scroll, keys and colours can be heard directly.
-$('frame').addEventListener('load', () => {
+let watching = null
+frame.addEventListener('load', () => {
   try {
-    const w = $('frame').contentWindow
+    const w = frame.contentWindow; const doc = w.document
     lastY = 0
+    const measure = () => { const m = doc.querySelector('.sheet > .masthead'); topLine = m ? m.getBoundingClientRect().bottom + w.scrollY : 40 }
+    measure()
+    w.addEventListener('resize', measure)
     w.addEventListener('scroll', () => onScroll(w.scrollY), { passive: true })
     w.addEventListener('keydown', onKey)
     w.addEventListener('mousemove', wake, { passive: true })
     w.addEventListener('touchstart', wake, { passive: true })
-    wear(w.document)
+    doc.addEventListener('click', (e) => { if (!e.target.closest('.obs-more')) closeMenu() })
+    wear(doc)
     if (watching) watching.disconnect()
-    watching = new MutationObserver(() => wear(w.document))
-    watching.observe(w.document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
-    embed(w.document)
-  } catch { /* a paper from elsewhere: the header simply stays */ }
+    watching = new MutationObserver(() => wear(doc))
+    watching.observe(doc.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    lend(doc)
+    mark('data-observer-bar', body.dataset.head === 'slim')
+    mark('data-observer-full', body.classList.contains('full'))
+  } catch { /* a paper from elsewhere: the page's own bar is all it has */ }
 })
 
 const dayName = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
@@ -419,53 +471,45 @@ const monthOf = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-U
 const clock = (ts) => ts ? new Date(ts * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e }
 
-async function main () {
-  if (!npub) {
-    $('facts').textContent = 'Add ?npub= to the address to see your papers'
-    $('empty').hidden = false
-    $('empty').textContent = 'No reader named. On Brainstorm this page knows you from your sign-in.'
-    return
-  }
+// With no paper to lend its header, the bar is the header.
+const noPaper = (text) => { head('slim'); $('facts').textContent = text; $('empty').hidden = false; $('empty').textContent = text }
 
-  // Today's paper not in yet: say so, and when it usually comes.
+async function main () {
+  if (!npub) return noPaper('No reader named. On Brainstorm this page knows you from your sign-in.')
+
+  // Today's paper not in yet: a dot on More, and its sentence inside.
   fetch('/api/today?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : null).then(async (t) => {
     if (!t || t.in) return
     const any = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).catch(() => [])
     if (!any.length) return
-    $('today-mark').hidden = false
-    $('today-note').textContent = 'Today\'s paper isn\'t in yet. Your Claude usually prints it around seven, or print a fresh edition now. Below is your latest.'
+    $('today-line').hidden = false
+    $('more-dot').hidden = false
+    const inPaper = paperDoc() && paperDoc().querySelector('.obs-more')
+    if (inPaper) inPaper.classList.add('obs-dot')
   }).catch(() => {})
 
   const editions = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : [])
-  if (!editions.length) {
-    $('facts').textContent = 'No papers yet'
-    $('empty').hidden = false
-    $('empty').textContent = 'Nothing handed in yet. Set up your daily print, or print a fresh edition now.'
-    return
-  }
+  if (!editions.length) return noPaper('Nothing handed in yet. Set up your daily print, or print a fresh edition now.')
   const byDate = papersByDay(editions)
   const newest = byDate.values().next().value
-  let current = null
 
-  // A new issue arrives at its top, with the full header back. The address
+  // A new issue arrives at its top, with its own header showing. The address
   // names it, so a reload or a shared link opens the same one, and Back
   // returns to the one before.
   const show = (e, how = 'push') => {
-    current = e
-    head('full'); lastY = 0
+    paper.current = e
+    head('top'); lastY = 0
     $('date').querySelector('.long').textContent = dayName(e.date)
     $('date').querySelector('.short').textContent = short(e.date)
-    $('frame').title = 'Your paper, ' + dayName(e.date)
+    frame.title = 'Your paper, ' + dayName(e.date)
     const window = e.until ? new Date(e.until * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : ''
     const f = e.fullness
-    $('facts').textContent = ''
     $('printed').textContent = [
       `Printed ${clock(e.printedAt)}${window ? ' · 24 hours to ' + window : ''} · edition ${e.code}`,
       f ? `${f.sections} sections · ${f.pictures} pictures` : '',
       e.topics && e.topics.length ? 'Your topics: ' + e.topics.join(', ') : '',
     ].filter(Boolean).join(' · ')
     // Swapped in place, so the paper adds nothing to history: Back belongs to the page.
-    const frame = $('frame')
     if (frame.getAttribute('src')) { try { frame.contentWindow.location.replace(e.url) } catch { frame.src = e.url } } else frame.src = e.url
     frame.hidden = false
     $('open-tab').href = e.url
@@ -476,7 +520,8 @@ async function main () {
     if (how === 'push' && address !== location.search) history.pushState(null, '', address)
     else if (how === 'replace') history.replaceState(null, '', address)
   }
-  const step = (by) => { const e = stepIssue(editions, current, by); if (e) show(e) }
+  paper = { editions, current: null, show }
+  const step = (by) => { const e = stepIssue(editions, paper.current, by); if (e) show(e) }
   $('prev').addEventListener('click', () => step(1))
   $('next').addEventListener('click', () => step(-1))
   const pick = (e) => () => { show(e); drawer(false) }
@@ -505,7 +550,7 @@ async function main () {
   }
   show(issueFromAddress(location.search, editions) || newest, 'replace')
 }
-main().catch(() => { $('facts').textContent = 'Could not load your papers' })
+main().catch(() => noPaper('Could not load your papers'))
 </script>
 </body>
 </html>

@@ -881,18 +881,19 @@ paper lands on the reader's Observer page in brainstorm.world.
     a "connected" line that lights on the reader's first tool call, and a
     topics box that composes the daily prompt. Nothing is stored.
   - `/observer`: the paper fills the window and is the only thing that
-    scrolls. The header is two rows on the paper's own measure (1240px, 22px
-    sides; 15px on a phone): the name with the Set up / Your papers tabs,
-    then the bar: date ‹ ›, the paper's own folio facts (Vol. · No., the 24h
-    window, read from the paper), a teal mark when today's paper is not in,
-    Issues, Full screen, Aa (the paper's reading panel) and More. Inside the
-    page the paper's own folio line steps aside (a style the page adds to the
-    paper; opened alone it is untouched). The header gives way as the reader
-    reads: the name row folds and the name steps into a slim pinned bar on
-    desktop; on a phone the bar hides on the way down. Full screen hides even the bar; Esc or a fading button brings it
-    back. One Issues drawer holds "This week" (gaps shown) and every paper by
-    month. More holds "Print a fresh edition" (the prompt to paste), "Open in
-    new tab", and a disabled "Publish to my Blossom".
+    scrolls. At the top the paper's own folio and masthead are the header:
+    the page adds nothing above them, and lends the folio line its controls
+    (Issues, Full screen, More beside the paper's Aa; More alone on a phone)
+    and ‹ › that step between this reader's issues (added when the paper was
+    dressed without them). Once the masthead has scrolled away a slim bar
+    appears over the paper: the name, the date ‹ ›, the folio's issue and
+    window (read from the paper), Issues, Full screen, Aa and More; on a
+    phone it hides on the way down. Nothing is said twice at once. Full
+    screen hides the page's controls; Esc or a fading button brings them
+    back. One Issues drawer holds "This week" (gaps shown), every paper by
+    month, and when and which edition. More holds "Today's paper isn't in
+    yet" (a teal dot on More when true), "Print a fresh edition", "Open in
+    new tab", "Set up your paper", and a disabled "Publish to my Blossom".
   - They read three small JSON routes: `/api/readiness` (public, by npub),
     `/api/status`, and `/api/editions`, which lists editions only for readers
     this connector serves. Each paper is served at

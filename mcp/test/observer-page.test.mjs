@@ -6,15 +6,18 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { headState, stepIssue, issueFromAddress, addressFor, shutBehind, folioFacts } from '../pages/observer.js'
 
-test('the header is whole at the top, a slim bar while reading on a desktop, and on a phone gone on the way down and back on the way up', () => {
-  assert.equal(headState({ y: 0, lastY: 500, phone: false, now: 'slim' }), 'full', 'back at the top, the whole header')
-  assert.equal(headState({ y: 39, lastY: 0, phone: true, now: 'full' }), 'full', 'a nudge is not reading yet')
-  assert.equal(headState({ y: 400, lastY: 300, phone: false, now: 'full' }), 'slim')
-  assert.equal(headState({ y: 300, lastY: 400, phone: false, now: 'slim' }), 'slim', 'on a desktop the bar stays either way')
-  assert.equal(headState({ y: 400, lastY: 300, phone: true, now: 'slim' }), 'hidden', 'down on a phone: out of the way')
-  assert.equal(headState({ y: 300, lastY: 400, phone: true, now: 'hidden' }), 'slim', 'up on a phone: the bar comes back')
-  assert.equal(headState({ y: 402, lastY: 400, phone: true, now: 'hidden' }), 'hidden', 'a jitter changes nothing')
-  assert.equal(headState({ y: 398, lastY: 400, phone: true, now: 'slim' }), 'slim')
+test('no bar while the paper\'s own header is in view; once it has scrolled away, a slim bar on a desktop, and on a phone gone on the way down and back on the way up', () => {
+  const top = 320 // where the paper's masthead ends
+  assert.equal(headState({ y: 0, lastY: 500, phone: false, now: 'slim', top }), 'top', 'at the top the paper\'s own header is the header')
+  assert.equal(headState({ y: 319, lastY: 0, phone: true, now: 'top', top }), 'top', 'the masthead still showing: nothing repeated')
+  assert.equal(headState({ y: 400, lastY: 300, phone: false, now: 'top', top }), 'slim', 'the masthead gone: the bar carries it')
+  assert.equal(headState({ y: 380, lastY: 400, phone: false, now: 'slim', top }), 'slim', 'on a desktop the bar stays either way')
+  assert.equal(headState({ y: 500, lastY: 400, phone: true, now: 'slim', top }), 'hidden', 'down on a phone: out of the way')
+  assert.equal(headState({ y: 400, lastY: 500, phone: true, now: 'hidden', top }), 'slim', 'up on a phone: the bar comes back')
+  assert.equal(headState({ y: 502, lastY: 500, phone: true, now: 'hidden', top }), 'hidden', 'a jitter changes nothing')
+  assert.equal(headState({ y: 324, lastY: 322, phone: true, now: 'top', top }), 'slim', 'just past the masthead, the bar arrives')
+  assert.equal(headState({ y: 30, lastY: 0, phone: false, now: 'top' }), 'top', 'a paper with no masthead measured: a little way down still counts as the top')
+  assert.equal(headState({ y: 60, lastY: 0, phone: false, now: 'top' }), 'slim')
 })
 
 // As /api/editions lists them: newest first, a reprint on the 27th, nothing on the 26th.

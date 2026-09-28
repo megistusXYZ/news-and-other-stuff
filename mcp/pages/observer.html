@@ -121,27 +121,35 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 .drawer-body { overflow-y: auto; padding: 6px 20px 28px; }
 .count { margin: 8px 0 0; color: var(--ink-3); }
 .issue-list { list-style: none; margin: 0; padding: 0; }
-.issue-list .month { margin: 18px 0 2px; color: var(--ink-3); }
-.issue-row { display: block; width: 100%; text-align: left; padding: 12px 0 12px 14px; margin-left: -14px; background: none; border: 0;
-  border-left: 3px solid transparent; border-bottom: 1px solid var(--hair); color: var(--ink); cursor: pointer; }
-.issue-row:hover { background: var(--paper-2); }
-.issue-row[aria-current="true"] { border-left-color: var(--teal); background: var(--paper-2); }
+.issue-list .month { margin: 22px 0 6px; color: var(--ink-3); }
+/* One day, one block: the teal edge marks the paper being read; its other
+ * printings sit inside the same block, never crowding the next. */
+.day-item { position: relative; padding: 12px 12px 12px 14px; border-left: 3px solid transparent; border-bottom: 1px solid var(--hair); }
+.day-item:hover { background: var(--paper-2); }
+.day-item.current { border-left-color: var(--teal); background: var(--paper-2); }
+.issue-row { display: block; width: 100%; text-align: left; padding: 0; background: none; border: 0; color: var(--ink); cursor: pointer; }
+.issue-row:focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; }
 .row-meta { display: block; color: var(--ink-2); }
 .row-meta b { color: var(--ink); font-weight: 500; }
-.row-lead { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 5px 0 5px;
+.row-lead { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 6px 0;
   font: 700 1.02rem/1.3 var(--display); }
 .row-foot { display: block; color: var(--ink-3); }
 .now { display: none; color: var(--teal); }
-.issue-row[aria-current="true"] .now { display: inline; }
-.also { margin: -4px 0 10px; color: var(--ink-3); }
+.day-item.current .now { display: inline; }
+.also { margin: 8px 0 0; padding-top: 8px; border-top: 1px dotted var(--hair); color: var(--ink-3); }
 .reprint { background: none; border: 0; padding: 2px 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink-2);
   text-decoration: underline; text-decoration-color: var(--hair); text-underline-offset: 3px; cursor: pointer; }
+.reprint:hover { color: var(--ink); text-decoration-color: currentColor; }
 .reprint[aria-current="true"] { color: var(--teal); text-decoration-color: currentColor; }
-.gap { padding: 9px 0; border-bottom: 1px solid var(--hair); color: var(--ink-3); font-style: italic; font-size: .9rem; }
-.today-row { margin: 14px 0 6px; padding: 12px 14px; border: 1px dashed var(--ink-3); }
-.today-row p { margin: 0 0 8px; font-size: .95rem; color: var(--ink-2); }
-.today-row .mono { color: var(--ink); margin-bottom: 6px; }
+.gap { padding: 10px 0 10px 17px; border-bottom: 1px solid var(--hair); color: var(--ink-3); font-style: italic; font-size: .9rem; }
+/* Today, not in yet: a note with a way to print, not an alarm. */
+.today-row { margin: 16px 0 4px; padding: 12px 14px; border: 1px solid var(--hair); border-left: 3px solid var(--teal); background: var(--paper-2); }
+.today-row p { margin: 0; font-size: .95rem; color: var(--ink-2); }
+.today-row .mono { color: var(--ink); margin-bottom: 4px; }
 .today-row[hidden] { display: none; }
+.link { margin-top: 10px; padding: 4px 0; background: none; border: 0; cursor: pointer; color: var(--teal);
+  font: 500 .72rem/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 4px; }
+.link:hover { color: var(--ink); }
 
 /* --- Print a fresh edition: a small sheet under the bar -------------------------- */
 .pop { position: fixed; z-index: 45; right: max(16px, calc((100vw - 1240px) / 2 + 22px)); width: min(440px, calc(100vw - 32px));
@@ -174,7 +182,8 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
   .menu a, .menu button { padding: 14px 16px; }
   .exit { top: max(10px, env(safe-area-inset-top)); }
   .drawer { width: 100vw; border-left: 0; }
-  .issue-row { padding: 14px 0 14px 14px; }
+  .day-item { padding: 14px; }
+  .drawer-head, .drawer-body { padding-left: 16px; padding-right: 16px; }
 }
 /* The short date on a phone; the long one elsewhere. */
 .issue .short { display: none; }
@@ -237,7 +246,7 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
     <div class="today-row" id="today-row" hidden>
       <p class="mono" id="today-row-date"></p>
       <p>Not printed yet. Your Claude usually prints it around seven.</p>
-      <button class="copy" type="button" id="today-print">Print it now</button>
+      <button class="link" type="button" id="today-print">Print it now →</button>
     </div>
     <ol class="issue-list" id="issue-list"></ol>
   </div>
@@ -324,7 +333,7 @@ $('fresh-copy').addEventListener('click', async () => {
 // --- the Issues drawer: this week, then every paper; nothing behind it reachable
 const behind = [$('top'), document.querySelector('main'), $('exit'), $('fresh'), $('more-menu')]
 let opener = null
-const drawer = (on) => {
+const drawer = (on, byKeyboard = false) => {
   const d = $('issues'); const s = $('scrim')
   $('issues-btn').setAttribute('aria-expanded', String(on))
   // Who opened it, noted before the page behind goes inert and drops focus.
@@ -335,7 +344,8 @@ const drawer = (on) => {
     d.hidden = s.hidden = false
     requestAnimationFrame(() => { d.classList.add('on'); s.classList.add('on') })
     const here = d.querySelector('.issue-row[aria-current="true"], .reprint[aria-current="true"]') || d.querySelector('.issue-row') || $('issues-close')
-    here.focus()
+    // A keyboard reader sees where focus landed; a pointer reader is not shown a ring they did not ask for.
+    here.focus({ focusVisible: byKeyboard })
   } else {
     d.classList.remove('on'); s.classList.remove('on')
     setTimeout(() => { d.hidden = s.hidden = true }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240)
@@ -343,8 +353,8 @@ const drawer = (on) => {
     if (back && back.focus) back.focus({ preventScroll: true })
   }
 }
-$('issues-btn').addEventListener('click', () => drawer(true))
-$('issues-item').addEventListener('click', () => drawer(true))
+$('issues-btn').addEventListener('click', (e) => drawer(true, e.detail === 0))
+$('issues-item').addEventListener('click', (e) => drawer(true, e.detail === 0))
 $('issues-close').addEventListener('click', () => drawer(false))
 $('scrim').addEventListener('click', () => drawer(false))
 
@@ -394,7 +404,7 @@ let paper = null // { editions, current, show }
 let aaWatch = null
 const button = (doc, cls, text, onClick) => {
   const b = doc.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = text
-  b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClick(b) })
+  b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClick(b, e) })
   return b
 }
 const lend = (doc) => {
@@ -417,7 +427,7 @@ const lend = (doc) => {
   if (!folio.querySelector('.obs-tools')) {
     const tools = doc.createElement('span'); tools.className = 'obs-tools'
     tools.append(
-      button(doc, 'obs-issues obs-wide', 'Issues', () => { opener = frame; drawer(true) }),
+      button(doc, 'obs-issues obs-wide', 'Issues', (b, e) => { opener = frame; drawer(true, e.detail === 0) }),
       button(doc, 'obs-full obs-wide', 'Full screen', () => full(true)),
       button(doc, 'obs-more', 'More', (b) => toggleMenu(b, true)),
     )
@@ -535,6 +545,7 @@ async function main () {
     $('prev').disabled = !stepIssue(editions, e, 1)
     $('next').disabled = !stepIssue(editions, e, -1)
     document.querySelectorAll('#issue-list [data-code]').forEach((d) => d.setAttribute('aria-current', String(d.dataset.code === e.code)))
+    document.querySelectorAll('#issue-list .day-item').forEach((li) => li.classList.toggle('current', !!li.querySelector('[aria-current="true"]')))
     const address = addressFor(location.search, e)
     if (how === 'push' && address !== location.search) history.pushState(null, '', address)
     else if (how === 'replace') history.replaceState(null, '', address)
@@ -558,6 +569,7 @@ async function main () {
     else if (r.kind === 'gap') { li.className = 'gap'; li.textContent = r.days === 1 ? `No paper ${short(r.from)}` : `No papers ${short(r.from)} – ${short(r.to)}` }
     else {
       const e = r.paper
+      li.className = 'day-item'
       const row = el('button', 'issue-row'); row.type = 'button'; row.dataset.code = e.code
       const meta = el('span', 'row-meta mono')
       if (number(e)) meta.append(el('b', null, number(e)), ' · ')

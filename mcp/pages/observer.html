@@ -18,9 +18,12 @@
   --serif: "Source Serif 4", Georgia, serif; --display: "Playfair Display", Georgia, serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   color-scheme: light;
 }
+/* Dark with the device, unless the paper has been set light or dark: then
+ * the page wears the paper's choice (the script copies it to data-theme). */
 @media (prefers-color-scheme: dark) {
-  :root { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441; --teal: #13D2E5; --shade: rgba(0, 0, 0, .5); color-scheme: dark; }
+  :root:not([data-theme="light"]) { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441; --teal: #13D2E5; --shade: rgba(0, 0, 0, .5); color-scheme: dark; }
 }
+:root[data-theme="dark"] { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441; --teal: #13D2E5; --shade: rgba(0, 0, 0, .5); color-scheme: dark; }
 * { box-sizing: border-box; }
 /* The page is the window: a header above, the paper filling the rest. Only
  * the paper scrolls, so there is never a box scrolling inside a page. */
@@ -227,117 +230,125 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
   </div>
 </aside>
 
-<script>
-(() => {
-  const $ = (id) => document.getElementById(id)
-  const body = document.body
-  const phone = matchMedia('(max-width: 720px)')
-  const npub = (new URLSearchParams(location.search).get('npub') || '').trim()
-  $('today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-  if (npub) { $('tab').href = $('setup-link').href = '/setup?npub=' + encodeURIComponent(npub) }
+<script type="module">
+import { headState, stepIssue, issueFromAddress, addressFor, papersByDay, shutBehind } from '/assets/observer.js'
+const $ = (id) => document.getElementById(id)
+const body = document.body
+const phone = matchMedia('(max-width: 720px)')
+const npub = (new URLSearchParams(location.search).get('npub') || '').trim()
+$('today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+if (npub) { $('tab').href = $('setup-link').href = '/setup?npub=' + encodeURIComponent(npub) }
 
-  // --- the header: full at the top, slim (desktop) or gone (phone) once reading
-  const head = (state) => { if (body.dataset.head !== state) body.dataset.head = state }
-  let lastY = 0
-  const onScroll = (y) => {
-    if (y < 40) head('full')
-    else if (!phone.matches) head('slim')
-    else if (y > lastY + 6) head('hidden')
-    else if (y < lastY - 6) head('slim')
-    lastY = y
-  }
-  $('mini').addEventListener('click', (e) => { e.preventDefault(); try { $('frame').contentWindow.scrollTo({ top: 0, behavior: 'smooth' }) } catch {} })
+// --- the header: full at the top, slim (desktop) or gone (phone) once reading
+let lastY = 0
+const head = (state) => { if (body.dataset.head !== state) body.dataset.head = state }
+const onScroll = (y) => { head(headState({ y, lastY, phone: phone.matches, now: body.dataset.head })); lastY = y }
+$('mini').addEventListener('click', (e) => { e.preventDefault(); try { $('frame').contentWindow.scrollTo({ top: 0, behavior: 'smooth' }) } catch {} })
 
-  // --- full screen: the paper alone; Esc or a quiet button brings the bar back
-  let quietTimer
-  const wake = () => {
-    if (!body.classList.contains('full')) return
-    $('exit').classList.remove('quiet')
-    clearTimeout(quietTimer)
-    quietTimer = setTimeout(() => $('exit').classList.add('quiet'), 2000)
-  }
-  const full = (on) => {
-    body.classList.toggle('full', on)
-    $('exit').hidden = !on
+// --- full screen: the paper alone; Esc or a quiet button brings the bar back
+let quietTimer
+const wake = () => {
+  if (!body.classList.contains('full')) return
+  $('exit').classList.remove('quiet')
+  clearTimeout(quietTimer)
+  quietTimer = setTimeout(() => $('exit').classList.add('quiet'), 2000)
+}
+const closeMenu = () => { $('more-menu').hidden = true; $('more-btn').setAttribute('aria-expanded', 'false') }
+const full = (on) => {
+  body.classList.toggle('full', on)
+  $('exit').hidden = !on
+  closeMenu()
+  if (on) { wake(); $('exit').focus({ preventScroll: true }) } else { clearTimeout(quietTimer); $('full-btn').focus({ preventScroll: true }) }
+}
+$('full-btn').addEventListener('click', () => full(true))
+$('full-item').addEventListener('click', () => full(true))
+$('exit').addEventListener('click', () => full(false))
+addEventListener('mousemove', wake)
+
+// --- More: a short list of the occasional things
+$('more-btn').addEventListener('click', () => {
+  const open = $('more-menu').hidden
+  $('more-menu').hidden = !open
+  $('more-btn').setAttribute('aria-expanded', String(open))
+})
+document.addEventListener('click', (e) => { if (!e.target.closest('.more')) closeMenu() })
+
+// --- Print a fresh edition
+const placeFresh = () => { $('fresh').style.top = ($('top').getBoundingClientRect().bottom + 8) + 'px' }
+const fresh = (on) => { $('fresh').hidden = !on; if (on) { placeFresh(); $('fresh-copy').focus() } }
+$('fresh-item').addEventListener('click', () => { closeMenu(); fresh(true) })
+$('fresh-close').addEventListener('click', () => { fresh(false); $('more-btn').focus() })
+$('fresh-copy').addEventListener('click', async () => {
+  const b = $('fresh-copy'); const was = b.textContent
+  try { await navigator.clipboard.writeText($('fresh-prompt').textContent); b.textContent = 'Copied' } catch { b.textContent = 'Select and copy' }
+  setTimeout(() => { b.textContent = was }, 1600)
+})
+
+// --- the Issues drawer: this week, then every paper; nothing behind it reachable
+const behind = [$('top'), document.querySelector('main'), $('exit'), $('fresh')]
+let opener = null
+const drawer = (on) => {
+  const d = $('issues'); const s = $('scrim')
+  $('issues-btn').setAttribute('aria-expanded', String(on))
+  // Who opened it, noted before the page behind goes inert and drops focus.
+  if (on) opener = document.activeElement && document.activeElement !== body ? document.activeElement : phone.matches ? $('more-btn') : $('issues-btn')
+  shutBehind(on, behind, d)
+  if (on) {
     closeMenu()
-    if (on) { wake(); $('exit').focus({ preventScroll: true }) } else { clearTimeout(quietTimer); $('full-btn').focus({ preventScroll: true }) }
+    d.hidden = s.hidden = false
+    requestAnimationFrame(() => { d.classList.add('on'); s.classList.add('on') })
+    const here = d.querySelector('[aria-current="true"]') || d.querySelector('.day:not(.none)') || $('issues-close')
+    here.focus()
+  } else {
+    d.classList.remove('on'); s.classList.remove('on')
+    setTimeout(() => { d.hidden = s.hidden = true }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240)
+    if (opener && opener.focus) opener.focus({ preventScroll: true })
   }
-  $('full-btn').addEventListener('click', () => full(true))
-  $('full-item').addEventListener('click', () => full(true))
-  $('exit').addEventListener('click', () => full(false))
-  addEventListener('mousemove', wake)
+}
+$('issues-btn').addEventListener('click', () => drawer(true))
+$('issues-item').addEventListener('click', () => drawer(true))
+$('issues-close').addEventListener('click', () => drawer(false))
+$('scrim').addEventListener('click', () => drawer(false))
 
-  // --- More: a short list of the occasional things
-  const closeMenu = () => { $('more-menu').hidden = true; $('more-btn').setAttribute('aria-expanded', 'false') }
-  $('more-btn').addEventListener('click', () => {
-    const open = $('more-menu').hidden
-    $('more-menu').hidden = !open
-    $('more-btn').setAttribute('aria-expanded', String(open))
-  })
-  document.addEventListener('click', (e) => { if (!e.target.closest('.more')) closeMenu() })
+// Esc closes the nearest thing: the drawer, the fresh sheet, the menu, then full screen.
+const onKey = (e) => {
+  if (e.key !== 'Escape') return
+  if (!$('issues').hidden) drawer(false)
+  else if (!$('fresh').hidden) fresh(false)
+  else if (!$('more-menu').hidden) { closeMenu(); $('more-btn').focus() }
+  else if (body.classList.contains('full')) full(false)
+}
+document.addEventListener('keydown', onKey)
 
-  // --- Print a fresh edition
-  const placeFresh = () => { $('fresh').style.top = ($('top').getBoundingClientRect().bottom + 8) + 'px' }
-  const fresh = (on) => { $('fresh').hidden = !on; if (on) { placeFresh(); $('fresh-copy').focus() } }
-  $('fresh-item').addEventListener('click', () => { closeMenu(); fresh(true) })
-  $('fresh-close').addEventListener('click', () => { fresh(false); $('more-btn').focus() })
-  $('fresh-copy').addEventListener('click', async () => {
-    const b = $('fresh-copy'); const was = b.textContent
-    try { await navigator.clipboard.writeText($('fresh-prompt').textContent); b.textContent = 'Copied' } catch { b.textContent = 'Select and copy' }
-    setTimeout(() => { b.textContent = was }, 1600)
-  })
+// --- the page wears the paper's colours: light or dark, as the reader set it there
+const wear = (doc) => {
+  const theme = doc.documentElement.getAttribute('data-theme')
+  if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme
+}
+let watching = null
+// The paper is served from here, so its scroll, keys and colours can be heard directly.
+$('frame').addEventListener('load', () => {
+  try {
+    const w = $('frame').contentWindow
+    lastY = 0
+    w.addEventListener('scroll', () => onScroll(w.scrollY), { passive: true })
+    w.addEventListener('keydown', onKey)
+    w.addEventListener('mousemove', wake, { passive: true })
+    w.addEventListener('touchstart', wake, { passive: true })
+    wear(w.document)
+    if (watching) watching.disconnect()
+    watching = new MutationObserver(() => wear(w.document))
+    watching.observe(w.document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  } catch { /* a paper from elsewhere: the header simply stays */ }
+})
 
-  // --- the Issues drawer: this week, then every paper
-  let opener = null
-  const drawer = (on) => {
-    const d = $('issues'); const s = $('scrim')
-    $('issues-btn').setAttribute('aria-expanded', String(on))
-    if (on) {
-      opener = document.activeElement
-      closeMenu()
-      d.hidden = s.hidden = false
-      requestAnimationFrame(() => { d.classList.add('on'); s.classList.add('on') })
-      const here = d.querySelector('[aria-current="true"]') || d.querySelector('.day:not(.none)') || $('issues-close')
-      here.focus({ preventScroll: false })
-    } else {
-      d.classList.remove('on'); s.classList.remove('on')
-      setTimeout(() => { d.hidden = s.hidden = true }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240)
-      if (opener && opener.focus) opener.focus({ preventScroll: true })
-    }
-  }
-  $('issues-btn').addEventListener('click', () => drawer(true))
-  $('issues-item').addEventListener('click', () => drawer(true))
-  $('issues-close').addEventListener('click', () => drawer(false))
-  $('scrim').addEventListener('click', () => drawer(false))
+const dayName = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+const short = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+const monthOf = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+const clock = (ts) => ts ? new Date(ts * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e }
 
-  // Esc closes the nearest thing: the drawer, the fresh sheet, the menu, then full screen.
-  const onKey = (e) => {
-    if (e.key !== 'Escape') return
-    if (!$('issues').hidden) drawer(false)
-    else if (!$('fresh').hidden) fresh(false)
-    else if (!$('more-menu').hidden) { closeMenu(); $('more-btn').focus() }
-    else if (body.classList.contains('full')) full(false)
-  }
-  document.addEventListener('keydown', onKey)
-
-  // The paper is served from here, so its scroll and keys can be heard directly.
-  $('frame').addEventListener('load', () => {
-    try {
-      const w = $('frame').contentWindow
-      lastY = 0
-      w.addEventListener('scroll', () => onScroll(w.scrollY), { passive: true })
-      w.addEventListener('keydown', onKey)
-      w.addEventListener('mousemove', wake, { passive: true })
-      w.addEventListener('touchstart', wake, { passive: true })
-    } catch { /* a paper from elsewhere: the header simply stays */ }
-  })
-
-  const dayName = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-  const short = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
-  const monthOf = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
-  const clock = (ts) => ts ? new Date(ts * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''
-  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e }
-
+async function main () {
   if (!npub) {
     $('meta').textContent = 'Add ?npub= to the address to see your papers'
     $('empty').hidden = false
@@ -354,70 +365,75 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
     $('today-note').textContent = 'Today\'s paper isn\'t in yet. Your Claude usually prints it around seven, or print a fresh edition now. Below is your latest.'
   }).catch(() => {})
 
-  fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).then((editions) => {
-    if (!editions.length) {
-      $('meta').textContent = 'No papers yet'
-      $('empty').hidden = false
-      $('empty').textContent = 'Nothing handed in yet. Set up your daily print, or print a fresh edition now.'
-      return
-    }
-    // One paper a day: the latest of each date, newest first.
-    const byDate = new Map()
-    for (const e of editions) if (!byDate.has(e.date)) byDate.set(e.date, e)
-    const days = [...byDate.keys()]
-    let current = null
+  const editions = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : [])
+  if (!editions.length) {
+    $('meta').textContent = 'No papers yet'
+    $('empty').hidden = false
+    $('empty').textContent = 'Nothing handed in yet. Set up your daily print, or print a fresh edition now.'
+    return
+  }
+  const byDate = papersByDay(editions)
+  const newest = byDate.values().next().value
+  let current = null
 
-    // A new issue arrives at its top, with the full header back.
-    const show = (e) => {
-      current = e
-      head('full'); lastY = 0
-      $('date').textContent = phone.matches ? short(e.date) : dayName(e.date)
-      const window = e.until ? new Date(e.until * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : ''
-      const f = e.fullness
-      $('meta').textContent = [
-        `Printed ${clock(e.printedAt)}${window ? ' · 24 hours to ' + window : ''} · edition ${e.code}`,
-        f ? `${f.sections} sections · ${f.pictures} pictures` : '',
-        e.topics && e.topics.length ? 'Your topics: ' + e.topics.join(', ') : '',
-      ].filter(Boolean).join(' · ')
-      $('frame').src = e.url
-      $('frame').hidden = false
-      $('open-tab').href = e.url
-      const at = days.indexOf(e.date)
-      $('prev').disabled = at < 0 || at >= days.length - 1
-      $('next').disabled = at <= 0
-      document.querySelectorAll('.day[data-code]').forEach((d) => d.setAttribute('aria-current', String(d.dataset.code === e.code)))
-    }
-    const step = (by) => { const at = days.indexOf(current.date) + by; if (at >= 0 && at < days.length) show(byDate.get(days[at])) }
-    $('prev').addEventListener('click', () => step(1))
-    $('next').addEventListener('click', () => step(-1))
-    const pick = (e) => () => { show(e); drawer(false) }
+  // A new issue arrives at its top, with the full header back. The address
+  // names it, so a reload or a shared link opens the same one, and Back
+  // returns to the one before.
+  const show = (e, how = 'push') => {
+    current = e
+    head('full'); lastY = 0
+    $('date').textContent = phone.matches ? short(e.date) : dayName(e.date)
+    $('frame').title = 'Your paper, ' + dayName(e.date)
+    const window = e.until ? new Date(e.until * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : ''
+    const f = e.fullness
+    $('meta').textContent = [
+      `Printed ${clock(e.printedAt)}${window ? ' · 24 hours to ' + window : ''} · edition ${e.code}`,
+      f ? `${f.sections} sections · ${f.pictures} pictures` : '',
+      e.topics && e.topics.length ? 'Your topics: ' + e.topics.join(', ') : '',
+    ].filter(Boolean).join(' · ')
+    // Swapped in place, so the paper adds nothing to history: Back belongs to the page.
+    const frame = $('frame')
+    if (frame.getAttribute('src')) { try { frame.contentWindow.location.replace(e.url) } catch { frame.src = e.url } } else frame.src = e.url
+    frame.hidden = false
+    $('open-tab').href = e.url
+    $('prev').disabled = !stepIssue(editions, e, 1)
+    $('next').disabled = !stepIssue(editions, e, -1)
+    document.querySelectorAll('.day[data-code]').forEach((d) => d.setAttribute('aria-current', String(d.dataset.code === e.code)))
+    const address = addressFor(location.search, e)
+    if (how === 'push' && address !== location.search) history.pushState(null, '', address)
+    else if (how === 'replace') history.replaceState(null, '', address)
+  }
+  const step = (by) => { const e = stepIssue(editions, current, by); if (e) show(e) }
+  $('prev').addEventListener('click', () => step(1))
+  $('next').addEventListener('click', () => step(-1))
+  const pick = (e) => () => { show(e); drawer(false) }
+  addEventListener('popstate', () => show(issueFromAddress(location.search, editions) || newest, 'none'))
 
-    // This week: seven days back from the newest paper, gaps shown as gaps.
-    const newest = days[0]
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(newest + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - i)
-      const date = d.toISOString().slice(0, 10)
-      const e = byDate.get(date)
-      const row = el(e ? 'button' : 'div', 'day' + (e ? '' : ' none'))
-      row.append(el('b', null, short(date)), el('span', 'mono', e ? `${i === 0 ? 'Latest' : 'Printed'} · ${clock(e.printedAt)}` : 'No paper · nothing handed in'))
-      if (e) { row.type = 'button'; row.dataset.code = e.code; row.addEventListener('click', pick(e)) }
-      $('week').append(row)
-    }
+  // This week: seven days back from the newest paper, gaps shown as gaps.
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(newest.date + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - i)
+    const date = d.toISOString().slice(0, 10)
+    const e = byDate.get(date)
+    const row = el(e ? 'button' : 'div', 'day' + (e ? '' : ' none'))
+    row.append(el('b', null, short(date)), el('span', 'mono', e ? `${i === 0 ? 'Latest' : 'Printed'} · ${clock(e.printedAt)}` : 'No paper · nothing handed in'))
+    if (e) { row.type = 'button'; row.dataset.code = e.code; row.addEventListener('click', pick(e)) }
+    $('week').append(row)
+  }
 
-    // Every paper, by month, reprints included.
-    let month = ''
-    for (const e of editions) {
-      if (monthOf(e.date) !== month) { month = monthOf(e.date); $('archive-list').append(el('p', 'month mono', month)) }
-      const row = el('button', 'day')
-      row.type = 'button'; row.dataset.code = e.code
-      row.append(el('b', null, short(e.date)), el('span', 'mono', `Edition ${e.code}${e.topics && e.topics.length ? ' · ' + e.topics.join(', ') : ''}`))
-      row.addEventListener('click', pick(e))
-      $('archive-list').append(row)
-    }
-    show(byDate.get(newest))
-    phone.addEventListener('change', () => current && ($('date').textContent = phone.matches ? short(current.date) : dayName(current.date)))
-  }).catch(() => { $('meta').textContent = 'Could not load your papers' })
-})()
+  // Every paper, by month, reprints included.
+  let month = ''
+  for (const e of editions) {
+    if (monthOf(e.date) !== month) { month = monthOf(e.date); $('archive-list').append(el('p', 'month mono', month)) }
+    const row = el('button', 'day')
+    row.type = 'button'; row.dataset.code = e.code
+    row.append(el('b', null, short(e.date)), el('span', 'mono', `Edition ${e.code}${e.topics && e.topics.length ? ' · ' + e.topics.join(', ') : ''}`))
+    row.addEventListener('click', pick(e))
+    $('archive-list').append(row)
+  }
+  show(issueFromAddress(location.search, editions) || newest, 'replace')
+  phone.addEventListener('change', () => current && ($('date').textContent = phone.matches ? short(current.date) : dayName(current.date)))
+}
+main().catch(() => { $('meta').textContent = 'Could not load your papers' })
 </script>
 </body>
 </html>

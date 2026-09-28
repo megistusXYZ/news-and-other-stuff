@@ -71,6 +71,12 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   assert.match(html, /id="full-btn"[^>]*>Full screen</, 'full screen, one press')
   assert.match(html, /id="more-btn"[^>]*aria-expanded="false"/)
   for (const item of ['Print a fresh edition', 'Open in new tab', 'Publish to my Blossom']) assert.match(html, new RegExp(item), item + ' is under More')
+  assert.match(html, /<script type="module">[\s\S]*from '\/assets\/observer\.js'/, 'the page runs on its tested decisions')
+  const script = await get('/assets/observer.js')
+  assert.equal(script.status, 200)
+  assert.match(script.headers.get('content-type'), /javascript/)
+  assert.match(await script.text(), /export function headState/)
+  assert.equal((await get('/assets/observer.js.map')).status, 404, 'that one file, nothing beside it')
 })
 
 test('the setup page can tell when the reader\'s Claude has connected: the first tool call marks it', async () => {

@@ -90,6 +90,8 @@ const readerOf = (npub) => { try { return toHex(String(npub || '')) } catch { re
 async function page (req, res, url, deps, readers) {
   const path = url.pathname
   if (path === '/setup' || path === '/observer') return send(res, 200, 'text/html; charset=utf-8', readFileSync(new URL(`.${path}.html`, PAGES)))
+  // The Your papers page's tested decisions, and nothing else from pages/.
+  if (path === '/assets/observer.js') return send(res, 200, 'text/javascript; charset=utf-8', readFileSync(new URL('./observer.js', PAGES)))
   if (path.startsWith('/assets/fonts/')) {
     const name = path.slice('/assets/fonts/'.length)
     if (!/^[a-z0-9-]+\.woff2$/.test(name)) return send(res, 404, 'text/plain', 'not found')

@@ -79,7 +79,7 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   assert.match(html, /id="aa-btn"[^>]*aria-label="Reading settings[^"]*"[^>]*>Aa</, 'Aa in the bar')
   assert.match(html, /id="more-menu"[\s\S]*Set up your paper/, 'set-up lives under More')
   assert.match(html, /id="more-dot"[^>]*hidden/, '"not in yet" is a dot on More, shown only when true')
-  assert.match(html, /id="more-menu"[\s\S]*id="today-line"[^>]*hidden/, 'and its sentence the first line inside')
+  assert.match(html, /id="more-menu"[^>]*>\s*<button[^>]*id="fresh-item"/, 'and printing is the first thing inside, so a missing paper is one step from being printed')
   assert.match(html, /<script type="module">[\s\S]*from '\/assets\/observer\.js'/, 'the page runs on its tested decisions')
   const script = await get('/assets/observer.js')
   assert.equal(script.status, 200)

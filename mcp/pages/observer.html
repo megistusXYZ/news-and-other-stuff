@@ -73,18 +73,18 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 .dot[hidden] { display: none; }
 
 /* More hangs from whichever More was pressed: the bar's, or the one in the paper's folio. */
-.menu { position: fixed; z-index: 30; min-width: 260px; padding: 6px 0; background: var(--paper-2);
+.menu { position: fixed; z-index: 30; min-width: 200px; padding: 4px 0; background: var(--paper-2);
   border: 1px solid var(--rule); box-shadow: 0 14px 34px rgba(10, 14, 24, .16); }
 .menu[hidden] { display: none; }
-.menu a, .menu button { display: block; width: 100%; text-align: left; padding: 11px 16px; background: none; border: 0; cursor: pointer;
-  font: 500 .72rem/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; color: var(--ink); }
+.menu a, .menu button { display: block; width: 100%; text-align: left; padding: 8px 14px; background: none; border: 0; cursor: pointer;
+  font: 500 .66rem/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; color: var(--ink); white-space: nowrap; }
 .menu a:hover, .menu button:hover:not([disabled]) { background: var(--paper); }
 .menu button[disabled] { color: var(--ink-3); cursor: not-allowed; }
 .menu .phone { display: none; }
-.menu hr { border: 0; border-top: 1px solid var(--hair); margin: 6px 0; }
-.menu-note { display: flex; align-items: center; gap: 8px; margin: 0; padding: 11px 16px; border-bottom: 1px solid var(--hair); color: var(--teal);
-  font: 500 .72rem/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
-.menu-note::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+.menu hr { border: 0; border-top: 1px solid var(--hair); margin: 4px 0; }
+/* When today's paper is not in, printing it is the first thing on offer. */
+.menu .due { display: flex; align-items: center; gap: 8px; color: var(--teal); }
+.menu .due::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
 .menu-note[hidden] { display: none; }
 .printed { margin: 8px 0 0; color: var(--ink-3); line-height: 1.7; }
 .printed:empty { display: none; }
@@ -217,15 +217,13 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 </main>
 
 <div class="menu" id="more-menu" hidden>
-  <p class="menu-note" id="today-line" hidden>Today's paper isn't in yet</p>
+  <button type="button" id="fresh-item" aria-controls="fresh">Print a fresh edition</button>
   <button class="phone" type="button" id="issues-item">Issues</button>
   <button class="phone" type="button" id="full-item">Full screen</button>
-  <hr class="phone">
-  <button type="button" id="fresh-item" aria-controls="fresh">Print a fresh edition</button>
   <a id="open-tab" href="#" target="_blank" rel="noopener">Open in new tab ↗</a>
   <a href="/setup" id="setup-link">Set up your paper</a>
   <hr>
-  <button type="button" disabled title="Coming next: you sign it, and it is kept on your own media server">Publish to my Blossom · soon</button>
+  <button type="button" disabled title="Publish to my Blossom. Coming next: you sign it, and it is kept on your own media server">Publish · soon</button>
 </div>
 
 <button class="exit" type="button" id="exit" aria-label="Exit full screen (Esc)" hidden><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 1.5V6H1.5M10 1.5V6h4.5M6 14.5V10H1.5M10 14.5V10h4.5"/></svg><span class="exit-label">Exit full screen · Esc</span></button>
@@ -438,7 +436,7 @@ const lend = (doc) => {
     const aa = folio.querySelector('.lv-aa')
     if (aa) aa.after(tools); else folio.append(tools)
   }
-  folio.querySelector('.obs-more').classList.toggle('obs-dot', !$('today-line').hidden)
+  folio.querySelector('.obs-more').classList.toggle('obs-dot', $('fresh-item').classList.contains('due'))
 
   // The paper's own ‹ › step between this reader's issues here. A paper
   // printed through the connector was dressed alone, with none: it gets them.
@@ -518,7 +516,8 @@ async function main () {
     if (!t || t.in) return
     const any = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).catch(() => [])
     if (!any.length) return
-    $('today-line').hidden = false
+    $('fresh-item').classList.add('due')
+    $('fresh-item').textContent = 'Print today\'s paper'
     $('more-dot').hidden = false
     $('today-row').hidden = false
     $('today-row-date').textContent = 'Today · ' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })

@@ -491,9 +491,11 @@ table.sudoku td.lv-revealed { color: var(--ink-3); }
 
 /* Five: the word of the day, as one plate like the sudoku's. */
 .five { outline: none; }
-.lv-five-board { display: flex; flex-direction: column; gap: 6px; }
-.lv-five-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-.lv-tile { aspect-ratio: 1; display: grid; place-items: center; border: 1px solid var(--rule); font-family: var(--serif); font-weight: 700; font-size: 1.6rem; text-transform: uppercase; color: var(--ink); background: var(--paper-2, #fff); transition: background-color .25s ease, border-color .25s ease; }
+/* The board stands as tall as the sudoku beside it, not taller: narrower
+ * than its column and centred, with the keyboard still at full width. */
+.lv-five-board { display: flex; flex-direction: column; gap: 5px; width: 69%; margin: 0 auto; }
+.lv-five-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.lv-tile { aspect-ratio: 1; display: grid; place-items: center; border: 1px solid var(--rule); font-family: var(--serif); font-weight: 700; font-size: 1.25rem; text-transform: uppercase; color: var(--ink); background: var(--paper-2, #fff); transition: background-color .25s ease, border-color .25s ease; }
 .lv-tile.lv-typed { border-color: var(--ink); }
 .lv-tile.lv-hit { background: #4a8f4e; border-color: #4a8f4e; color: #fff; }
 .lv-tile.lv-near { background: #c9a227; border-color: #c9a227; color: #fff; }
@@ -504,7 +506,7 @@ table.sudoku td.lv-revealed { color: var(--ink-3); }
 .lv-keyboard { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .lv-keyboard-row { display: flex; gap: 4px; }
 .lv-keyboard-row:nth-child(2) { padding: 0 5%; }
-.lv-keyboard .lv-key { flex: 1; aspect-ratio: 1 / 1.15; padding: 0; border: 1px solid var(--rule); border-radius: 0; background: var(--paper-2, #fff); font-family: var(--serif); font-weight: 700; font-size: 1rem; text-transform: uppercase; color: var(--ink); }
+.lv-keyboard .lv-key { flex: 1; aspect-ratio: 1 / 1; padding: 0; border: 1px solid var(--rule); border-radius: 0; background: var(--paper-2, #fff); font-family: var(--serif); font-weight: 700; font-size: 1rem; text-transform: uppercase; color: var(--ink); }
 .lv-keyboard .lv-key-wide { flex: 1.6; font-family: var(--mono); font-weight: 600; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; aspect-ratio: auto; }
 .lv-keyboard .lv-key:hover { border-color: var(--ink); }
 .lv-keyboard .lv-key.lv-hit { background: #4a8f4e; border-color: #4a8f4e; color: #fff; }

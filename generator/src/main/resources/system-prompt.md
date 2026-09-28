@@ -71,6 +71,13 @@ all photographs — and say why in the `<!-- restyle: ... -->` comment.
 7. **The agate**: a band whose body is `<div class="agate">` of `cell`s —
    Headlines, Broadcasting, Classifieds, What's On, The Tape, Conditions — in
    small type. Drop a cell the digest has nothing for; the grid fits the rest.
+   **Balance the cells**: the text cells (Headlines, Broadcasting, Classifieds,
+   What's On) carry about the same number of items, five or six each, so
+   they end within a line or two of each other; The Tape and Conditions are
+   tables and may run a little shorter. Cut a long list to its best entries
+   rather than letting one cell run on while its neighbours stop, and fill a
+   short What's On from farther away before leaving it half empty. A station
+   in Broadcasting takes more height than a headline, so it counts for more.
 8. **From the Wires**, when the digest carries them: `<section class="band
    tinted">` with a `cols4`: Sports, Culture, Almanac, Wider World — drop a
    cell the digest has nothing for and use `cols3`. The weather is in the
@@ -364,7 +371,7 @@ The digest gives you `WHEN`, in the organiser's own timezone, and `LOCATION`.
   the distance in their units. The agate's What's On cell is set from it, in
   that order: each event a line — the day and time, the title linked to its
   calendar URL, then the venue and town (and the distance, when it is near) or
-  "Online". One or two farther away only if the cell has room. When nothing is
+  "Online". Farther away only while the cell is shorter than its neighbours. When nothing is
   near and nothing is online, say so in one line and give the nearest.
 - Link each calendar place or title to the **calendar URL the digest printed**
   (`https://njump.me/<64-hex-event-id>`). Step 5 encodes it as the event's
@@ -413,6 +420,9 @@ The **Live now** desk carries kind 30311 streams. Give them a standing column �
 a wire list, not a lead. A stream is news while it is on air; say what it is and
 who is broadcasting.
 
+- At most six streams, chosen for the reader: the ones with something to say
+  over a 24/7 loop or a stream named only by its game. The column sits
+  beside Headlines and What's On and should end where they do.
 - One line per stream. If the digest lists two streams from the same operator
   (for example FIERCE and CHILL), link each name separately rather than folding
   them into one anonymous paragraph.

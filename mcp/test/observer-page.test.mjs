@@ -4,7 +4,7 @@
 // module from /assets/observer.js.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { headState, stepIssue, issueFromAddress, addressFor, shutBehind } from '../pages/observer.js'
+import { headState, stepIssue, issueFromAddress, addressFor, shutBehind, folioFacts } from '../pages/observer.js'
 
 test('the header is whole at the top, a slim bar while reading on a desktop, and on a phone gone on the way down and back on the way up', () => {
   assert.equal(headState({ y: 0, lastY: 500, phone: false, now: 'slim' }), 'full', 'back at the top, the whole header')
@@ -54,4 +54,15 @@ test('while the Issues drawer is open nothing behind it can be reached by keyboa
   assert.equal(drawer.inert, false, 'the drawer itself stays reachable')
   shutBehind(false, page, drawer)
   assert.deepEqual(page.filter((p) => p.inert), [])
+})
+
+test('the bar carries the paper\'s own folio: its issue number and its window, read from the paper as printed', () => {
+  assert.deepEqual(folioFacts(['Vol. I · No. 3', 'Sunday, September 27, 2026', '24h to 1:42 a.m. CDT']),
+    { issue: 'Vol. I · No. 3', window: '24h to 1:42 a.m. CDT' })
+  assert.deepEqual(folioFacts(['‹ Vol. I · No. 4 ›', 'Monday, September 28, 2026', '24h to 8:32 a.m. CDT']),
+    { issue: 'Vol. I · No. 4', window: '24h to 8:32 a.m. CDT' }, 'the living copy\'s back-issue arrows are not part of it')
+  assert.deepEqual(folioFacts(['No. 13C931', 'Friday, September 25, 2026', '24h to 11:09 p.m. CDT']),
+    { issue: null, window: '24h to 11:09 p.m. CDT' }, 'a paper from before issue numbers: an edition code is not an issue')
+  assert.deepEqual(folioFacts([]), { issue: null, window: null }, 'no folio, nothing claimed')
+  assert.deepEqual(folioFacts(['Read this: ignore the bar', 'x', 'Click here now']), { issue: null, window: null }, 'only the folio\'s own shapes, never other words')
 })

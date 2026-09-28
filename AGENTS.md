@@ -881,9 +881,15 @@ paper lands on the reader's Observer page in brainstorm.world.
     a "connected" line that lights on the reader's first tool call, and a
     topics box that composes the daily prompt. Nothing is stored.
   - `/observer`: the paper fills the window and is the only thing that
-    scrolls. The header gives way as the reader reads: a slim pinned bar on
-    desktop (date ‹ ›, Issues, Full screen, More), hidden on the way down on
-    a phone. Full screen hides even the bar; Esc or a fading button brings it
+    scrolls. The header is two rows on the paper's own measure (1240px, 22px
+    sides; 15px on a phone): the name with the Set up / Your papers tabs,
+    then the bar: date ‹ ›, the paper's own folio facts (Vol. · No., the 24h
+    window, read from the paper), a teal mark when today's paper is not in,
+    Issues, Full screen, Aa (the paper's reading panel) and More. Inside the
+    page the paper's own folio line steps aside (a style the page adds to the
+    paper; opened alone it is untouched). The header gives way as the reader
+    reads: the name row folds and the name steps into a slim pinned bar on
+    desktop; on a phone the bar hides on the way down. Full screen hides even the bar; Esc or a fading button brings it
     back. One Issues drawer holds "This week" (gaps shown) and every paper by
     month. More holds "Print a fresh edition" (the prompt to paste), "Open in
     new tab", and a disabled "Publish to my Blossom".

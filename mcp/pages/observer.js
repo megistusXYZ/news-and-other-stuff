@@ -63,3 +63,21 @@ export function addressFor (search, edition) {
 export function shutBehind (open, parts, keep) {
   for (const part of parts) if (part !== keep) part.inert = open
 }
+
+// The folio's own shapes: "Vol. I · No. 3" and "24h to 1:42 a.m. CDT".
+const ISSUE = /^Vol\. [IVXLCDM]+ · No\. \d+$/
+const WINDOW = /^24h to \d{1,2}:\d{2} [ap]\.m\. [A-Z]{2,5}$/
+
+/**
+ * The paper's issue number and window, read from its folio as printed (the
+ * text of each span), for the bar to carry once the folio has scrolled away.
+ * Only text of the folio's own shape counts: the living copy's back-issue
+ * arrows are dropped, and anything else is not claimed.
+ */
+export function folioFacts (texts) {
+  const clean = texts.map((t) => String(t).replace(/[‹›]/g, '').replace(/\s+/g, ' ').trim())
+  return {
+    issue: clean.find((t) => ISSUE.test(t)) || null,
+    window: clean.find((t) => WINDOW.test(t)) || null,
+  }
+}

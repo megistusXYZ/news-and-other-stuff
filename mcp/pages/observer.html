@@ -35,45 +35,61 @@ a:hover { text-decoration-color: currentColor; }
 :focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
 button { font: inherit; color: inherit; }
 .mono { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
-.wrap { max-width: 1280px; margin: 0 auto; padding: 0 28px; }
+/* The paper's own measure (house.css .sheet: 1240px, 22px sides; 15px on a
+ * phone), so the header's edges stand on the paper's columns. */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 22px; }
 
 /* --- the header, which gives way as the reader reads ---------------------- */
 /* Each part folds on its own row, so it slides shut rather than jumping. */
 .top { flex: none; background: var(--paper); position: relative; z-index: 5; }
 .fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .22s ease; }
 .fold > div { overflow: hidden; min-height: 0; }
-body[data-head="slim"] .lead, body[data-head="slim"] .sub,
+body[data-head="slim"] .lead,
 body[data-head="hidden"] .fold, body.full .fold { grid-template-rows: 0fr; }
 /* The bar clips only while it is away, so the More menu can hang below it. */
 .barfold > div { overflow: visible; }
 body[data-head="hidden"] .barfold > div, body.full .barfold > div { overflow: hidden; }
 
-.folio { display: flex; justify-content: space-between; gap: 16px; padding: 18px 0 8px; color: var(--ink-2); }
-.fine { height: 2px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
-.nameplate { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; padding: 10px 0 8px; }
-.nameplate h1 { margin: 0; font: 900 1.55rem/1 var(--display); letter-spacing: -.01em; }
-.nameplate p { margin: 0; color: var(--ink-3); font-style: italic; font-size: .95rem; }
-.oxford { border-top: 3px solid var(--rule); border-bottom: 1px solid var(--rule); height: 7px; }
-.sections { display: flex; border-bottom: 1px solid var(--hair); }
-.sections a { padding: 11px 18px 10px; text-decoration: none; color: var(--ink-2); border-right: 1px solid var(--hair); }
-.sections a:first-child { padding-left: 0; }
+.brandrow { display: flex; align-items: center; gap: 16px; min-height: 48px; }
+.name { margin: 0; font: 900 1.3rem/1 var(--display); letter-spacing: -.01em; white-space: nowrap; }
+.sections { display: flex; margin-left: auto; }
+.sections a { padding: 16px 0 14px; margin-left: 22px; text-decoration: none; color: var(--ink-3); white-space: nowrap; }
+.sections a:hover { color: var(--ink); }
 .sections a[aria-current] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+.fine { height: 2px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
 
 /* The bar: the one line that stays while reading. */
 .barline { border-bottom: 1px solid var(--rule); }
-.bar { display: flex; align-items: center; gap: 12px; min-height: 52px; }
-.mini { display: none; font: 900 1.05rem/1 var(--display); white-space: nowrap; margin-right: 6px; text-decoration: none; }
+.bar { display: flex; align-items: center; gap: 10px; min-height: 46px; }
+/* Collapsed, the name steps into the bar so the reader never loses it. */
+.mini { display: none; font: 900 1.02rem/1 var(--display); white-space: nowrap; margin-right: 8px; padding-right: 16px;
+  border-right: 1px solid var(--hair); text-decoration: none; }
 body[data-head="slim"] .mini { display: inline; }
-.issue { display: flex; align-items: center; gap: 2px; min-width: 0; }
-.issue h2 { margin: 0 6px; font: 700 1.25rem/1.15 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
-.step { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid transparent; background: none; cursor: pointer;
-  font: 400 1.35rem/1 var(--serif); color: var(--ink-2); }
+.issue { display: flex; align-items: center; min-width: 0; margin-left: -8px; }
+.issue h2 { margin: 0 2px; font: 700 1.08rem/1.15 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Collapsed (and always on a phone) the date is short and the mark a dot. */
+.issue .short { display: none; }
+body[data-head="slim"] .issue .long { display: none; }
+body[data-head="slim"] .issue .short { display: inline; }
+body[data-head="slim"] .mark span { display: none; }
+.facts { margin: 0 0 0 6px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.facts b { font-weight: 500; color: var(--ink); }
+.mark { flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 6px 8px; border: 0; background: none; cursor: pointer; color: var(--teal); }
+.mark::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+.mark[hidden] { display: none; }
+.tip { position: absolute; z-index: 30; margin: 0; max-width: 360px; padding: 10px 14px; background: var(--paper-2); border: 1px solid var(--rule);
+  border-left: 3px solid var(--teal); font-style: italic; font-size: .92rem; color: var(--ink-2); box-shadow: 0 14px 34px rgba(10, 14, 24, .16); }
+.tip[hidden] { display: none; }
+.step { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid transparent; background: none; cursor: pointer;
+  font: 400 1.2rem/1 var(--serif); color: var(--ink-2); }
 .step:hover:not([disabled]) { border-color: var(--hair); color: var(--ink); }
 .step[disabled] { color: var(--hair); cursor: default; }
 .tools { margin-left: auto; display: flex; align-items: center; }
 .tool { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; background: none; border: 0; cursor: pointer;
-  padding: 12px 12px; color: var(--ink); white-space: nowrap; }
+  padding: 10px 12px; color: var(--ink); white-space: nowrap; }
+.tool:last-child { padding-right: 0; }
+.aa { font: 700 .95rem/1 var(--display); letter-spacing: 0; text-transform: none; }
+.aa[hidden] { display: none; }
 .tool + .tool, .tool + .more, .more + .tool { border-left: 1px solid var(--hair); }
 .tool:hover { text-decoration: underline; text-underline-offset: 3px; }
 .more { position: relative; }
@@ -87,15 +103,13 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
 .menu .phone { display: none; }
 .menu hr { border: 0; border-top: 1px solid var(--hair); margin: 6px 0; }
 
-.subline { padding: 8px 0 12px; }
-.meta { margin: 0; color: var(--ink-3); }
-.today { margin: 8px 0 0; padding: 2px 0 2px 12px; border-left: 3px solid var(--teal); font-style: italic; font-size: .95rem; color: var(--ink-2); }
-.today[hidden], .meta:empty { display: none; }
+.printed { margin: 8px 0 0; color: var(--ink-3); line-height: 1.7; }
+.printed:empty { display: none; }
 
 /* --- the paper -------------------------------------------------------------- */
 .reader { flex: 1; min-height: 0; position: relative; }
 .reader iframe { display: block; width: 100%; height: 100%; border: 0; background: #F2F3F0; }
-.empty { max-width: 1280px; margin: 0 auto; padding: 40px 28px; font-style: italic; color: var(--ink-2); }
+.empty { max-width: 1240px; margin: 0 auto; padding: 40px 22px; font-style: italic; color: var(--ink-2); }
 
 /* --- full screen: the paper alone; a quiet way back --------------------------- */
 .exit { position: fixed; z-index: 40; top: 12px; right: 12px; padding: 10px 14px; border: 1px solid var(--rule); background: var(--paper-2);
@@ -113,7 +127,8 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
   background: var(--paper); border-left: 1px solid var(--rule); transform: translateX(100%); transition: transform .24s cubic-bezier(.2, .7, .2, 1); }
 .drawer.on { transform: none; }
 .drawer[hidden] { display: none; }
-.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 3px solid var(--rule); }
+.drawer-head { padding: 16px 20px 12px; border-bottom: 3px solid var(--rule); }
+.drawer-title { display: flex; align-items: center; justify-content: space-between; }
 .drawer-head h2 { margin: 0; font: 900 1.4rem/1 var(--display); }
 .close { width: 40px; height: 40px; border: 1px solid transparent; background: none; cursor: pointer; font: 400 1.5rem/1 var(--serif); color: var(--ink-2); }
 .close:hover { border-color: var(--hair); color: var(--ink); }
@@ -129,7 +144,7 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
 .month { margin: 16px 0 0; color: var(--ink-3); }
 
 /* --- Print a fresh edition: a small sheet under the bar -------------------------- */
-.pop { position: fixed; z-index: 45; right: max(16px, calc((100vw - 1280px) / 2 + 28px)); width: min(440px, calc(100vw - 32px));
+.pop { position: fixed; z-index: 45; right: max(16px, calc((100vw - 1240px) / 2 + 22px)); width: min(440px, calc(100vw - 32px));
   padding: 16px 18px 18px; background: var(--paper-2); border: 1px solid var(--rule); box-shadow: 0 14px 34px rgba(10, 14, 24, .16); }
 .pop[hidden] { display: none; }
 .pop .mono { color: var(--ink-2); margin: 0 0 8px; }
@@ -140,20 +155,27 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
 .copy:hover { background: transparent; color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) { .fold, .drawer, .scrim, .exit { transition: none; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* --- phones: the date and More; the bar hides on the way down -------------------- */
 @media (max-width: 720px) {
-  .wrap { padding: 0 16px; }
-  .folio span:last-child { display: none; }
-  .folio { padding-top: 12px; }
-  .bar { gap: 4px; }
-  .issue h2 { font-size: 1.1rem; margin: 0 2px; }
-  body[data-head="full"] .issue h2 { font-size: 1.2rem; }
+  .wrap { padding: 0 15px; }
+  .brandrow { min-height: 44px; }
+  .name { font-size: 1.12rem; }
+  .sections a { margin-left: 14px; padding: 14px 0 12px; letter-spacing: .1em; }
+  .bar { gap: 2px; min-height: 48px; }
+  .issue { margin-left: -10px; }
+  .issue h2 { font-size: 1rem; }
+  .issue .long { display: none; }
+  .issue .short { display: inline; }
+  .facts .window, .facts .sep, .facts .vol, .mark span { display: none; }
+  .mark { padding: 6px 4px; }
+  .facts { margin-left: 2px; }
   body[data-head="slim"] .mini { display: none; }
   .tools .wide { display: none; }
   .menu .phone { display: block; }
-  .step { width: 44px; height: 44px; }
-  .tool { padding: 15px 4px 15px 12px; }
+  .step { width: 36px; height: 44px; }
+  .tool { padding: 15px 8px 15px 10px; }
   .menu a, .menu button { padding: 14px 16px; }
   .exit { top: max(10px, env(safe-area-inset-top)); }
 }
@@ -161,27 +183,28 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
 </head>
 <body data-head="full">
 <header class="top" id="top">
-  <div class="fold lead"><div><div class="wrap">
-    <div class="folio mono"><span id="today">&nbsp;</span><span>The Observer · Your papers</span></div>
-    <div class="fine" aria-hidden="true"></div>
-    <div class="nameplate">
-      <h1>News and Other Stuff</h1>
-      <p>The observer for your network.</p>
+  <div class="fold lead"><div>
+    <div class="wrap brandrow">
+      <h1 class="name">News and Other Stuff</h1>
+      <nav class="sections mono" aria-label="Your Observer"><a href="/setup" id="tab">Set up</a><a href="/observer" aria-current="page">Your papers</a></nav>
     </div>
-    <div class="oxford" aria-hidden="true"></div>
-    <nav class="sections mono" aria-label="Your Observer"><a href="/setup" id="tab">Set up</a><a href="/observer" aria-current="page">Your papers</a></nav>
-  </div></div></div>
+    <div class="wrap"><div class="fine" aria-hidden="true"></div></div>
+  </div></div>
 
   <div class="fold barfold"><div><div class="barline"><div class="wrap bar">
     <a class="mini" href="#" id="mini" aria-hidden="true" tabindex="-1">News and Other Stuff</a>
     <div class="issue">
       <button class="step" type="button" id="prev" aria-label="Previous issue" disabled>‹</button>
-      <h2 id="date">Your papers</h2>
+      <h2 id="date"><span class="long">Your papers</span><span class="short"></span></h2>
       <button class="step" type="button" id="next" aria-label="Next issue" disabled>›</button>
     </div>
+    <p class="facts mono" id="facts" aria-live="polite">Loading your papers…</p>
+    <button class="mark mono" type="button" id="today-mark" aria-expanded="false" aria-controls="today-note" hidden><span>Today's not in yet</span></button>
+    <p class="tip" id="today-note" hidden></p>
     <div class="tools">
       <button class="tool wide" type="button" id="issues-btn" aria-expanded="false" aria-controls="issues">Issues</button>
       <button class="tool wide" type="button" id="full-btn">Full screen</button>
+      <button class="tool aa" type="button" id="aa-btn" aria-label="Reading settings: text size, contrast, motion and dark mode" aria-expanded="false" hidden>Aa</button>
       <div class="more">
         <button class="tool" type="button" id="more-btn" aria-expanded="false" aria-controls="more-menu">More</button>
         <div class="menu" id="more-menu" hidden>
@@ -198,10 +221,6 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
     </div>
   </div></div></div></div>
 
-  <div class="fold sub"><div><div class="wrap subline">
-    <p class="meta mono" id="meta" aria-live="polite">Loading your papers…</p>
-    <p class="today" id="today-note" hidden></p>
-  </div></div></div>
 </header>
 
 <main class="reader" aria-label="The paper">
@@ -221,7 +240,10 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
 
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="issues" aria-label="Issues" hidden>
-  <div class="drawer-head"><h2>Issues</h2><button class="close" type="button" id="issues-close" aria-label="Close issues">×</button></div>
+  <div class="drawer-head">
+    <div class="drawer-title"><h2>Issues</h2><button class="close" type="button" id="issues-close" aria-label="Close issues">×</button></div>
+    <p class="printed mono" id="printed"></p>
+  </div>
   <div class="drawer-body">
     <h3 class="mono">This week</h3>
     <div id="week"></div>
@@ -231,12 +253,11 @@ body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
 </aside>
 
 <script type="module">
-import { headState, stepIssue, issueFromAddress, addressFor, papersByDay, shutBehind } from '/assets/observer.js'
+import { headState, stepIssue, issueFromAddress, addressFor, papersByDay, shutBehind, folioFacts } from '/assets/observer.js'
 const $ = (id) => document.getElementById(id)
 const body = document.body
 const phone = matchMedia('(max-width: 720px)')
 const npub = (new URLSearchParams(location.search).get('npub') || '').trim()
-$('today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 if (npub) { $('tab').href = $('setup-link').href = '/setup?npub=' + encodeURIComponent(npub) }
 
 // --- the header: full at the top, slim (desktop) or gone (phone) once reading
@@ -264,6 +285,19 @@ $('full-btn').addEventListener('click', () => full(true))
 $('full-item').addEventListener('click', () => full(true))
 $('exit').addEventListener('click', () => full(false))
 addEventListener('mousemove', wake)
+
+// --- "not in yet": a small mark that says its sentence when asked
+const tip = (on) => {
+  $('today-note').hidden = !on
+  $('today-mark').setAttribute('aria-expanded', String(on))
+  if (on) {
+    const m = $('today-mark').getBoundingClientRect(); const bar = $('today-mark').closest('.bar').getBoundingClientRect()
+    $('today-note').style.left = Math.max(0, Math.min(m.left - bar.left, bar.width - 360)) + 'px'
+    $('today-note').style.top = (m.bottom - bar.top + 6) + 'px'
+  }
+}
+$('today-mark').addEventListener('click', () => tip($('today-note').hidden))
+document.addEventListener('click', (e) => { if (!e.target.closest('#today-mark')) tip(false) })
 
 // --- More: a short list of the occasional things
 $('more-btn').addEventListener('click', () => {
@@ -316,6 +350,7 @@ const onKey = (e) => {
   if (!$('issues').hidden) drawer(false)
   else if (!$('fresh').hidden) fresh(false)
   else if (!$('more-menu').hidden) { closeMenu(); $('more-btn').focus() }
+  else if (!$('today-note').hidden) { tip(false); $('today-mark').focus() }
   else if (body.classList.contains('full')) full(false)
 }
 document.addEventListener('keydown', onKey)
@@ -326,6 +361,41 @@ const wear = (doc) => {
   if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme
 }
 let watching = null
+
+// --- inside this page the bar carries the paper's folio, so the paper's own
+// folio line steps aside; its reading panel stays, pinned under the bar and
+// opened by the bar's Aa. Opened on its own, the paper is untouched.
+const EMBEDDED = `
+  .sheet > .folio { height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border: 0 !important; overflow: visible !important; }
+  .sheet > .folio > :not(.lv-reading) { display: none !important; }
+  .lv-reading { position: fixed !important; top: 8px !important; right: max(15px, calc((100vw - 1240px) / 2 + 22px)) !important; }`
+let aaWatch = null
+const embed = (doc) => {
+  const folio = doc.querySelector('.sheet > .folio')
+  const facts = folioFacts(folio ? [...folio.children].filter((c) => c.tagName === 'SPAN').map((c) => c.textContent) : [])
+  $('facts').replaceChildren()
+  if (facts.issue) {
+    const [vol, no] = facts.issue.split(' · ')
+    const b = document.createElement('b')
+    b.append(Object.assign(document.createElement('span'), { className: 'vol', textContent: vol + ' · ' }), no)
+    $('facts').append(b)
+  }
+  if (facts.issue && facts.window) $('facts').append(Object.assign(document.createElement('span'), { className: 'sep', textContent: ' · ' }))
+  if (facts.window) $('facts').append(Object.assign(document.createElement('span'), { className: 'window', textContent: facts.window }))
+  if (!doc.getElementById('observer-embedded')) doc.head.append(Object.assign(doc.createElement('style'), { id: 'observer-embedded', textContent: EMBEDDED }))
+  const aa = doc.querySelector('.lv-aa')
+  $('aa-btn').hidden = !aa
+  if (aaWatch) aaWatch.disconnect()
+  if (aa) {
+    const sync = () => $('aa-btn').setAttribute('aria-expanded', aa.getAttribute('aria-expanded') || 'false')
+    aaWatch = new MutationObserver(sync); aaWatch.observe(aa, { attributes: true, attributeFilter: ['aria-expanded'] }); sync()
+  }
+}
+// The bar's Aa presses the paper's own: one reading panel, one set of choices.
+$('aa-btn').addEventListener('click', (e) => {
+  e.stopPropagation()
+  try { const aa = $('frame').contentDocument.querySelector('.lv-aa'); if (aa) aa.click() } catch {}
+})
 // The paper is served from here, so its scroll, keys and colours can be heard directly.
 $('frame').addEventListener('load', () => {
   try {
@@ -339,6 +409,7 @@ $('frame').addEventListener('load', () => {
     if (watching) watching.disconnect()
     watching = new MutationObserver(() => wear(w.document))
     watching.observe(w.document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    embed(w.document)
   } catch { /* a paper from elsewhere: the header simply stays */ }
 })
 
@@ -350,7 +421,7 @@ const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls)
 
 async function main () {
   if (!npub) {
-    $('meta').textContent = 'Add ?npub= to the address to see your papers'
+    $('facts').textContent = 'Add ?npub= to the address to see your papers'
     $('empty').hidden = false
     $('empty').textContent = 'No reader named. On Brainstorm this page knows you from your sign-in.'
     return
@@ -361,13 +432,13 @@ async function main () {
     if (!t || t.in) return
     const any = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).catch(() => [])
     if (!any.length) return
-    $('today-note').hidden = false
+    $('today-mark').hidden = false
     $('today-note').textContent = 'Today\'s paper isn\'t in yet. Your Claude usually prints it around seven, or print a fresh edition now. Below is your latest.'
   }).catch(() => {})
 
   const editions = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : [])
   if (!editions.length) {
-    $('meta').textContent = 'No papers yet'
+    $('facts').textContent = 'No papers yet'
     $('empty').hidden = false
     $('empty').textContent = 'Nothing handed in yet. Set up your daily print, or print a fresh edition now.'
     return
@@ -382,11 +453,13 @@ async function main () {
   const show = (e, how = 'push') => {
     current = e
     head('full'); lastY = 0
-    $('date').textContent = phone.matches ? short(e.date) : dayName(e.date)
+    $('date').querySelector('.long').textContent = dayName(e.date)
+    $('date').querySelector('.short').textContent = short(e.date)
     $('frame').title = 'Your paper, ' + dayName(e.date)
     const window = e.until ? new Date(e.until * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : ''
     const f = e.fullness
-    $('meta').textContent = [
+    $('facts').textContent = ''
+    $('printed').textContent = [
       `Printed ${clock(e.printedAt)}${window ? ' · 24 hours to ' + window : ''} · edition ${e.code}`,
       f ? `${f.sections} sections · ${f.pictures} pictures` : '',
       e.topics && e.topics.length ? 'Your topics: ' + e.topics.join(', ') : '',
@@ -431,9 +504,8 @@ async function main () {
     $('archive-list').append(row)
   }
   show(issueFromAddress(location.search, editions) || newest, 'replace')
-  phone.addEventListener('change', () => current && ($('date').textContent = phone.matches ? short(current.date) : dayName(current.date)))
 }
-main().catch(() => { $('meta').textContent = 'Could not load your papers' })
+main().catch(() => { $('facts').textContent = 'Could not load your papers' })
 </script>
 </body>
 </html>

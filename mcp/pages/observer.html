@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Your papers · News and Other Stuff</title>
 <style>
 @font-face { font-family: "Playfair Display"; font-weight: 700; font-display: swap; src: url("/assets/fonts/playfair-display-latin-700-normal.woff2") format("woff2"); }
@@ -14,21 +14,38 @@
 @font-face { font-family: "IBM Plex Mono"; font-weight: 500; font-display: swap; src: url("/assets/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
 :root {
   --paper: #F2F3F0; --paper-2: #FAFAF8; --ink: #0A0E18; --ink-2: #2B3442; --ink-3: #555D69;
-  --rule: #0A0E18; --hair: #C9CDD0; --teal: #267882;
+  --rule: #0A0E18; --hair: #C9CDD0; --teal: #267882; --shade: rgba(10, 14, 24, .28);
   --serif: "Source Serif 4", Georgia, serif; --display: "Playfair Display", Georgia, serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441; --teal: #13D2E5; color-scheme: dark; }
+  :root { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441; --teal: #13D2E5; --shade: rgba(0, 0, 0, .5); color-scheme: dark; }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.55 var(--serif); }
+/* The page is the window: a header above, the paper filling the rest. Only
+ * the paper scrolls, so there is never a box scrolling inside a page. */
+html, body { height: 100%; }
+body { margin: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--paper); color: var(--ink); font: 400 17px/1.55 var(--serif); }
 a { color: inherit; text-decoration-color: var(--hair); text-underline-offset: 3px; }
 a:hover { text-decoration-color: currentColor; }
 :focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
-.sheet { max-width: 1280px; margin: 0 auto; padding: 18px 28px 48px; }
+button { font: inherit; color: inherit; }
 .mono { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
-.folio { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 8px; color: var(--ink-2); }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 28px; }
+
+/* --- the header, which gives way as the reader reads ---------------------- */
+/* Each part folds on its own row, so it slides shut rather than jumping. */
+.top { flex: none; background: var(--paper); position: relative; z-index: 5; }
+.fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .22s ease; }
+.fold > div { overflow: hidden; min-height: 0; }
+body[data-head="slim"] .lead, body[data-head="slim"] .sub,
+body[data-head="hidden"] .fold, body.full .fold { grid-template-rows: 0fr; }
+/* The bar clips only while it is away, so the More menu can hang below it. */
+.barfold > div { overflow: visible; }
+body[data-head="hidden"] .barfold > div, body.full .barfold > div { overflow: hidden; }
+
+.folio { display: flex; justify-content: space-between; gap: 16px; padding: 18px 0 8px; color: var(--ink-2); }
 .fine { height: 2px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
 .nameplate { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; padding: 10px 0 8px; }
 .nameplate h1 { margin: 0; font: 900 1.55rem/1 var(--display); letter-spacing: -.01em; }
@@ -39,150 +56,285 @@ a:hover { text-decoration-color: currentColor; }
 .sections a:first-child { padding-left: 0; }
 .sections a[aria-current] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
 
-.head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 24px; padding: 22px 0 14px; border-bottom: 1px solid var(--rule); }
-.kicker { color: var(--teal); margin: 0 0 6px; }
-.head h2 { font: 700 clamp(1.6rem, 3.4vw, 2.3rem)/1.08 var(--display); margin: 0; }
-.meta { margin: 8px 0 0; color: var(--ink-3); }
-.actions { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 0; }
-.actions button { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; background: none; border: 0; color: var(--ink); cursor: pointer; padding: 10px 12px; }
-.actions button + button { border-left: 1px solid var(--hair); }
-.actions button:hover { text-decoration: underline; text-underline-offset: 3px; }
-.actions button[disabled] { color: var(--ink-3); cursor: not-allowed; text-decoration: none; }
-.panel { margin: 16px 0 0; padding: 12px 0 14px; border-bottom: 1px solid var(--hair); }
-.panel .mono { color: var(--ink-2); margin: 0 0 6px; }
-.panel p { margin: 0 0 8px; font-size: .95rem; }
-.prompt { margin: 8px 0 10px; padding: 2px 0 2px 14px; border-left: 3px solid var(--ink); font-style: italic; }
-.copy { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; min-height: 38px; padding: 0 14px; margin-right: 14px;
-  border: 1px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; border-radius: 0; }
-.copy:hover { background: transparent; color: var(--ink); }
-.archive a { display: block; padding: 5px 0; border-bottom: 1px solid var(--hair); text-decoration: none; }
-.archive a:last-child { border-bottom: 0; }
+/* The bar: the one line that stays while reading. */
+.barline { border-bottom: 1px solid var(--rule); }
+.bar { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+.mini { display: none; font: 900 1.05rem/1 var(--display); white-space: nowrap; margin-right: 6px; text-decoration: none; }
+body[data-head="slim"] .mini { display: inline; }
+.issue { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.issue h2 { margin: 0 6px; font: 700 1.25rem/1.15 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body[data-head="full"] .issue h2 { font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
+.step { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid transparent; background: none; cursor: pointer;
+  font: 400 1.35rem/1 var(--serif); color: var(--ink-2); }
+.step:hover:not([disabled]) { border-color: var(--hair); color: var(--ink); }
+.step[disabled] { color: var(--hair); cursor: default; }
+.tools { margin-left: auto; display: flex; align-items: center; }
+.tool { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; background: none; border: 0; cursor: pointer;
+  padding: 12px 12px; color: var(--ink); white-space: nowrap; }
+.tool + .tool, .tool + .more, .more + .tool { border-left: 1px solid var(--hair); }
+.tool:hover { text-decoration: underline; text-underline-offset: 3px; }
+.more { position: relative; }
+.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 250px; padding: 6px 0; background: var(--paper-2);
+  border: 1px solid var(--rule); box-shadow: 0 14px 34px rgba(10, 14, 24, .16); }
+.menu[hidden] { display: none; }
+.menu a, .menu button { display: block; width: 100%; text-align: left; padding: 11px 16px; background: none; border: 0; cursor: pointer;
+  font: 500 .72rem/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; color: var(--ink); }
+.menu a:hover, .menu button:hover:not([disabled]) { background: var(--paper); }
+.menu button[disabled] { color: var(--ink-3); cursor: not-allowed; }
+.menu .phone { display: none; }
+.menu hr { border: 0; border-top: 1px solid var(--hair); margin: 6px 0; }
 
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; margin-top: 20px; }
-.paper { padding-right: 24px; }
-.paper iframe { display: block; width: 100%; height: calc(100vh - 150px); min-height: 560px; border: 1px solid var(--ink); background: #F2F3F0; }
-.fill { margin: 8px 0 0; color: var(--ink-3); }
-.today { margin: 0 0 12px; padding: 8px 0 8px 14px; border-left: 3px solid var(--teal); font-style: italic; color: var(--ink-2); }
-.today[hidden] { display: none; }
-.empty { padding: 36px 0; font-style: italic; color: var(--ink-2); }
-.week { border-left: 1px solid var(--hair); padding-left: 22px; }
-.week h3 { margin: 0 0 4px; padding-bottom: 8px; border-bottom: 3px solid var(--rule); }
-.week-toggle { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; background: none; border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
-.week-toggle .arrow { font-family: var(--serif); font-size: 1.1rem; line-height: 1; color: var(--ink-3); }
-.week-toggle:hover .arrow { color: var(--ink); }
-/* folded: a narrow rail at the right edge, the paper takes the room */
-.layout { transition: grid-template-columns .2s ease; }
-.layout.folded { grid-template-columns: minmax(0, 1fr) 40px; }
-.layout.folded .week { padding-left: 0; }
-.layout.folded .week h3 { border-bottom: 0; padding: 0; }
-.layout.folded .week-toggle { flex-direction: column; justify-content: flex-start; gap: 10px; padding: 2px 0 0 12px; }
-.layout.folded .week-toggle .label { writing-mode: vertical-rl; }
-.layout.folded #week { display: none; }
-@media (prefers-reduced-motion: reduce) { .layout { transition: none; } }
-.day { display: block; width: 100%; text-align: left; padding: 11px 0; background: none; border: 0; border-bottom: 1px solid var(--hair); color: var(--ink); font: inherit; cursor: pointer; }
+.subline { padding: 8px 0 12px; }
+.meta { margin: 0; color: var(--ink-3); }
+.today { margin: 8px 0 0; padding: 2px 0 2px 12px; border-left: 3px solid var(--teal); font-style: italic; font-size: .95rem; color: var(--ink-2); }
+.today[hidden], .meta:empty { display: none; }
+
+/* --- the paper -------------------------------------------------------------- */
+.reader { flex: 1; min-height: 0; position: relative; }
+.reader iframe { display: block; width: 100%; height: 100%; border: 0; background: #F2F3F0; }
+.empty { max-width: 1280px; margin: 0 auto; padding: 40px 28px; font-style: italic; color: var(--ink-2); }
+
+/* --- full screen: the paper alone; a quiet way back --------------------------- */
+.exit { position: fixed; z-index: 40; top: 12px; right: 12px; padding: 10px 14px; border: 1px solid var(--rule); background: var(--paper-2);
+  color: var(--ink); cursor: pointer; font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  box-shadow: 0 8px 22px rgba(10, 14, 24, .16); transition: opacity .4s ease; }
+.exit[hidden] { display: none; }
+.exit.quiet { opacity: 0; pointer-events: none; }
+.exit:focus-visible { opacity: 1; pointer-events: auto; }
+
+/* --- the Issues drawer ------------------------------------------------------ */
+.scrim { position: fixed; inset: 0; z-index: 50; background: var(--shade); opacity: 0; transition: opacity .2s ease; }
+.scrim.on { opacity: 1; }
+.scrim[hidden] { display: none; }
+.drawer { position: fixed; z-index: 51; top: 0; right: 0; bottom: 0; width: min(380px, 92vw); display: flex; flex-direction: column;
+  background: var(--paper); border-left: 1px solid var(--rule); transform: translateX(100%); transition: transform .24s cubic-bezier(.2, .7, .2, 1); }
+.drawer.on { transform: none; }
+.drawer[hidden] { display: none; }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 3px solid var(--rule); }
+.drawer-head h2 { margin: 0; font: 900 1.4rem/1 var(--display); }
+.close { width: 40px; height: 40px; border: 1px solid transparent; background: none; cursor: pointer; font: 400 1.5rem/1 var(--serif); color: var(--ink-2); }
+.close:hover { border-color: var(--hair); color: var(--ink); }
+.drawer-body { overflow-y: auto; padding: 6px 20px 28px; }
+.drawer h3 { margin: 18px 0 2px; color: var(--ink-2); }
+.day { display: block; width: 100%; text-align: left; padding: 11px 0; background: none; border: 0; border-bottom: 1px solid var(--hair); color: var(--ink); cursor: pointer; }
 .day b { display: block; font: 700 1.05rem/1.3 var(--display); }
 .day span { color: var(--ink-3); }
 .day[aria-current="true"] b::before { content: "▸ "; color: var(--teal); }
 .day.none { cursor: default; }
 .day.none b { font-weight: 400; font-family: var(--serif); color: var(--ink-3); }
 .day.none span { font: italic 400 .9rem/1.4 var(--serif); letter-spacing: 0; text-transform: none; }
-.foot { margin-top: 18px; color: var(--ink-3); }
-@media (max-width: 960px) {
-  .sheet { padding: 14px 16px 40px; }
-  .layout { grid-template-columns: 1fr; }
-  .paper { padding-right: 0; }
-  .paper iframe { height: 80vh; }
-  .week { border-left: 0; padding-left: 0; margin-top: 22px; }
-  .layout.folded { grid-template-columns: 1fr; }
-  .layout.folded .week-toggle { flex-direction: row; padding: 0; }
-  .layout.folded .week-toggle .label { writing-mode: horizontal-tb; }
-  .actions { margin-left: 0; }
-  .actions button:first-child { padding-left: 0; }
+.month { margin: 16px 0 0; color: var(--ink-3); }
+
+/* --- Print a fresh edition: a small sheet under the bar -------------------------- */
+.pop { position: fixed; z-index: 45; right: max(16px, calc((100vw - 1280px) / 2 + 28px)); width: min(440px, calc(100vw - 32px));
+  padding: 16px 18px 18px; background: var(--paper-2); border: 1px solid var(--rule); box-shadow: 0 14px 34px rgba(10, 14, 24, .16); }
+.pop[hidden] { display: none; }
+.pop .mono { color: var(--ink-2); margin: 0 0 8px; }
+.pop p { margin: 0 0 8px; font-size: .95rem; }
+.prompt { margin: 8px 0 12px; padding: 2px 0 2px 14px; border-left: 3px solid var(--ink); font-style: italic; }
+.copy { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; min-height: 40px; padding: 0 14px; margin-right: 14px;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; border-radius: 0; }
+.copy:hover { background: transparent; color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) { .fold, .drawer, .scrim, .exit { transition: none; } }
+
+/* --- phones: the date and More; the bar hides on the way down -------------------- */
+@media (max-width: 720px) {
+  .wrap { padding: 0 16px; }
   .folio span:last-child { display: none; }
+  .folio { padding-top: 12px; }
+  .bar { gap: 4px; }
+  .issue h2 { font-size: 1.1rem; margin: 0 2px; }
+  body[data-head="full"] .issue h2 { font-size: 1.2rem; }
+  body[data-head="slim"] .mini { display: none; }
+  .tools .wide { display: none; }
+  .menu .phone { display: block; }
+  .step { width: 44px; height: 44px; }
+  .tool { padding: 15px 4px 15px 12px; }
+  .menu a, .menu button { padding: 14px 16px; }
+  .exit { top: max(10px, env(safe-area-inset-top)); }
 }
 </style>
 </head>
-<body>
-<main class="sheet">
-  <div class="folio mono"><span id="today">&nbsp;</span><span>The Observer · Your papers</span></div>
-  <div class="fine" aria-hidden="true"></div>
-  <header class="nameplate">
-    <h1>News and Other Stuff</h1>
-    <p>The observer for your network.</p>
-  </header>
-  <div class="oxford" aria-hidden="true"></div>
-  <nav class="sections mono" aria-label="Your Observer"><a href="/setup" id="tab">Set up</a><a href="/observer" aria-current="page">Your papers</a></nav>
+<body data-head="full">
+<header class="top" id="top">
+  <div class="fold lead"><div><div class="wrap">
+    <div class="folio mono"><span id="today">&nbsp;</span><span>The Observer · Your papers</span></div>
+    <div class="fine" aria-hidden="true"></div>
+    <div class="nameplate">
+      <h1>News and Other Stuff</h1>
+      <p>The observer for your network.</p>
+    </div>
+    <div class="oxford" aria-hidden="true"></div>
+    <nav class="sections mono" aria-label="Your Observer"><a href="/setup" id="tab">Set up</a><a href="/observer" aria-current="page">Your papers</a></nav>
+  </div></div></div>
 
-  <div class="head">
-    <div>
-      <p class="kicker mono">Written by your Claude</p>
+  <div class="fold barfold"><div><div class="barline"><div class="wrap bar">
+    <a class="mini" href="#" id="mini" aria-hidden="true" tabindex="-1">News and Other Stuff</a>
+    <div class="issue">
+      <button class="step" type="button" id="prev" aria-label="Previous issue" disabled>‹</button>
       <h2 id="date">Your papers</h2>
-      <p class="meta mono" id="meta" aria-live="polite">Loading your papers…</p>
+      <button class="step" type="button" id="next" aria-label="Next issue" disabled>›</button>
     </div>
-    <div class="actions">
-      <button type="button" id="archive-btn" aria-expanded="false" aria-controls="archive">Archive</button>
-      <button type="button" id="fresh-btn" aria-expanded="false" aria-controls="fresh">Print a fresh edition</button>
-      <button type="button" disabled title="Coming next: you sign it, and it is kept on your own media server">Publish to my Blossom · soon</button>
+    <div class="tools">
+      <button class="tool wide" type="button" id="issues-btn" aria-expanded="false" aria-controls="issues">Issues</button>
+      <button class="tool wide" type="button" id="full-btn">Full screen</button>
+      <div class="more">
+        <button class="tool" type="button" id="more-btn" aria-expanded="false" aria-controls="more-menu">More</button>
+        <div class="menu" id="more-menu" hidden>
+          <button class="phone" type="button" id="issues-item">Issues</button>
+          <button class="phone" type="button" id="full-item">Full screen</button>
+          <hr class="phone">
+          <button type="button" id="fresh-item" aria-controls="fresh">Print a fresh edition</button>
+          <a id="open-tab" href="#" target="_blank" rel="noopener">Open in new tab ↗</a>
+          <a href="/setup" id="setup-link">Change your paper</a>
+          <hr>
+          <button type="button" disabled title="Coming next: you sign it, and it is kept on your own media server">Publish to my Blossom · soon</button>
+        </div>
+      </div>
     </div>
-  </div>
+  </div></div></div></div>
 
-  <div class="panel" id="fresh" hidden>
-    <p class="mono">Print a fresh edition</p>
-    <p>Your Claude prints it, on your plan: copy this into any Claude chat that has the Brainstorm connector, and the new paper appears here once it is handed in.</p>
-    <p class="prompt" id="fresh-prompt">Print today's Nostr Observer with the Brainstorm connector. If my trust network isn't ready, stop and tell me why.</p>
-    <button class="copy" type="button" id="fresh-copy">Copy the instructions</button>
-    <a href="/setup" id="setup-link">Change your paper on the set-up page</a>
-  </div>
-  <div class="panel archive" id="archive" hidden><p class="mono">Every paper</p><div id="archive-list"></div></div>
+  <div class="fold sub"><div><div class="wrap subline">
+    <p class="meta mono" id="meta" aria-live="polite">Loading your papers…</p>
+    <p class="today" id="today-note" hidden></p>
+  </div></div></div>
+</header>
 
-  <div class="layout folded">
-    <section class="paper" aria-label="The paper">
-      <p class="today" id="today-note" hidden></p>
-      <p class="empty" id="empty" hidden></p>
-      <iframe id="frame" title="Your paper" hidden></iframe>
-      <p class="fill mono" id="fill" hidden></p>
-    </section>
-    <aside class="week" aria-label="This week">
-      <h3 class="mono"><button class="week-toggle" id="week-toggle" type="button" aria-expanded="false" aria-controls="week" title="Show this week"><span class="label">This week</span><span class="arrow" aria-hidden="true">‹</span></button></h3>
-      <div id="week"></div>
-    </aside>
-  </div>
-  <p class="foot mono">News and Other Stuff · The observer for your network</p>
+<main class="reader" aria-label="The paper">
+  <p class="empty" id="empty" hidden></p>
+  <iframe id="frame" title="Your paper" hidden></iframe>
 </main>
+
+<button class="exit" type="button" id="exit" hidden>Exit full screen · Esc</button>
+
+<div class="pop" id="fresh" role="dialog" aria-label="Print a fresh edition" hidden>
+  <p class="mono">Print a fresh edition</p>
+  <p>Your Claude prints it, on your plan: copy this into any Claude chat that has the Brainstorm connector, and the new paper appears here once it is handed in.</p>
+  <p class="prompt" id="fresh-prompt">Print today's Nostr Observer with the Brainstorm connector. If my trust network isn't ready, stop and tell me why.</p>
+  <button class="copy" type="button" id="fresh-copy">Copy the instructions</button>
+  <button class="tool" type="button" id="fresh-close">Close</button>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="issues" aria-label="Issues" hidden>
+  <div class="drawer-head"><h2>Issues</h2><button class="close" type="button" id="issues-close" aria-label="Close issues">×</button></div>
+  <div class="drawer-body">
+    <h3 class="mono">This week</h3>
+    <div id="week"></div>
+    <h3 class="mono">Every paper</h3>
+    <div id="archive-list"></div>
+  </div>
+</aside>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id)
+  const body = document.body
+  const phone = matchMedia('(max-width: 720px)')
   const npub = (new URLSearchParams(location.search).get('npub') || '').trim()
   $('today').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
   if (npub) { $('tab').href = $('setup-link').href = '/setup?npub=' + encodeURIComponent(npub) }
-  const toggle = (btn, panel) => btn.addEventListener('click', () => { const open = panel.hidden; panel.hidden = !open; btn.setAttribute('aria-expanded', String(open)) })
-  toggle($('fresh-btn'), $('fresh'))
 
-  // This week folds into a rail to give the paper the room; remembered here.
-  const layout = document.querySelector('.layout')
-  const fold = (folded) => {
-    layout.classList.toggle('folded', folded)
-    $('week-toggle').setAttribute('aria-expanded', String(!folded))
-    $('week-toggle').title = folded ? 'Show this week' : 'Fold this week away'
-    $('week-toggle').querySelector('.arrow').textContent = folded ? '‹' : '›'
+  // --- the header: full at the top, slim (desktop) or gone (phone) once reading
+  const head = (state) => { if (body.dataset.head !== state) body.dataset.head = state }
+  let lastY = 0
+  const onScroll = (y) => {
+    if (y < 40) head('full')
+    else if (!phone.matches) head('slim')
+    else if (y > lastY + 6) head('hidden')
+    else if (y < lastY - 6) head('slim')
+    lastY = y
   }
-  // Folded until the reader opens it; then it stays as they left it.
-  try { fold(localStorage.getItem('observer-week') !== 'open') } catch { fold(true) }
-  $('week-toggle').addEventListener('click', () => {
-    const folded = !layout.classList.contains('folded')
-    fold(folded)
-    try { localStorage.setItem('observer-week', folded ? 'folded' : 'open') } catch { /* private window: not remembered */ }
+  $('mini').addEventListener('click', (e) => { e.preventDefault(); try { $('frame').contentWindow.scrollTo({ top: 0, behavior: 'smooth' }) } catch {} })
+
+  // --- full screen: the paper alone; Esc or a quiet button brings the bar back
+  let quietTimer
+  const wake = () => {
+    if (!body.classList.contains('full')) return
+    $('exit').classList.remove('quiet')
+    clearTimeout(quietTimer)
+    quietTimer = setTimeout(() => $('exit').classList.add('quiet'), 2000)
+  }
+  const full = (on) => {
+    body.classList.toggle('full', on)
+    $('exit').hidden = !on
+    closeMenu()
+    if (on) { wake(); $('exit').focus({ preventScroll: true }) } else { clearTimeout(quietTimer); $('full-btn').focus({ preventScroll: true }) }
+  }
+  $('full-btn').addEventListener('click', () => full(true))
+  $('full-item').addEventListener('click', () => full(true))
+  $('exit').addEventListener('click', () => full(false))
+  addEventListener('mousemove', wake)
+
+  // --- More: a short list of the occasional things
+  const closeMenu = () => { $('more-menu').hidden = true; $('more-btn').setAttribute('aria-expanded', 'false') }
+  $('more-btn').addEventListener('click', () => {
+    const open = $('more-menu').hidden
+    $('more-menu').hidden = !open
+    $('more-btn').setAttribute('aria-expanded', String(open))
   })
-  toggle($('archive-btn'), $('archive'))
+  document.addEventListener('click', (e) => { if (!e.target.closest('.more')) closeMenu() })
+
+  // --- Print a fresh edition
+  const placeFresh = () => { $('fresh').style.top = ($('top').getBoundingClientRect().bottom + 8) + 'px' }
+  const fresh = (on) => { $('fresh').hidden = !on; if (on) { placeFresh(); $('fresh-copy').focus() } }
+  $('fresh-item').addEventListener('click', () => { closeMenu(); fresh(true) })
+  $('fresh-close').addEventListener('click', () => { fresh(false); $('more-btn').focus() })
   $('fresh-copy').addEventListener('click', async () => {
     const b = $('fresh-copy'); const was = b.textContent
     try { await navigator.clipboard.writeText($('fresh-prompt').textContent); b.textContent = 'Copied' } catch { b.textContent = 'Select and copy' }
     setTimeout(() => { b.textContent = was }, 1600)
   })
 
+  // --- the Issues drawer: this week, then every paper
+  let opener = null
+  const drawer = (on) => {
+    const d = $('issues'); const s = $('scrim')
+    $('issues-btn').setAttribute('aria-expanded', String(on))
+    if (on) {
+      opener = document.activeElement
+      closeMenu()
+      d.hidden = s.hidden = false
+      requestAnimationFrame(() => { d.classList.add('on'); s.classList.add('on') })
+      const here = d.querySelector('[aria-current="true"]') || d.querySelector('.day:not(.none)') || $('issues-close')
+      here.focus({ preventScroll: false })
+    } else {
+      d.classList.remove('on'); s.classList.remove('on')
+      setTimeout(() => { d.hidden = s.hidden = true }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240)
+      if (opener && opener.focus) opener.focus({ preventScroll: true })
+    }
+  }
+  $('issues-btn').addEventListener('click', () => drawer(true))
+  $('issues-item').addEventListener('click', () => drawer(true))
+  $('issues-close').addEventListener('click', () => drawer(false))
+  $('scrim').addEventListener('click', () => drawer(false))
+
+  // Esc closes the nearest thing: the drawer, the fresh sheet, the menu, then full screen.
+  const onKey = (e) => {
+    if (e.key !== 'Escape') return
+    if (!$('issues').hidden) drawer(false)
+    else if (!$('fresh').hidden) fresh(false)
+    else if (!$('more-menu').hidden) { closeMenu(); $('more-btn').focus() }
+    else if (body.classList.contains('full')) full(false)
+  }
+  document.addEventListener('keydown', onKey)
+
+  // The paper is served from here, so its scroll and keys can be heard directly.
+  $('frame').addEventListener('load', () => {
+    try {
+      const w = $('frame').contentWindow
+      lastY = 0
+      w.addEventListener('scroll', () => onScroll(w.scrollY), { passive: true })
+      w.addEventListener('keydown', onKey)
+      w.addEventListener('mousemove', wake, { passive: true })
+      w.addEventListener('touchstart', wake, { passive: true })
+    } catch { /* a paper from elsewhere: the header simply stays */ }
+  })
+
   const dayName = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
   const short = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+  const monthOf = (date) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
   const clock = (ts) => ts ? new Date(ts * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e }
 
@@ -199,7 +351,7 @@ a:hover { text-decoration-color: currentColor; }
     const any = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).catch(() => [])
     if (!any.length) return
     $('today-note').hidden = false
-    $('today-note').textContent = 'Today\'s paper isn\'t in yet. Your Claude usually prints it around seven; or print a fresh edition now. Below is your latest.'
+    $('today-note').textContent = 'Today\'s paper isn\'t in yet. Your Claude usually prints it around seven, or print a fresh edition now. Below is your latest.'
   }).catch(() => {})
 
   fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : []).then((editions) => {
@@ -209,42 +361,61 @@ a:hover { text-decoration-color: currentColor; }
       $('empty').textContent = 'Nothing handed in yet. Set up your daily print, or print a fresh edition now.'
       return
     }
-    // One paper a day: the latest of each date.
+    // One paper a day: the latest of each date, newest first.
     const byDate = new Map()
     for (const e of editions) if (!byDate.has(e.date)) byDate.set(e.date, e)
+    const days = [...byDate.keys()]
+    let current = null
 
+    // A new issue arrives at its top, with the full header back.
     const show = (e) => {
-      $('date').textContent = dayName(e.date)
+      current = e
+      head('full'); lastY = 0
+      $('date').textContent = phone.matches ? short(e.date) : dayName(e.date)
       const window = e.until ? new Date(e.until * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : ''
-      $('meta').textContent = `Printed ${clock(e.printedAt)}${window ? ' · covers the 24 hours to ' + window : ''} · edition ${e.code}`
+      const f = e.fullness
+      $('meta').textContent = [
+        `Printed ${clock(e.printedAt)}${window ? ' · 24 hours to ' + window : ''} · edition ${e.code}`,
+        f ? `${f.sections} sections · ${f.pictures} pictures` : '',
+        e.topics && e.topics.length ? 'Your topics: ' + e.topics.join(', ') : '',
+      ].filter(Boolean).join(' · ')
       $('frame').src = e.url
       $('frame').hidden = false
-      const f = e.fullness
-      const topics = e.topics && e.topics.length ? 'Your topics: ' + e.topics.join(', ') : ''
-      $('fill').textContent = [f ? `${f.sections} sections · ${f.pictures} pictures, from a day of ${f.desks} desks and ${f.shortlist} pictures` : '', topics].filter(Boolean).join(' · ')
-      $('fill').hidden = !$('fill').textContent
-      document.querySelectorAll('.day').forEach((d) => d.setAttribute('aria-current', String(d.dataset.date === e.date)))
+      $('open-tab').href = e.url
+      const at = days.indexOf(e.date)
+      $('prev').disabled = at < 0 || at >= days.length - 1
+      $('next').disabled = at <= 0
+      document.querySelectorAll('.day[data-code]').forEach((d) => d.setAttribute('aria-current', String(d.dataset.code === e.code)))
     }
+    const step = (by) => { const at = days.indexOf(current.date) + by; if (at >= 0 && at < days.length) show(byDate.get(days[at])) }
+    $('prev').addEventListener('click', () => step(1))
+    $('next').addEventListener('click', () => step(-1))
+    const pick = (e) => () => { show(e); drawer(false) }
 
     // This week: seven days back from the newest paper, gaps shown as gaps.
-    const newest = [...byDate.keys()][0]
+    const newest = days[0]
     for (let i = 0; i < 7; i++) {
       const d = new Date(newest + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - i)
       const date = d.toISOString().slice(0, 10)
       const e = byDate.get(date)
       const row = el(e ? 'button' : 'div', 'day' + (e ? '' : ' none'))
-      row.dataset.date = date
       row.append(el('b', null, short(date)), el('span', 'mono', e ? `${i === 0 ? 'Latest' : 'Printed'} · ${clock(e.printedAt)}` : 'No paper · nothing handed in'))
-      if (e) { row.type = 'button'; row.addEventListener('click', () => show(e)) }
+      if (e) { row.type = 'button'; row.dataset.code = e.code; row.addEventListener('click', pick(e)) }
       $('week').append(row)
     }
 
+    // Every paper, by month, reprints included.
+    let month = ''
     for (const e of editions) {
-      const a = el('a', null, `${short(e.date)} · edition ${e.code}${e.topics && e.topics.length ? ' · ' + e.topics.join(', ') : ''}`)
-      a.href = e.url; a.target = '_blank'; a.rel = 'noopener'
-      $('archive-list').append(a)
+      if (monthOf(e.date) !== month) { month = monthOf(e.date); $('archive-list').append(el('p', 'month mono', month)) }
+      const row = el('button', 'day')
+      row.type = 'button'; row.dataset.code = e.code
+      row.append(el('b', null, short(e.date)), el('span', 'mono', `Edition ${e.code}${e.topics && e.topics.length ? ' · ' + e.topics.join(', ') : ''}`))
+      row.addEventListener('click', pick(e))
+      $('archive-list').append(row)
     }
     show(byDate.get(newest))
+    phone.addEventListener('change', () => current && ($('date').textContent = phone.matches ? short(current.date) : dayName(current.date)))
   }).catch(() => { $('meta').textContent = 'Could not load your papers' })
 })()
 </script>

@@ -60,9 +60,17 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   const page = await get(`/observer?npub=${toNpub(READER)}`)
   assert.equal(page.status, 200)
   const html = await page.text()
+  // The paper has the whole window: no column beside it, one drawer for the issues.
+  assert.doesNotMatch(html, /class="layout|class="week"/, 'no week column squeezing the paper')
+  assert.match(html, /id="issues-btn"[^>]*aria-expanded="false"[^>]*aria-controls="issues"/, 'one Issues button, closed at first')
+  assert.match(html, /<aside[^>]*id="issues"[^>]*hidden/, 'the drawer starts closed')
   assert.match(html, /This week/)
-  assert.match(html, /<div class="layout folded">/, 'this week starts folded away, so the paper has the room')
-  assert.match(html, /id="week-toggle"[^>]*aria-expanded="false"/, 'and says so to a screen reader')
+  assert.match(html, /Every paper/)
+  assert.match(html, /id="prev"[^>]*aria-label="Previous issue"/)
+  assert.match(html, /id="next"[^>]*aria-label="Next issue"/)
+  assert.match(html, /id="full-btn"[^>]*>Full screen</, 'full screen, one press')
+  assert.match(html, /id="more-btn"[^>]*aria-expanded="false"/)
+  for (const item of ['Print a fresh edition', 'Open in new tab', 'Publish to my Blossom']) assert.match(html, new RegExp(item), item + ' is under More')
 })
 
 test('the setup page can tell when the reader\'s Claude has connected: the first tool call marks it', async () => {

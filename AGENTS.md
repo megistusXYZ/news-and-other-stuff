@@ -880,9 +880,13 @@ paper lands on the reader's Observer page in brainstorm.world.
   - `/setup`: Vitor's three steps, a live lens badge, the connector address,
     a "connected" line that lights on the reader's first tool call, and a
     topics box that composes the daily prompt. Nothing is stored.
-  - `/observer`: the paper in a frame, "This week" with the gaps shown, an
-    archive, "Print a fresh edition" (the prompt to paste), and a disabled
-    "Publish to my Blossom".
+  - `/observer`: the paper fills the window and is the only thing that
+    scrolls. The header gives way as the reader reads: a slim pinned bar on
+    desktop (date ‹ ›, Issues, Full screen, More), hidden on the way down on
+    a phone. Full screen hides even the bar; Esc or a fading button brings it
+    back. One Issues drawer holds "This week" (gaps shown) and every paper by
+    month. More holds "Print a fresh edition" (the prompt to paste), "Open in
+    new tab", and a disabled "Publish to my Blossom".
   - They read three small JSON routes: `/api/readiness` (public, by npub),
     `/api/status`, and `/api/editions`, which lists editions only for readers
     this connector serves. Each paper is served at

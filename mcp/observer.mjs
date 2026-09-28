@@ -5,6 +5,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from '../.claude/skills/nostr-observer/scripts/resolve.mjs'
 import { check } from '../.claude/skills/nostr-observer/scripts/validate.mjs'
+import { wireBalance } from '../.claude/skills/nostr-observer/scripts/layout.mjs'
 import { dress, loadAssets } from '../.claude/skills/nostr-observer/scripts/dress.mjs'
 import { digest, cleanTopics, cleanPaper } from '../.claude/skills/nostr-observer/scripts/corpus.mjs'
 
@@ -344,7 +345,9 @@ async function runTool (name, args, reader, deps) {
       const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
       const full = `\nThe page has ${plural(f.sections, 'section')} and ${plural(f.pictures, 'picture')}; the digest held ${plural(f.desks, 'desk')} with posts and ${plural(f.shortlist, 'picture')} on the shortlist.`
       const url = deps.paperUrl ? deps.paperUrl(reader, out.date, out.edition) : null
-      return say(`Accepted: edition ${out.edition} for ${out.date}, on the reader's Observer page.` + (url ? `\nRead it: ${url}` : '') + full + (worth.length ? `\nThe printer ${worth.map((c) => `${c.kind} ${c.detail || ''}`.trim()).slice(0, 8).join('; ')}.` : ''), { structuredContent: { edition: out.edition, date: out.date, ...(url ? { url } : {}), ...out.fullness } })
+      // Advice for tomorrow's paper; today's is already kept.
+      const layout = wireBalance(args.html)
+      return say(`Accepted: edition ${out.edition} for ${out.date}, on the reader's Observer page.` + (url ? `\nRead it: ${url}` : '') + full + (worth.length ? `\nThe printer ${worth.map((c) => `${c.kind} ${c.detail || ''}`.trim()).slice(0, 8).join('; ')}.` : '') + (layout.length ? `\nLayout, for next time: ${layout.join(' ')}` : ''), { structuredContent: { edition: out.edition, date: out.date, ...(url ? { url } : {}), ...out.fullness } })
     }
     default:
       return fail(`No tool called ${name}.`)

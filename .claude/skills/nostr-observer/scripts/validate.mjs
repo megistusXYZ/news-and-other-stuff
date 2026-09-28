@@ -23,6 +23,7 @@
 import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { tags, attributes as attrsOf, textIn } from './html.mjs'
+import { wireBalance } from './layout.mjs'
 import { fromNevent, fromNaddr, fromNpub, toZapStreamUrl, LIVE_KIND, toShopstrUrl, CLASSIFIED_KIND, toNjumpCalendarUrl, toBrainstormCalendar, CALENDAR_KINDS, tagValue, toBrainstormNote, toBrainstormArticle, toBrainstormProfile, ARTICLE_KINDS } from './nostr.mjs'
 
 function arg (name, fallback = null) {
@@ -625,6 +626,14 @@ function main () {
 
   if (violations.length === 0) {
     console.log(`  CLEAN — ${quotes.length} quotes, all verified.\n`)
+    // Advice on the layout, after the verdict and never part of it: a page
+    // is not refused for how its columns end.
+    const layout = wireBalance(html)
+    if (layout.length) {
+      console.log('  LAYOUT, advice and not blocking:')
+      for (const note of layout) console.log(`    ${note}`)
+      console.log('')
+    }
     process.exit(0)
   }
 

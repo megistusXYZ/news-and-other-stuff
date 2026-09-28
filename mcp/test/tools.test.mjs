@@ -118,6 +118,19 @@ test('the brief asks for the whole paper, and an accepted page says how full it 
     'the front page and one band, against the notes and long-form it was given')
 })
 
+test('an accepted paper whose Wire runs on hears so, and is kept all the same', async () => {
+  const d = deps()
+  const note = { id: '1'.repeat(64), kind: 1, pubkey: ADA, created_at: 1790300000, content: 'Noon bread.', tags: [] }
+  d.store.keepCorpus(READER, { ...busyCorpus(), code: 'WIRE01', art: [], desks: { notes: [note] } })
+  const list = (n, what) => Array.from({ length: n }, (_, i) => `<div class="wire-item"><p>${what} ${i + 1}</p></div>`).join('')
+  const html = '<!doctype html><html><head><title>The Nostr Observer — Sunday</title></head><body><main class="sheet"><section class="fold"><article><h2 class="lead-head">Bread</h2>'
+    + `<p><q>Noon bread.</q> <a href="https://brainstorm.world/e/${note.id}">Read</a></p></article></section>`
+    + `<section class="band"><div class="band-head"><h2>The Wire</h2></div><div class="agate"><div class="cell"><p class="box-head">Headlines</p>${list(5, 'headline')}</div><div class="cell"><p class="box-head">Broadcasting</p>${list(8, 'station')}</div></div></section></main></body></html>`
+  const out = text(await callTool('submit_edition', { code: 'WIRE01', html }, READER, d))
+  assert.match(out, /^Accepted/)
+  assert.match(out, /Layout, for next time: Broadcasting carries 8 stations/)
+})
+
 test('a refusal says how to fix each kind of problem, not only what the rule is', async () => {
   const d = deps()
   const note = { id: '1'.repeat(64), kind: 1, pubkey: ADA, created_at: 1790300000, content: 'Noon bread.', tags: [] }

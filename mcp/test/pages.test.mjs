@@ -59,7 +59,10 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   assert.equal((await get(`/observer/${toNpub(READER)}/2026-09-27-ZZZ999`)).status, 404)
   const page = await get(`/observer?npub=${toNpub(READER)}`)
   assert.equal(page.status, 200)
-  assert.match(await page.text(), /This week/)
+  const html = await page.text()
+  assert.match(html, /This week/)
+  assert.match(html, /<div class="layout folded">/, 'this week starts folded away, so the paper has the room')
+  assert.match(html, /id="week-toggle"[^>]*aria-expanded="false"/, 'and says so to a screen reader')
 })
 
 test('the setup page can tell when the reader\'s Claude has connected: the first tool call marks it', async () => {

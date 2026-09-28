@@ -135,7 +135,7 @@ a:hover { text-decoration-color: currentColor; }
   </div>
   <div class="panel archive" id="archive" hidden><p class="mono">Every paper</p><div id="archive-list"></div></div>
 
-  <div class="layout">
+  <div class="layout folded">
     <section class="paper" aria-label="The paper">
       <p class="today" id="today-note" hidden></p>
       <p class="empty" id="empty" hidden></p>
@@ -143,7 +143,7 @@ a:hover { text-decoration-color: currentColor; }
       <p class="fill mono" id="fill" hidden></p>
     </section>
     <aside class="week" aria-label="This week">
-      <h3 class="mono"><button class="week-toggle" id="week-toggle" type="button" aria-expanded="true" aria-controls="week" title="Fold this week away"><span class="label">This week</span><span class="arrow" aria-hidden="true">›</span></button></h3>
+      <h3 class="mono"><button class="week-toggle" id="week-toggle" type="button" aria-expanded="false" aria-controls="week" title="Show this week"><span class="label">This week</span><span class="arrow" aria-hidden="true">‹</span></button></h3>
       <div id="week"></div>
     </aside>
   </div>
@@ -167,7 +167,8 @@ a:hover { text-decoration-color: currentColor; }
     $('week-toggle').title = folded ? 'Show this week' : 'Fold this week away'
     $('week-toggle').querySelector('.arrow').textContent = folded ? '‹' : '›'
   }
-  try { fold(localStorage.getItem('observer-week') === 'folded') } catch { fold(false) }
+  // Folded until the reader opens it; then it stays as they left it.
+  try { fold(localStorage.getItem('observer-week') !== 'open') } catch { fold(true) }
   $('week-toggle').addEventListener('click', () => {
     const folded = !layout.classList.contains('folded')
     fold(folded)

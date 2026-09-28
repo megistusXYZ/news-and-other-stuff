@@ -14,7 +14,7 @@ import { toNpub } from '../../.claude/skills/nostr-observer/scripts/nostr.mjs'
 const READER = 'aa'.repeat(32)
 const STRANGER = 'dd'.repeat(32)
 const store = memoryStore()
-store.putEdition(READER, { date: '2026-09-27', code: 'ABC123', html: '<p>page</p>', living: '<!doctype html><title>Living</title><p>the living copy</p>', printedAt: 1790500000, until: 1790490000, topics: ['nostr'], fullness: { sections: 9, pictures: 8, desks: 13, shortlist: 49 } })
+store.putEdition(READER, { date: '2026-09-27', code: 'ABC123', html: '<div class="folio"><span>Vol. I · No. 3</span><span>Sunday, September 27, 2026</span><span>24h to 1:42 a.m. CDT</span></div><article class="story"><p class="kicker">The Lead · Spending</p><h2 class="lead-head">Ice Cream &amp; a <em>Grill</em>, Paid in Sats</h2></article>', living: '<!doctype html><title>Living</title><p>the living copy</p>', printedAt: 1790500000, until: 1790490000, topics: ['nostr'], fullness: { sections: 9, pictures: 8, desks: 13, shortlist: 49 } })
 const deps = {
   store,
   readiness: async (reader) => (reader === READER ? { ready: true, state: 'ready', say: 'Ready.', do: '' } : { ready: false, state: 'no-score-list', say: 'No lens yet.', do: 'Ask Brainstorm.' }),
@@ -51,6 +51,8 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   const list = await (await get(`/api/editions?npub=${toNpub(READER)}`)).json()
   assert.deepEqual(list.map((e) => [e.date, e.code, e.url]), [['2026-09-27', 'ABC123', `/observer/${toNpub(READER)}/2026-09-27-ABC123`]])
   assert.deepEqual(list[0].fullness, { sections: 9, pictures: 8, desks: 13, shortlist: 49 })
+  assert.equal(list[0].issue, 'Vol. I · No. 3', 'each paper names its issue, as its folio printed it')
+  assert.equal(list[0].lead, 'Ice Cream & a Grill, Paid in Sats', 'and its lead headline, as plain words')
   const paper = await get(list[0].url)
   assert.equal(paper.status, 200)
   assert.match(await paper.text(), /the living copy/)
@@ -64,8 +66,8 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   assert.doesNotMatch(html, /class="layout|class="week"/, 'no week column squeezing the paper')
   assert.match(html, /id="issues-btn"[^>]*aria-expanded="false"[^>]*aria-controls="issues"/, 'one Issues button, closed at first')
   assert.match(html, /<aside[^>]*id="issues"[^>]*hidden/, 'the drawer starts closed')
-  assert.match(html, /This week/)
-  assert.match(html, /Every paper/)
+  assert.match(html, /<aside[^>]*id="issues"[\s\S]*id="issue-list"/, 'one list of issues, a row a day')
+  assert.doesNotMatch(html, /This week|Every paper/, 'not two lists of the same papers')
   assert.match(html, /id="prev"[^>]*aria-label="Previous issue"/)
   assert.match(html, /id="next"[^>]*aria-label="Next issue"/)
   assert.match(html, /id="full-btn"[^>]*>Full screen</, 'full screen, one press')
@@ -78,7 +80,6 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   assert.match(html, /id="more-menu"[\s\S]*Set up your paper/, 'set-up lives under More')
   assert.match(html, /id="more-dot"[^>]*hidden/, '"not in yet" is a dot on More, shown only when true')
   assert.match(html, /id="more-menu"[\s\S]*id="today-line"[^>]*hidden/, 'and its sentence the first line inside')
-  assert.match(html, /<aside[^>]*id="issues"[\s\S]*id="printed"/, 'when and which edition: in the Issues drawer')
   assert.match(html, /<script type="module">[\s\S]*from '\/assets\/observer\.js'/, 'the page runs on its tested decisions')
   const script = await get('/assets/observer.js')
   assert.equal(script.status, 200)

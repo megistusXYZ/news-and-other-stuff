@@ -83,3 +83,30 @@ export function folioFacts (texts) {
     window: clean.find((t) => WINDOW.test(t)) || null,
   }
 }
+
+const DAY = 86400000
+const dayOf = (date) => Date.parse(date + 'T12:00:00Z')
+const isoOf = (ms) => new Date(ms).toISOString().slice(0, 10)
+const monthLabel = (date) => new Date(dayOf(date)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+
+/**
+ * The Issues list, in the order it is read: a month heading, then one row
+ * a day, newest first. A day's latest paper is its issue and any earlier
+ * print of that day folds into it as a reprint. Days with no paper between
+ * two issues are one quiet line, never a row each.
+ */
+export function issueList (editions) {
+  const rows = []
+  let month = null
+  let prev = null
+  for (const [date, paper] of papersByDay(editions)) {
+    if (prev) {
+      const days = Math.round((dayOf(prev) - dayOf(date)) / DAY) - 1
+      if (days > 0) rows.push({ kind: 'gap', from: isoOf(dayOf(date) + DAY), to: isoOf(dayOf(prev) - DAY), days })
+    }
+    if (monthLabel(date) !== month) { month = monthLabel(date); rows.push({ kind: 'month', label: month }) }
+    rows.push({ kind: 'issue', date, paper, reprints: editions.filter((e) => e.date === date && e !== paper) })
+    prev = date
+  }
+  return rows
+}

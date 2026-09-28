@@ -890,8 +890,12 @@ paper lands on the reader's Observer page in brainstorm.world.
     window (read from the paper), Issues, Full screen, Aa and More; on a
     phone it hides on the way down. Nothing is said twice at once. Full
     screen hides the page's controls; Esc or a fading button brings them
-    back. One Issues drawer holds "This week" (gaps shown), every paper by
-    month, and when and which edition. More holds "Today's paper isn't in
+    back. One Issues drawer lists a row a day, newest first, by month:
+    the issue number, the date, the lead headline and when it was printed,
+    both read from the paper as printed (`paperFacts`, served with
+    /api/editions); reprints fold into their day as "Also printed …", days
+    with no paper are one quiet line, and when today's paper is not in, the
+    top row says so with "Print it now". No edition codes are shown. More holds "Today's paper isn't in
     yet" (a teal dot on More when true), "Print a fresh edition", "Open in
     new tab", "Set up your paper", and a disabled "Publish to my Blossom".
   - They read three small JSON routes: `/api/readiness` (public, by npub),

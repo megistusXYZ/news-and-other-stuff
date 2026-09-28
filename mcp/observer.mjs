@@ -8,6 +8,7 @@ import { check } from '../.claude/skills/nostr-observer/scripts/validate.mjs'
 import { wireBalance } from '../.claude/skills/nostr-observer/scripts/layout.mjs'
 import { dress, loadAssets } from '../.claude/skills/nostr-observer/scripts/dress.mjs'
 import { digest, cleanTopics, cleanPaper } from '../.claude/skills/nostr-observer/scripts/corpus.mjs'
+import { folioFacts } from './pages/observer.js'
 
 const EDITORIAL = readFileSync(new URL('../.claude/skills/nostr-observer/reference/editorial.md', import.meta.url), 'utf8')
 const HOUSE_CSS = readFileSync(new URL('../.claude/skills/nostr-observer/reference/house.css', import.meta.url), 'utf8')
@@ -352,4 +353,21 @@ async function runTool (name, args, reader, deps) {
     default:
       return fail(`No tool called ${name}.`)
   }
+}
+
+const plain = (html) => html.replace(/<[^>]*>/g, '')
+  .replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+  .replace(/\s+/g, ' ').trim()
+
+/**
+ * What a reader recognises a paper by, read from the page as printed: its
+ * issue ("Vol. I · No. 3", from the folio) and its lead headline, as plain
+ * words. Either is null when the page does not carry it.
+ */
+export function paperFacts (html) {
+  const page = String(html || '')
+  const folio = /<div class="folio">([\s\S]*?)<\/div>/.exec(page)
+  const spans = folio ? [...folio[1].matchAll(/<span[^>]*>([\s\S]*?)<\/span>/g)].map((m) => plain(m[1])) : []
+  const lead = /<h2 class="lead-head"[^>]*>([\s\S]*?)<\/h2>/.exec(page)
+  return { issue: folioFacts(spans).issue, lead: lead ? plain(lead[1]).slice(0, 200) || null : null }
 }

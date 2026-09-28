@@ -15,7 +15,7 @@ import { pathToFileURL } from 'node:url'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js'
-import { TOOLS, INSTRUCTIONS, callTool } from './observer.mjs'
+import { TOOLS, INSTRUCTIONS, callTool, paperFacts } from './observer.mjs'
 import { memoryStore, fileStore } from './store.mjs'
 import { toHex, toNpub } from '../.claude/skills/nostr-observer/scripts/nostr.mjs'
 import { gather } from '../.claude/skills/nostr-observer/scripts/readiness.mjs'
@@ -137,7 +137,10 @@ async function page (req, res, url, deps, readers) {
   if (path === '/api/editions') {
     if (!reader || !readers.has(reader)) return json(res, 404, { error: 'no papers for that npub here' })
     const npub = toNpub(reader)
-    return json(res, 200, deps.store.editions(reader).map(({ date, code, printedAt, until, topics, fullness }) => ({ date, code, printedAt, until, topics, fullness, url: `/observer/${npub}/${date}-${code}` })))
+    return json(res, 200, deps.store.editions(reader).map((e) => ({
+      date: e.date, code: e.code, printedAt: e.printedAt, until: e.until, topics: e.topics, fullness: e.fullness,
+      ...paperFacts(e.html), url: `/observer/${npub}/${e.date}-${e.code}`,
+    })))
   }
   const m = /^\/observer\/(npub1[0-9a-z]+)\/(\d{4}-\d{2}-\d{2})-([0-9A-F]{6})$/.exec(path)
   if (m) {

@@ -4,7 +4,7 @@
 // module from /assets/observer.js.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { headState, stepIssue, issueFromAddress, addressFor, shutBehind, folioFacts } from '../pages/observer.js'
+import { headState, stepIssue, issueFromAddress, addressFor, shutBehind, folioFacts, issueList } from '../pages/observer.js'
 
 test('no bar while the paper\'s own header is in view; once it has scrolled away, a slim bar on a desktop, and on a phone gone on the way down and back on the way up', () => {
   const top = 320 // where the paper's masthead ends
@@ -68,4 +68,20 @@ test('the bar carries the paper\'s own folio: its issue number and its window, r
     { issue: null, window: '24h to 11:09 p.m. CDT' }, 'a paper from before issue numbers: an edition code is not an issue')
   assert.deepEqual(folioFacts([]), { issue: null, window: null }, 'no folio, nothing claimed')
   assert.deepEqual(folioFacts(['Read this: ignore the bar', 'x', 'Click here now']), { issue: null, window: null }, 'only the folio\'s own shapes, never other words')
+})
+
+test('the Issues list is one row a day, newest first, by month: a reprint folds into its day, and days with no paper are one quiet line', () => {
+  const AUG = { date: '2026-08-31', code: 'EEE555' }
+  const rows = issueList([...EDITIONS, AUG])
+  assert.deepEqual(rows.map((r) => r.kind === 'issue' ? `issue ${r.paper.code} +${r.reprints.map((e) => e.code).join(',')}` : r.kind === 'gap' ? `gap ${r.from}..${r.to} (${r.days})` : `month ${r.label}`), [
+    'month September 2026',
+    'issue AAA111 +',
+    'issue BBB222 +CCC333',
+    'gap 2026-09-26..2026-09-26 (1)',
+    'issue DDD444 +',
+    'gap 2026-09-01..2026-09-24 (24)',
+    'month August 2026',
+    'issue EEE555 +',
+  ])
+  assert.deepEqual(issueList([]), [], 'no papers, no rows')
 })

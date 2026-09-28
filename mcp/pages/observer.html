@@ -93,12 +93,17 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 .empty { max-width: 1240px; margin: 0 auto; padding: 40px 22px; font-style: italic; color: var(--ink-2); }
 
 /* --- full screen: the paper alone; a quiet way back --------------------------- */
-.exit { position: fixed; z-index: 40; top: 12px; right: 12px; padding: 10px 14px; border: 1px solid var(--rule); background: var(--paper-2);
-  color: var(--ink); cursor: pointer; font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
-  box-shadow: 0 8px 22px rgba(10, 14, 24, .16); transition: opacity .4s ease; }
+/* A small mark in the corner; its words only when pointed at or focused. */
+.exit { position: fixed; z-index: 40; top: 10px; right: 10px; height: 32px; min-width: 32px; padding: 0 8px; display: flex; align-items: center; gap: 0;
+  border: 1px solid var(--hair); border-radius: 16px; background: var(--paper-2); color: var(--ink-2); cursor: pointer; opacity: .72;
+  font: 500 .66rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; transition: opacity .4s ease, gap .2s ease; }
+.exit svg { flex: none; width: 14px; height: 14px; }
+.exit .exit-label { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width .2s ease; }
+.exit:hover, .exit:focus-visible { opacity: 1; gap: 8px; color: var(--ink); border-color: var(--ink-3); }
+.exit:hover .exit-label, .exit:focus-visible .exit-label { max-width: 220px; }
 .exit[hidden] { display: none; }
 .exit.quiet { opacity: 0; pointer-events: none; }
-.exit:focus-visible { opacity: 1; pointer-events: auto; }
+.exit.quiet:focus-visible { opacity: 1; pointer-events: auto; }
 
 /* --- the Issues drawer ------------------------------------------------------ */
 .scrim { position: fixed; inset: 0; z-index: 50; background: var(--shade); opacity: 0; transition: opacity .2s ease; }
@@ -114,15 +119,29 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 .close { width: 40px; height: 40px; border: 1px solid transparent; background: none; cursor: pointer; font: 400 1.5rem/1 var(--serif); color: var(--ink-2); }
 .close:hover { border-color: var(--hair); color: var(--ink); }
 .drawer-body { overflow-y: auto; padding: 6px 20px 28px; }
-.drawer h3 { margin: 18px 0 2px; color: var(--ink-2); }
-.day { display: block; width: 100%; text-align: left; padding: 11px 0; background: none; border: 0; border-bottom: 1px solid var(--hair); color: var(--ink); cursor: pointer; }
-.day b { display: block; font: 700 1.05rem/1.3 var(--display); }
-.day span { color: var(--ink-3); }
-.day[aria-current="true"] b::before { content: "▸ "; color: var(--teal); }
-.day.none { cursor: default; }
-.day.none b { font-weight: 400; font-family: var(--serif); color: var(--ink-3); }
-.day.none span { font: italic 400 .9rem/1.4 var(--serif); letter-spacing: 0; text-transform: none; }
-.month { margin: 16px 0 0; color: var(--ink-3); }
+.count { margin: 8px 0 0; color: var(--ink-3); }
+.issue-list { list-style: none; margin: 0; padding: 0; }
+.issue-list .month { margin: 18px 0 2px; color: var(--ink-3); }
+.issue-row { display: block; width: 100%; text-align: left; padding: 12px 0 12px 14px; margin-left: -14px; background: none; border: 0;
+  border-left: 3px solid transparent; border-bottom: 1px solid var(--hair); color: var(--ink); cursor: pointer; }
+.issue-row:hover { background: var(--paper-2); }
+.issue-row[aria-current="true"] { border-left-color: var(--teal); background: var(--paper-2); }
+.row-meta { display: block; color: var(--ink-2); }
+.row-meta b { color: var(--ink); font-weight: 500; }
+.row-lead { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 5px 0 5px;
+  font: 700 1.02rem/1.3 var(--display); }
+.row-foot { display: block; color: var(--ink-3); }
+.now { display: none; color: var(--teal); }
+.issue-row[aria-current="true"] .now { display: inline; }
+.also { margin: -4px 0 10px; color: var(--ink-3); }
+.reprint { background: none; border: 0; padding: 2px 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink-2);
+  text-decoration: underline; text-decoration-color: var(--hair); text-underline-offset: 3px; cursor: pointer; }
+.reprint[aria-current="true"] { color: var(--teal); text-decoration-color: currentColor; }
+.gap { padding: 9px 0; border-bottom: 1px solid var(--hair); color: var(--ink-3); font-style: italic; font-size: .9rem; }
+.today-row { margin: 14px 0 6px; padding: 12px 14px; border: 1px dashed var(--ink-3); }
+.today-row p { margin: 0 0 8px; font-size: .95rem; color: var(--ink-2); }
+.today-row .mono { color: var(--ink); margin-bottom: 6px; }
+.today-row[hidden] { display: none; }
 
 /* --- Print a fresh edition: a small sheet under the bar -------------------------- */
 .pop { position: fixed; z-index: 45; right: max(16px, calc((100vw - 1240px) / 2 + 22px)); width: min(440px, calc(100vw - 32px));
@@ -154,6 +173,8 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
   .tool { padding: 15px 8px 15px 10px; }
   .menu a, .menu button { padding: 14px 16px; }
   .exit { top: max(10px, env(safe-area-inset-top)); }
+  .drawer { width: 100vw; border-left: 0; }
+  .issue-row { padding: 14px 0 14px 14px; }
 }
 /* The short date on a phone; the long one elsewhere. */
 .issue .short { display: none; }
@@ -196,7 +217,7 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
   <button type="button" disabled title="Coming next: you sign it, and it is kept on your own media server">Publish to my Blossom · soon</button>
 </div>
 
-<button class="exit" type="button" id="exit" hidden>Exit full screen · Esc</button>
+<button class="exit" type="button" id="exit" aria-label="Exit full screen (Esc)" hidden><svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 1.5V6H1.5M10 1.5V6h4.5M6 14.5V10H1.5M10 14.5V10h4.5"/></svg><span class="exit-label">Exit full screen · Esc</span></button>
 
 <div class="pop" id="fresh" role="dialog" aria-label="Print a fresh edition" hidden>
   <p class="mono">Print a fresh edition</p>
@@ -210,18 +231,20 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 <aside class="drawer" id="issues" aria-label="Issues" hidden>
   <div class="drawer-head">
     <div class="drawer-title"><h2>Issues</h2><button class="close" type="button" id="issues-close" aria-label="Close issues">×</button></div>
-    <p class="printed mono" id="printed"></p>
+    <p class="count mono" id="issues-count"></p>
   </div>
   <div class="drawer-body">
-    <h3 class="mono">This week</h3>
-    <div id="week"></div>
-    <h3 class="mono">Every paper</h3>
-    <div id="archive-list"></div>
+    <div class="today-row" id="today-row" hidden>
+      <p class="mono" id="today-row-date"></p>
+      <p>Not printed yet. Your Claude usually prints it around seven.</p>
+      <button class="copy" type="button" id="today-print">Print it now</button>
+    </div>
+    <ol class="issue-list" id="issue-list"></ol>
   </div>
 </aside>
 
 <script type="module">
-import { headState, stepIssue, issueFromAddress, addressFor, papersByDay, shutBehind, folioFacts } from '/assets/observer.js'
+import { headState, stepIssue, issueFromAddress, addressFor, papersByDay, shutBehind, folioFacts, issueList } from '/assets/observer.js'
 const $ = (id) => document.getElementById(id)
 const body = document.body
 const phone = matchMedia('(max-width: 720px)')
@@ -290,6 +313,7 @@ const fresh = (on) => {
   if (on) { $('fresh').style.top = (body.dataset.head === 'slim' ? $('top').getBoundingClientRect().bottom + 8 : 56) + 'px'; $('fresh-copy').focus() }
 }
 $('fresh-item').addEventListener('click', () => { closeMenu(); fresh(true) })
+$('today-print').addEventListener('click', () => { drawer(false); fresh(true) })
 $('fresh-close').addEventListener('click', () => { fresh(false); if (menuFrom) menuFrom.focus() })
 $('fresh-copy').addEventListener('click', async () => {
   const b = $('fresh-copy'); const was = b.textContent
@@ -310,7 +334,7 @@ const drawer = (on) => {
     closeMenu()
     d.hidden = s.hidden = false
     requestAnimationFrame(() => { d.classList.add('on'); s.classList.add('on') })
-    const here = d.querySelector('[aria-current="true"]') || d.querySelector('.day:not(.none)') || $('issues-close')
+    const here = d.querySelector('.issue-row[aria-current="true"], .reprint[aria-current="true"]') || d.querySelector('.issue-row') || $('issues-close')
     here.focus()
   } else {
     d.classList.remove('on'); s.classList.remove('on')
@@ -484,6 +508,8 @@ async function main () {
     if (!any.length) return
     $('today-line').hidden = false
     $('more-dot').hidden = false
+    $('today-row').hidden = false
+    $('today-row-date').textContent = 'Today · ' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
     const inPaper = paperDoc() && paperDoc().querySelector('.obs-more')
     if (inPaper) inPaper.classList.add('obs-dot')
   }).catch(() => {})
@@ -502,20 +528,13 @@ async function main () {
     $('date').querySelector('.long').textContent = dayName(e.date)
     $('date').querySelector('.short').textContent = short(e.date)
     frame.title = 'Your paper, ' + dayName(e.date)
-    const window = e.until ? new Date(e.until * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : ''
-    const f = e.fullness
-    $('printed').textContent = [
-      `Printed ${clock(e.printedAt)}${window ? ' · 24 hours to ' + window : ''} · edition ${e.code}`,
-      f ? `${f.sections} sections · ${f.pictures} pictures` : '',
-      e.topics && e.topics.length ? 'Your topics: ' + e.topics.join(', ') : '',
-    ].filter(Boolean).join(' · ')
     // Swapped in place, so the paper adds nothing to history: Back belongs to the page.
     if (frame.getAttribute('src')) { try { frame.contentWindow.location.replace(e.url) } catch { frame.src = e.url } } else frame.src = e.url
     frame.hidden = false
     $('open-tab').href = e.url
     $('prev').disabled = !stepIssue(editions, e, 1)
     $('next').disabled = !stepIssue(editions, e, -1)
-    document.querySelectorAll('.day[data-code]').forEach((d) => d.setAttribute('aria-current', String(d.dataset.code === e.code)))
+    document.querySelectorAll('#issue-list [data-code]').forEach((d) => d.setAttribute('aria-current', String(d.dataset.code === e.code)))
     const address = addressFor(location.search, e)
     if (how === 'push' && address !== location.search) history.pushState(null, '', address)
     else if (how === 'replace') history.replaceState(null, '', address)
@@ -527,26 +546,42 @@ async function main () {
   const pick = (e) => () => { show(e); drawer(false) }
   addEventListener('popstate', () => show(issueFromAddress(location.search, editions) || newest, 'none'))
 
-  // This week: seven days back from the newest paper, gaps shown as gaps.
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(newest.date + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - i)
-    const date = d.toISOString().slice(0, 10)
-    const e = byDate.get(date)
-    const row = el(e ? 'button' : 'div', 'day' + (e ? '' : ' none'))
-    row.append(el('b', null, short(date)), el('span', 'mono', e ? `${i === 0 ? 'Latest' : 'Printed'} · ${clock(e.printedAt)}` : 'No paper · nothing handed in'))
-    if (e) { row.type = 'button'; row.dataset.code = e.code; row.addEventListener('click', pick(e)) }
-    $('week').append(row)
-  }
-
-  // Every paper, by month, reprints included.
-  let month = ''
-  for (const e of editions) {
-    if (monthOf(e.date) !== month) { month = monthOf(e.date); $('archive-list').append(el('p', 'month mono', month)) }
-    const row = el('button', 'day')
-    row.type = 'button'; row.dataset.code = e.code
-    row.append(el('b', null, short(e.date)), el('span', 'mono', `Edition ${e.code}${e.topics && e.topics.length ? ' · ' + e.topics.join(', ') : ''}`))
-    row.addEventListener('click', pick(e))
-    $('archive-list').append(row)
+  // The Issues list: a row a day, newest first, by month; reprints fold
+  // into their day and days without a paper are one quiet line.
+  const rows = issueList(editions)
+  const days = rows.filter((r) => r.kind === 'issue')
+  $('issues-count').textContent = `${days.length} ${days.length === 1 ? 'issue' : 'issues'} · since ${short(days[days.length - 1].date)}`
+  const number = (e) => (e.issue ? e.issue.split(' · ').pop() : null)
+  for (const r of rows) {
+    const li = document.createElement('li')
+    if (r.kind === 'month') { li.className = 'month mono'; li.textContent = r.label }
+    else if (r.kind === 'gap') { li.className = 'gap'; li.textContent = r.days === 1 ? `No paper ${short(r.from)}` : `No papers ${short(r.from)} – ${short(r.to)}` }
+    else {
+      const e = r.paper
+      const row = el('button', 'issue-row'); row.type = 'button'; row.dataset.code = e.code
+      const meta = el('span', 'row-meta mono')
+      if (number(e)) meta.append(el('b', null, number(e)), ' · ')
+      meta.append(dayName(e.date))
+      row.append(meta)
+      if (e.lead) row.append(el('span', 'row-lead', e.lead))
+      const foot = el('span', 'row-foot mono', `Printed ${clock(e.printedAt)}`)
+      foot.append(el('span', 'now', ' · Reading now'))
+      row.append(foot)
+      row.addEventListener('click', pick(e))
+      li.append(row)
+      if (r.reprints.length) {
+        const also = el('p', 'also mono', 'Also printed ')
+        r.reprints.forEach((x, i) => {
+          if (i) also.append(', ')
+          const b = el('button', 'reprint', clock(x.printedAt)); b.type = 'button'; b.dataset.code = x.code
+          b.setAttribute('aria-label', `The ${clock(x.printedAt)} printing of ${dayName(x.date)}`)
+          b.addEventListener('click', pick(x))
+          also.append(b)
+        })
+        li.append(also)
+      }
+    }
+    $('issue-list').append(li)
   }
   show(issueFromAddress(location.search, editions) || newest, 'replace')
 }

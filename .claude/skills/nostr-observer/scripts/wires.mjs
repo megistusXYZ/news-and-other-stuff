@@ -190,11 +190,11 @@ async function feed (fetch, entry) {
 // machine is the gentlest use there is, and it fetches once per edition.
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123'
 
-// A team may name its sport — "Northwestern Wildcats (American Football)" — because
-// the free search answers with ONE team, and a college name is shared by
-// every sport the college plays. With a sport, the search tries the whole
+// A team may name its sport — "Northwestern Wildcats (American Football)" —
+// because the free search answers with ONE team, and a college name is shared
+// by every sport the college plays. With a sport, the search tries the whole
 // name and then each word, longest first, until a team of that sport comes
-// back: TheSportsDB files Northwestern football under "Wildcats", not "Northwestern".
+// back: a college's football team can be filed under one word of its name.
 async function findTeam (fetch, entry) {
   const m = /^(.*?)\s*\(([^)]+)\)\s*$/.exec(entry)
   const name = (m ? m[1] : entry).trim()

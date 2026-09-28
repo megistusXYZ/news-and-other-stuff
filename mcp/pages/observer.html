@@ -82,7 +82,9 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 .menu button[disabled] { color: var(--ink-3); cursor: not-allowed; }
 .menu .phone { display: none; }
 .menu hr { border: 0; border-top: 1px solid var(--hair); margin: 6px 0; }
-.menu-note { margin: 4px 16px 10px; padding: 2px 0 2px 12px; border-left: 3px solid var(--teal); font-style: italic; font-size: .92rem; color: var(--ink-2); max-width: 300px; }
+.menu-note { display: flex; align-items: center; gap: 8px; margin: 0; padding: 11px 16px; border-bottom: 1px solid var(--hair); color: var(--teal);
+  font: 500 .72rem/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.menu-note::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
 .menu-note[hidden] { display: none; }
 .printed { margin: 8px 0 0; color: var(--ink-3); line-height: 1.7; }
 .printed:empty { display: none; }
@@ -215,7 +217,7 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 </main>
 
 <div class="menu" id="more-menu" hidden>
-  <p class="menu-note" id="today-line" hidden>Today's paper isn't in yet. Your Claude usually prints it around seven, or print a fresh edition now. Showing your latest.</p>
+  <p class="menu-note" id="today-line" hidden>Today's paper isn't in yet</p>
   <button class="phone" type="button" id="issues-item">Issues</button>
   <button class="phone" type="button" id="full-item">Full screen</button>
   <hr class="phone">

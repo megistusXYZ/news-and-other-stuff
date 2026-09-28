@@ -37,7 +37,7 @@ test('validate tells the writer about the Wire, and still passes a page whose qu
   const run = spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/validate.mjs', import.meta.url)), page, '--corpus', corpus], { encoding: 'utf8' })
   assert.equal(run.status, 0, run.stdout + run.stderr)
   assert.match(run.stdout, /CLEAN/)
-  assert.match(run.stdout, /LAYOUT[^\n]*not blocking[\s\S]*Broadcasting carries 8 stations/)
+  assert.match(run.stdout, /COLUMNS[^\n]*not blocking[\s\S]*Broadcasting carries 8 stations/)
 })
 
 test('a paper with no Wire, or no Classifieds that day, has nothing to balance', () => {

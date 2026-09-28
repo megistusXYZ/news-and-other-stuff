@@ -806,8 +806,9 @@ a.lv-panel-note-out { color: var(--accent); border-bottom: 1px solid var(--accen
 a.lv-was-read::after { content: " ✓"; font-family: var(--mono); font-size: .72em; color: var(--ink-3); }
 
 /* The story being read keeps a thin bar at its edge, and for a moment after closing. */
-.lv-current { box-shadow: inset 3px 0 0 var(--accent); transition: box-shadow .3s ease; }
-.col > .lv-current, .cell.lv-current { padding-left: 12px; }
+/* Drawn in the gutter, outside the story: padding would narrow the text,
+ * rewrap it, and push every story below down while the reader steps. */
+.lv-current { box-shadow: -10px 0 0 -7px var(--accent); transition: box-shadow .3s ease; }
 
 @media (max-width: 720px) {
   .lv-panel {

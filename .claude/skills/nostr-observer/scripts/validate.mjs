@@ -630,7 +630,7 @@ function main () {
     // is not refused for how its columns end.
     const layout = wireBalance(html)
     if (layout.length) {
-      console.log('  LAYOUT, advice and not blocking:')
+      console.log('  COLUMNS, advice and not blocking:')
       for (const note of layout) console.log(`    ${note}`)
       console.log('')
     }

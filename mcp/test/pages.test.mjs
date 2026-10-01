@@ -21,7 +21,7 @@ const deps = {
   pull: async () => ({ observer: READER, observerNpub: 'npub1reader', relay: 'wss://relay.test', floor: 20, since: 1790222949, until: 1790309349, code: 'PROG01', control: [], overlap: 0, profiles: {}, art: [], paper: null, wires: null, issue: null, desks: { notes: [{ id: '1'.repeat(64), kind: 1, pubkey: 'bb'.repeat(32), created_at: 1790300000, content: 'Noon bread.', tags: [] }] } }),
   paperUrl: (reader, date, code) => `http://paper.test/${date}-${code}`,
   now: () => 1790309349, // 2026-09-25 04:09 UTC
-  geocode: async (q) => (q === '60614' ? [{ label: 'Chicago, Illinois, United States', place: '60614', units: 'us' }] : []),
+  geocode: async (q) => (q === '60614' ? [{ label: 'Chicago, Illinois, United States', place: 'Chicago, Illinois', units: 'us' }] : []),
   findTeams: async (q) => (/cubs/i.test(q) ? [{ label: 'Chicago Cubs (Baseball)', league: 'Major League Baseball' }] : []),
 }
 const server = createConnector({ authenticate: tokenAuth(new Map([['t', READER]])), deps, readers: new Set([READER]) })
@@ -79,6 +79,44 @@ test('the trust-network note is Brainstorm\'s, wearing its mark; only the two Br
   }
   assert.equal((await get('/assets/brainstorm/brand.css')).status, 404, 'the marks, nothing else from the brand folder')
   assert.equal((await get('/assets/brainstorm/..%2Fbrainstorm%2Fmark.svg')).status, 404)
+})
+
+test('the setup page offers more private ways, says plainly who sees what, and lets a reader delete it all', async () => {
+  const html = await (await get('/setup')).text()
+  const fold = (summary) => (new RegExp(`<details class="learn"[^>]*>\\s*<summary>${summary}</summary>([\\s\\S]*?)</details>`).exec(html) || [])[1] || ''
+  const ways = fold('More private ways')
+  assert.match(ways, /Run it on your own computer/, 'the most private path: the skill, on your own machine')
+  assert.match(ways, /settings and papers stay on your computer/i)
+  assert.match(ways, /Run your own connector/, 'or this same connector, on your own machine')
+  const how = fold('How it works')
+  assert.match(how, /Your Claude reads your settings and the day's posts/, 'who sees what, plainly')
+  assert.match(how, /kept for 30 days/, 'how long papers are kept')
+  assert.match(how, /saved as the city/i, 'and that a ZIP is never kept')
+  assert.match(html, /<button[^>]*id="forget"[^>]*>Delete my paper and settings<\/button>/, 'one button deletes it all')
+})
+
+test('a reader can delete everything kept for them: settings, papers and history; nobody else\'s, and only on purpose', async () => {
+  const ME = 'ee'.repeat(32); const OTHER = 'ff'.repeat(32)
+  const kept = memoryStore()
+  for (const r of [ME, OTHER]) {
+    kept.savePaper(r, { place: 'Chicago, Illinois', teams: ['Chicago Cubs (Baseball)'], founded: '2026-09-25' })
+    kept.putEdition(r, { date: '2026-09-27', code: 'ABC123', html: '<p>page</p>', living: '<p>living</p>', printedAt: 1790500000 })
+    kept.touch(r, 1790500000); kept.record(r, { tool: 'get_paper' })
+  }
+  const mine = createConnector({ authenticate: tokenAuth(new Map()), deps: { ...deps, store: kept }, readers: new Set([ME, OTHER]) })
+  await new Promise((resolve) => mine.listen(0, '127.0.0.1', resolve))
+  try {
+    const at = (path, init) => fetch(`http://127.0.0.1:${mine.address().port}${path}`, init)
+    assert.equal((await at(`/api/forget?npub=${toNpub(ME)}`)).status, 405, 'never by just visiting an address')
+    assert.equal((await at(`/api/forget?npub=${toNpub(STRANGER)}`, { method: 'POST' })).status, 404, 'only for a reader this connector serves')
+    const gone = await at(`/api/forget?npub=${toNpub(ME)}`, { method: 'POST' })
+    assert.equal(gone.status, 200)
+    assert.deepEqual(await (await at(`/api/paper?npub=${toNpub(ME)}`)).json(), {}, 'settings gone')
+    assert.deepEqual(await (await at(`/api/editions?npub=${toNpub(ME)}`)).json(), [], 'papers gone')
+    assert.equal((await (await at(`/api/status?npub=${toNpub(ME)}`)).json()).connected, false, 'history gone')
+    assert.equal((await (await at(`/api/editions?npub=${toNpub(OTHER)}`)).json()).length, 1, 'another reader keeps theirs')
+    assert.equal((await (await at(`/api/paper?npub=${toNpub(OTHER)}`)).json()).place, 'Chicago, Illinois')
+  } finally { mine.close() }
 })
 
 test('the house stamp is served for the nameplate when the house has one, and only that one file', async () => {
@@ -178,7 +216,7 @@ test('the papers list says whether today\'s paper is in', async () => {
 })
 
 test('the form finds a place from a city or a ZIP, and a team by name, to confirm before saving', async () => {
-  assert.deepEqual(await (await get('/api/place?q=60614')).json(), [{ label: 'Chicago, Illinois, United States', place: '60614', units: 'us' }])
+  assert.deepEqual(await (await get('/api/place?q=60614')).json(), [{ label: 'Chicago, Illinois, United States', place: 'Chicago, Illinois', units: 'us' }], 'the place to keep is the city, not the ZIP typed')
   assert.deepEqual(await (await get('/api/place?q=Nowhere%20Town')).json(), [])
   assert.equal((await get('/api/place?q=a')).status, 400, 'too short to look up')
   assert.deepEqual(await (await get('/api/team?q=cubs')).json(), [{ label: 'Chicago Cubs (Baseball)', league: 'Major League Baseball' }])
@@ -191,7 +229,7 @@ test('the form saves the reader\'s paper the same way their Claude would, and re
   const saved = await post(JSON.stringify({ place: '60614', teams: ['Chicago Cubs (Baseball)'], culture: true, topics: ['Nostr'] }))
   assert.equal(saved.status, 200)
   const back = await (await get(url)).json()
-  assert.deepEqual([back.place, back.teams, back.topics, back.founded, back.culture], ['60614', ['Chicago Cubs (Baseball)'], ['nostr'], '2026-09-26', true])
+  assert.deepEqual([back.place, back.teams, back.topics, back.founded, back.culture], ['Chicago, Illinois', ['Chicago Cubs (Baseball)'], ['nostr'], '2026-09-26', true])
   assert.equal((await post('{not json')).status, 400)
   assert.equal((await post(JSON.stringify({ stamp: 'x' }))).status, 400, 'nothing a reader may set')
   assert.equal((await post('{}', `/api/paper?npub=${toNpub(STRANGER)}`)).status, 404, 'only the readers this connector serves')

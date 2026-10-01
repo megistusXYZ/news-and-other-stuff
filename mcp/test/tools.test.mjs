@@ -174,6 +174,7 @@ function paperDeps () {
     now: () => 1790309349, // 2026-09-25
     readiness: async () => ({ ready: true, state: 'ready', say: 'Ready.', do: '' }),
     pull: async (reader, opts) => { calls.push(opts); return busyCorpus() },
+    geocode: async (q) => (q === '60614' ? [{ label: 'Chicago, Illinois, United States', place: 'Chicago, Illinois', units: 'us' }] : []),
   }
 }
 
@@ -183,16 +184,16 @@ test('a reader or their Claude sets the paper once; only a reader\'s own setting
   assert.equal(set.isError, undefined)
   const saved = (await callTool('get_paper', {}, READER, d)).structuredContent
   assert.equal(saved.name, 'The Morning Post')
-  assert.equal(saved.place, '60614')
+  assert.equal(saved.place, 'Chicago, Illinois')
   assert.deepEqual(saved.teams, ['Chicago Cubs (Baseball)'])
   assert.deepEqual(saved.topics, ['nostr', 'ai agents'])
   assert.equal(saved.founded, '2026-09-25')
   for (const k of ['tape', 'brand', 'imprint', 'stamp']) assert.equal(saved[k], undefined, `${k} is not a reader's to set`)
-  assert.match(text(await callTool('get_paper', {}, READER, d)), /Place: 60614[\s\S]*Teams: Chicago Cubs \(Baseball\)[\s\S]*Topics: nostr, ai agents/)
+  assert.match(text(await callTool('get_paper', {}, READER, d)), /Place: Chicago, Illinois[\s\S]*Teams: Chicago Cubs \(Baseball\)[\s\S]*Topics: nostr, ai agents/)
 
   await callTool('set_paper', { teams: ['Chicago Cubs (Baseball)', 'Chicago Bulls (Basketball)'] }, READER, d)
   const later = (await callTool('get_paper', {}, READER, d)).structuredContent
-  assert.equal(later.place, '60614', 'a change to one thing keeps the rest')
+  assert.equal(later.place, 'Chicago, Illinois', 'a change to one thing keeps the rest')
   assert.deepEqual(later.teams, ['Chicago Cubs (Baseball)', 'Chicago Bulls (Basketball)'])
   assert.equal(later.founded, '2026-09-25', 'founded once')
   assert.equal((await callTool('set_paper', { stamp: 'ostrich' }, READER, d)).isError, true, 'nothing a reader may set')
@@ -202,12 +203,30 @@ test('each morning the digest uses the saved paper: its place, teams and pages, 
   const d = paperDeps()
   await callTool('set_paper', { place: '60614', teams: ['Chicago Cubs (Baseball)'], culture: true, topics: ['nostr'] }, READER, d)
   await callTool('get_digest', {}, READER, d)
-  assert.equal(d.calls[0].paper.wires.place, '60614')
+  assert.equal(d.calls[0].paper.wires.place, 'Chicago, Illinois')
   assert.deepEqual(d.calls[0].paper.wires.teams, ['Chicago Cubs (Baseball)'])
   assert.equal(d.calls[0].paper.founded, '2026-09-25', 'issue numbers count from the paper\'s own first day')
   assert.deepEqual(d.calls[0].topics, ['nostr'])
   await callTool('get_digest', { topics: ['sourdough'] }, READER, d)
   assert.deepEqual(d.calls[1].topics, ['sourdough'], 'topics named today win')
+})
+
+test('a ZIP or postal code is never kept: the paper keeps the city it names, which is all the weather needs', async () => {
+  const looked = []
+  const d = { ...paperDeps(), geocode: async (q) => { looked.push(q); return q === '60614' ? [{ label: 'Chicago, Illinois, United States', place: 'Chicago, Illinois', units: 'us' }] : [] } }
+  const set = await callTool('set_paper', { place: '60614' }, READER, d)
+  assert.equal(set.isError, undefined)
+  const saved = (await callTool('get_paper', {}, READER, d)).structuredContent
+  assert.equal(saved.place, 'Chicago, Illinois', 'the city, not the ZIP')
+  assert.equal(saved.units, 'us')
+  assert.doesNotMatch(JSON.stringify(d.store.paperOf(READER)), /60614/, 'the ZIP is nowhere in what is kept')
+  await callTool('set_paper', { place: 'Lincoln Park, Michigan' }, READER, d)
+  assert.equal((await callTool('get_paper', {}, READER, d)).structuredContent.place, 'Lincoln Park, Michigan', 'a place named in words is kept as given')
+  assert.deepEqual(looked, ['60614'], 'only a code is looked up')
+  const lost = await callTool('set_paper', { place: '00000' }, READER, d)
+  assert.equal(lost.isError, true, 'a code that names no place is refused, not kept')
+  assert.match(lost.content[0].text, /city/i)
+  assert.equal((await callTool('get_paper', {}, READER, d)).structuredContent.place, 'Lincoln Park, Michigan', 'and the paper keeps the place it had')
 })
 
 test('a reader who has saved nothing gets the house paper, never the host\'s or another reader\'s place, teams or topics', async () => {

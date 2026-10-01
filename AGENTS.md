@@ -852,6 +852,17 @@ paper lands on the reader's Observer page in brainstorm.world.
   `<section class="your-topics">` citing one of them. This is the proof the
   personalization is real. A dogfood on 2026-09-27 printed two accepted
   papers for the same day with different topics, and the two bands differed.
+- **Privacy on the hosted path (2026-10-01).** It stays the default (one
+  button, works in the Claude app) and keeps less: a ZIP or postal code is
+  saved as the city it names, never the code (`set_paper` looks it up; a code
+  naming no place is refused); papers are kept thirty days, not forever; and
+  "Delete my paper and settings" (`POST /api/forget`) erases everything kept
+  for a reader. Setup says plainly that the reader's Claude reads their
+  settings and the day's posts, and offers "More private ways": the skill on
+  the reader's own computer (nothing kept by Brainstorm), or this connector
+  run on their own machine. Pictures still load from their own hosts, which
+  see the reader's address: a "don't load pictures" reading setting is the
+  next privacy step, parked.
 - **Each reader's own Claude, each reader's own paper.** Every reader prints
   with their own Claude account, on their own plan; the connector holds no
   model key and never runs a model for anyone. A reader's paper is built only

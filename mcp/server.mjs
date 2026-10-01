@@ -122,6 +122,15 @@ async function page (req, res, url, deps, readers) {
     res.writeHead(200, { 'Content-Type': 'text/calendar; charset=utf-8', 'Content-Disposition': 'attachment; filename="print-my-paper.ics"', 'Cache-Control': 'no-store' })
     return res.end(ics)
   }
+  // "Delete my paper and settings": everything kept for this reader, gone.
+  // Only by a deliberate POST, and only for a reader this connector serves
+  // (on Brainstorm, the signed-in reader alone).
+  if (path === '/api/forget') {
+    if (req.method !== 'POST') return json(res, 405, { error: 'delete with a POST' })
+    if (!reader || !readers.has(reader)) return json(res, 404, { error: 'nothing kept for that npub here' })
+    deps.store.forget(reader)
+    return json(res, 200, { forgotten: true })
+  }
   if (path === '/api/paper') {
     if (!reader || !readers.has(reader)) return json(res, 404, { error: 'no paper for that npub here' })
     if (req.method !== 'POST') return json(res, 200, (deps.store.paperOf && deps.store.paperOf(reader)) || {})
@@ -169,7 +178,7 @@ export function createConnector ({ authenticate, deps, readers = new Set() }) {
   return createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost')
     if (url.pathname !== '/mcp') {
-      if (req.method !== 'GET' && !(req.method === 'POST' && url.pathname === '/api/paper')) return send(res, 405, 'text/plain', 'method not allowed')
+      if (req.method !== 'GET' && !(req.method === 'POST' && (url.pathname === '/api/paper' || url.pathname === '/api/forget'))) return send(res, 405, 'text/plain', 'method not allowed')
       try { return await page(req, res, url, deps, readers) } catch (error) { console.error(error); return send(res, 500, 'text/plain', 'error') }
     }
     const reader = authenticate(req)
@@ -212,7 +221,9 @@ export function relayDeps ({ relay = DEFAULT_RELAY, store = memoryStore(), publi
     geocode: async (q) => {
       const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`)
       const found = r.ok ? ((await r.json()).results || []) : []
-      return found.map((p) => ({ label: [p.name, p.admin1, p.country].filter(Boolean).join(', '), place: q, units: p.country_code === 'US' ? 'us' : 'metric', country: p.country_code || null }))
+      // The place to keep is the city and its region ("Chicago, Illinois"),
+      // which finds the same city again; never the code that was typed.
+      return found.map((p) => ({ label: [p.name, p.admin1, p.country].filter(Boolean).join(', '), place: [p.name, p.admin1].filter(Boolean).join(', '), units: p.country_code === 'US' ? 'us' : 'metric', country: p.country_code || null }))
     },
     findTeams: async (q) => {
       const r = await fetch(`https://www.thesportsdb.com/api/v1/json/123/searchteams.php?t=${encodeURIComponent(q)}`)
@@ -242,7 +253,9 @@ function main () {
   const port = Number(process.env.PORT || 8787)
   // Accepted editions are also written under OBSERVER_EDITIONS, if set, so a
   // local reader can open them.
-  const store = process.env.OBSERVER_EDITIONS ? fileStore(process.env.OBSERVER_EDITIONS) : memoryStore()
+  // Papers are kept for thirty days, not forever.
+  const keep = { keepDays: 30 }
+  const store = process.env.OBSERVER_EDITIONS ? fileStore(process.env.OBSERVER_EDITIONS, keep) : memoryStore(keep)
   createConnector({ authenticate: tokenAuth(tokens), deps: relayDeps({ store, paperDefaults, publicUrl: (process.env.OBSERVER_PUBLIC_URL || `http://127.0.0.1:${port}`).replace(/\/$/, '') }), readers: new Set(tokens.values()) })
     .listen(port, '127.0.0.1', () => console.log(`Brainstorm Observer connector on http://127.0.0.1:${port}/mcp, with /setup and /observer, for ${tokens.size} reader(s)`))
 }

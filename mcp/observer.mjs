@@ -300,6 +300,16 @@ async function runTool (name, args, reader, deps) {
     case 'set_paper': {
       const incoming = Object.fromEntries(Object.entries(args).filter(([k]) => READER_KEYS.includes(k)))
       if (!Object.keys(incoming).length) return fail('Nothing a reader can set was given. Set place, units, teams, topics, name or which pages to print.')
+      // A ZIP or postal code is never kept: tied to an npub it can say who a
+      // reader is. The paper keeps the city it names ("Chicago, Illinois"),
+      // which is all the weather needs.
+      if (typeof incoming.place === 'string' && /\d/.test(incoming.place)) {
+        const found = deps.geocode ? await deps.geocode(incoming.place.trim()).catch(() => []) : []
+        const city = found.find((p) => p.place && !/\d/.test(p.place))
+        if (!city) return fail('Could not find a city for that code, so nothing was saved. Give the city instead, e.g. "Chicago, Illinois".')
+        incoming.place = city.place
+        if (!incoming.units && city.units) incoming.units = city.units
+      }
       const current = (deps.store.paperOf && deps.store.paperOf(reader)) || WHOLE_PAPER
       const now = deps.now ? deps.now() : Math.floor(Date.now() / 1000)
       const founded = current.founded || new Date(now * 1000).toISOString().slice(0, 10)

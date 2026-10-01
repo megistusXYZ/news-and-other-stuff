@@ -70,11 +70,10 @@ a:hover { text-decoration-color: currentColor; }
 .gate .bs-word { flex: none; display: block; width: 78px; height: 17px; background: var(--ink-2);
   -webkit-mask: url("/assets/brainstorm/wordmark.svg") left center / contain no-repeat; mask: url("/assets/brainstorm/wordmark.svg") left center / contain no-repeat; }
 .gate > p { margin: 0; padding-left: 14px; border-left: 1px solid var(--hair); color: var(--ink-2); font-size: .98rem; }
-.gate .bs-link { color: #7237FF; font-weight: 600; text-decoration: underline; text-decoration-color: rgba(114, 55, 255, .35); text-underline-offset: 3px; white-space: nowrap; }
+.gate .bs-link { color: var(--ink); white-space: nowrap; text-decoration: underline; text-decoration-color: var(--hair); text-underline-offset: 3px; }
 .gate .bs-link:hover { text-decoration-color: currentColor; }
 .gate .learn { flex-basis: 100%; margin: 0; }
 .gate .learn > summary { padding: 0; }
-@media (prefers-color-scheme: dark) { .gate .bs-link { color: #A88BFF; } }
 @media (max-width: 720px) {
   .gate > p { flex-basis: 100%; padding-left: 0; border-left: 0; }
 }
@@ -297,6 +296,10 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
           <pre class="field code cmd" id="cmd">claude mcp add --transport http brainstorm-observer /mcp</pre>
           <div class="buttons"><button class="btn" type="button" data-copy="cmd">Copy</button></div>
         </details>
+        <details class="learn"><summary>More private ways</summary>
+          <p><b>Run it on your own computer.</b> The most private way: Claude Code prints your paper on your own machine with the News and Other Stuff skill. Your settings and papers stay on your computer; Brainstorm only ranks the posts. <a href="https://github.com/megistusXYZ/news-and-other-stuff" target="_blank" rel="noopener noreferrer">How to set it up ↗</a></p>
+          <p><b>Run your own connector.</b> This same connector, on your own machine, for Claude Code: your settings and papers stay with you, and this page works the same. <a href="https://github.com/megistusXYZ/news-and-other-stuff/blob/megistus-edition/docs/connector.md" target="_blank" rel="noopener noreferrer">How to run it ↗</a></p>
+        </details>
       </div>
     </li>
 
@@ -339,12 +342,16 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
         <h3 class="mono">Good to know</h3>
         <ul>
           <li>It runs on your Claude plan, about one conversation a day.</li>
-          <li>Brainstorm never sees your Claude login.</li>
+          <li>Your Claude reads your settings and the day's posts to write the paper, as with anything you ask it.</li>
+          <li>Brainstorm never sees your Claude login, and never posts as you.</li>
+          <li>A ZIP or postal code is saved as the city it names, never the code.</li>
+          <li>Your papers are kept for 30 days, then deleted.</li>
           <li>Every quote and link is checked against the posts before the paper is kept.</li>
           <li>Disconnect any time, in Claude or in your settings here.</li>
         </ul>
       </section>
     </div>
+    <div class="buttons" style="margin-top:16px"><button class="btn" type="button" id="forget">Delete my paper and settings</button><span class="saved mono" id="forgot" role="status" aria-live="polite"></span></div>
   </details>
 
   <p class="note">A local demonstration: on Brainstorm this page sits behind your sign-in.</p>
@@ -370,6 +377,18 @@ const remindLink = () => { $('remind').href = '/reminder.ics?time=' + encodeURIC
 $('remind-time').addEventListener('input', remindLink)
 remindLink()
 if (npub) { $('papers').href = q('/observer'); $('read').href = q('/observer') }
+
+// Everything kept for this reader, gone, after one plain question.
+$('forget').addEventListener('click', async () => {
+  if (!npub) return
+  if (!confirm('Delete your paper settings and every paper kept for you? This cannot be undone. You can set it up again any time.')) return
+  try {
+    const r = await fetch(q('/api/forget'), { method: 'POST' })
+    if (!r.ok) throw new Error()
+    $('forgot').textContent = 'Deleted ✓'
+    setTimeout(() => location.reload(), 900)
+  } catch { $('forgot').className = 'saved mono no'; $('forgot').textContent = 'Could not delete just now' }
+})
 
 document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
   const t = $(b.dataset.copy)

@@ -106,7 +106,8 @@ title, or its opening lines, never a word inside a link or in passing. search-st
 | `GET /setup`, `GET /observer` | reader | The two pages. |
 | `GET /api/readiness?npub=` | anyone | Is this npub's trust network ready (public information). |
 | `GET /api/place?q=`, `GET /api/team?q=` | anyone | City or ZIP to a confirmed place (Open-Meteo); team name to teams (TheSportsDB). Both keyless. |
-| `GET` / `POST /api/paper?npub=` | the reader | Read or save settings. POST goes through `set_paper`, so the rules are the same. |
+| `GET` / `POST /api/paper?npub=` | the reader | Read or save settings. POST goes through `set_paper`, so the rules are the same: a ZIP or postal code is saved as the city it names ("Chicago, Illinois"), never the code. |
+| `POST /api/forget?npub=` | the reader | "Delete my paper and settings": settings, papers, digests and call history, all gone. POST only. |
 | `GET /api/status?npub=` | the reader | Connected, and the last step their Claude took (it drives the live progress line). |
 | `GET /api/today?npub=`, `GET /api/editions?npub=` | the reader | Today's paper in or not; the list of papers. |
 | `GET /observer/<npub>/<date>-<code>` | the reader | One paper's living copy. |
@@ -166,6 +167,9 @@ claude mcp add --transport http brainstorm-observer http://127.0.0.1:8787/mcp --
    - `putEdition`, `editions`, `edition`: the Observer page's papers and living
      copies. About 1 MB per living copy, less with shared assets.
    - `paperOf`, `savePaper`: reader settings, small JSON.
+   - `forget`: everything kept for one reader, gone at their asking.
+   - Papers are kept for thirty days (`keepDays: 30`): a new paper sweeps out
+     the ones past keeping.
    - `touch`, `lastCall`, `record`, `lastStep`: the progress line, ephemeral.
 4. **The Observer tab in Brainstorm-UI.** Rebuild `/setup` and `/observer` in
    Brainstorm's stack, or embed them. They read only the JSON routes above.

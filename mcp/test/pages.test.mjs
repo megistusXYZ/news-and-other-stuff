@@ -41,6 +41,30 @@ test('the setup page walks the three steps, with this connector\'s address and a
   assert.doesNotMatch(html, /<script\b[^>]*src=/, 'self-contained: nothing loaded from elsewhere')
 })
 
+test('the setup page wears the paper\'s own header: its date line, nameplate and motto, and a section bar of the three steps', async () => {
+  const html = await (await get('/setup')).text()
+  assert.match(html, /class="folio[^"]*"[\s\S]*id="papers"[^>]*>Your papers/, 'the date line, with the way to your papers')
+  assert.match(html, /<header class="masthead">[\s\S]*<h1>News and Other Stuff<\/h1>[\s\S]*class="motto"/, 'the paper\'s nameplate and motto')
+  assert.match(html, /<nav class="index mono"[^>]*>[\s\S]*id="p1"[^>]*href="#part-paper"[\s\S]*id="p2"[^>]*href="#connect"[\s\S]*id="p3"[^>]*href="#schedule"/, 'the steps as the paper\'s section bar, each a way to its part')
+  assert.doesNotMatch(html, /class="sections|class="oxford"|id="progress"/, 'no tab row, no separate progress line')
+})
+
+test('the house stamp is served for the nameplate when the house has one, and only that one file', async () => {
+  assert.equal((await get('/assets/stamp.webp')).status, 404, 'no house stamp: none served, and the page leaves the cut out')
+  const house = createConnector({ authenticate: tokenAuth(new Map()), deps: { ...deps, paperDefaults: { stamp: 'ostrich-profile' } }, readers: new Set() })
+  await new Promise((resolve) => house.listen(0, '127.0.0.1', resolve))
+  try {
+    const at = `http://127.0.0.1:${house.address().port}`
+    const res = await fetch(at + '/assets/stamp.webp')
+    assert.equal(res.status, 200)
+    assert.equal(res.headers.get('content-type'), 'image/webp')
+    assert.equal((await fetch(at + '/assets/../stamp.webp')).status, 404)
+  } finally { house.close() }
+  const odd = createConnector({ authenticate: tokenAuth(new Map()), deps: { ...deps, paperDefaults: { stamp: '../../package' } }, readers: new Set() })
+  await new Promise((resolve) => odd.listen(0, '127.0.0.1', resolve))
+  try { assert.equal((await fetch(`http://127.0.0.1:${odd.address().port}/assets/stamp.webp`)).status, 404, 'a stamp name is a name, never a path') } finally { odd.close() }
+})
+
 test('anyone may ask whether an npub\'s lens is ready; a bad npub is a 400', async () => {
   assert.deepEqual(await (await get(`/api/readiness?npub=${toNpub(READER)}`)).json(), { ready: true, state: 'ready', say: 'Ready.', do: '' })
   assert.equal((await (await get(`/api/readiness?npub=${toNpub(STRANGER)}`)).json()).state, 'no-score-list')

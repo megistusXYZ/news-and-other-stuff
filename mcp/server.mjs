@@ -38,6 +38,7 @@ function mcpServer (reader, deps) {
 }
 
 const PAGES = new URL('./pages/', import.meta.url)
+const STAMPS = new URL('../.claude/skills/nostr-observer/reference/stamps/', import.meta.url)
 const FONTS = new URL('../.claude/skills/nostr-observer/reference/fonts/', import.meta.url)
 
 const send = (res, status, type, body) => { res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body) }
@@ -90,6 +91,14 @@ const readerOf = (npub) => { try { return toHex(String(npub || '')) } catch { re
 async function page (req, res, url, deps, readers) {
   const path = url.pathname
   if (path === '/setup' || path === '/observer') return send(res, 200, 'text/html; charset=utf-8', readFileSync(new URL(`.${path}.html`, PAGES)))
+  // The house's stamp, for the setup page's nameplate as the paper wears it.
+  // A stamp is a name in reference/stamps/, never a path.
+  if (path === '/assets/stamp.webp') {
+    const name = deps.paperDefaults && deps.paperDefaults.stamp
+    const file = typeof name === 'string' && /^[a-z0-9-]+$/.test(name) ? new URL(`${name}.webp`, STAMPS) : null
+    if (!file || !existsSync(file)) return send(res, 404, 'text/plain', 'not found')
+    return send(res, 200, 'image/webp', readFileSync(file))
+  }
   // The Your papers page's tested decisions, and nothing else from pages/.
   if (path === '/assets/observer.js') return send(res, 200, 'text/javascript; charset=utf-8', readFileSync(new URL('./observer.js', PAGES)))
   if (path.startsWith('/assets/fonts/')) {

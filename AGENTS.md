@@ -877,6 +877,12 @@ paper lands on the reader's Observer page in brainstorm.world.
 - **The demo pages.** Alongside `/mcp` the service serves the two pages
   Brainstorm's Observer tab will take over, set in the paper's own design (nameplate,
   Oxford rule, hairline columns, Playfair, Source Serif and Plex Mono), not app cards:
+  - Both pages wear the paper's own header on the paper's measure (1240px,
+    22px sides; 15px on a phone). On `/setup` that is the date line (with
+    "Your papers →"), the colour rule, the nameplate with its motto and the
+    house's engraved head (`/assets/stamp.webp`, the config's `stamp`, a
+    name and never a path; left out when the house has none), a double rule,
+    and a section bar of the three steps, each ticked once done.
   - `/setup`: Vitor's three steps, a live lens badge, the connector address,
     a "connected" line that lights on the reader's first tool call, and a
     topics box that composes the daily prompt. Nothing is stored.

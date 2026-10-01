@@ -28,18 +28,32 @@ a { color: inherit; text-decoration-color: var(--hair); text-underline-offset: 3
 a:hover { text-decoration-color: currentColor; }
 :focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
 [hidden] { display: none !important; }
-.sheet { max-width: 1080px; margin: 0 auto; padding: 18px 28px 56px; }
+/* The paper's own measure (house.css .sheet: 1240px, 22px sides; 15px on a phone). */
+.sheet { max-width: 1240px; margin: 0 auto; padding: 20px 22px 56px; }
 .mono { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
-.folio { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 8px; color: var(--ink-2); }
+/* --- the paper's own header, as Your papers shows it -------------------------- */
+/* The date line, the colour rule, the nameplate with its motto and the
+ * house's engraved head, a double rule, then a section bar: here, the three
+ * steps, each ticked once it is done. */
+.folio { display: flex; align-items: baseline; gap: 16px; padding: 0 0 7px; color: var(--ink-3); font-size: .7rem; }
+.folio .date { margin-right: auto; color: var(--ink); font-weight: 600; letter-spacing: .1em; }
+.folio a { color: var(--ink); text-decoration: none; }
+.folio a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .fine { height: 2px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
-.nameplate { padding: 18px 0 12px; }
-.nameplate h1 { margin: 0; font: 900 clamp(2.3rem, 6vw, 3.6rem)/.95 var(--display); letter-spacing: -.015em; }
-.nameplate p { margin: 8px 0 0; color: var(--ink-2); }
-.oxford { border-top: 3px solid var(--rule); border-bottom: 1px solid var(--rule); height: 7px; }
-.sections { display: flex; border-bottom: 1px solid var(--hair); }
-.sections a { padding: 11px 18px 10px; text-decoration: none; color: var(--ink-2); border-right: 1px solid var(--hair); }
-.sections a:first-child { padding-left: 0; }
-.sections a[aria-current] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+.masthead { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 18px; align-items: end; padding: 16px 0 14px; border-bottom: 3px solid var(--rule); }
+.masthead h1 { grid-column: 1; margin: 0; font: 900 clamp(2.3rem, 6.2vw, 5.1rem)/.95 var(--display); letter-spacing: -.018em; text-wrap: balance; }
+.masthead .motto { grid-column: 1; margin: 9px 0 0; font-size: 1.06rem; color: var(--ink-2); }
+/* The engraving: the house stamp as a mask in a faded warm ink, as the paper prints it. */
+.cut { grid-column: 2; grid-row: 1 / span 2; align-self: end; height: 104px; aspect-ratio: var(--ratio, 1);
+  background: #675C4F; -webkit-mask: url("/assets/stamp.webp") left bottom / contain no-repeat; mask: url("/assets/stamp.webp") left bottom / contain no-repeat;
+  opacity: .86; transform: scaleX(-1); }
+.index { display: flex; flex-wrap: nowrap; margin-top: 3px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); overflow-x: auto; scrollbar-width: none; }
+.index a { flex: none; padding: 9px 16px; border-left: 1px solid var(--rule); color: var(--ink); font-weight: 600; font-size: .66rem; text-decoration: none; white-space: nowrap; }
+.index a:first-child { padding-left: 0; border-left: 0; }
+.index a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.index a .n { color: var(--ink-3); margin-right: .5em; }
+.index a.done { color: var(--teal); }
+.index a.done::after { content: " ✓"; }
 .kicker { color: var(--teal); margin: 26px 0 6px; }
 .headline { font: 700 clamp(1.8rem, 4vw, 2.6rem)/1.08 var(--display); margin: 0; }
 .dek { font-style: italic; color: var(--ink-2); margin: 10px 0 0; max-width: 46rem; }
@@ -92,10 +106,7 @@ textarea.field { min-height: 76px; resize: vertical; }
 .save { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 16px 0 0; border-top: 1px solid var(--hair); margin-top: 6px; }
 .saved { color: var(--teal); }
 .saved.no { color: var(--no); }
-.progress { display: flex; flex-wrap: wrap; gap: 0; margin: 14px 0 0; padding: 0; list-style: none; color: var(--ink-3); }
-.progress li + li::before { content: "·"; margin: 0 .7em; color: var(--hair); }
-.progress li.done { color: var(--teal); }
-.progress li.done::after { content: " ✓"; }
+
 details.more { margin-top: 2px; }
 details.more > summary { cursor: pointer; list-style: none; font-size: .98rem; color: var(--ink-2); }
 details.more > summary::-webkit-details-marker { display: none; }
@@ -145,13 +156,22 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
 .note { margin-top: 28px; padding-top: 10px; border-top: 1px solid var(--hair); font-style: italic; font-size: .88rem; color: var(--ink-3); }
 .foot { margin-top: 10px; color: var(--ink-3); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+@media (max-width: 720px) {
+  .sheet { padding: 14px 15px 44px; }
+  .masthead { column-gap: 12px; }
+  .cut { grid-row: 1; height: 64px; }
+  .masthead .motto { grid-column: 1 / -1; font-size: .98rem; }
+  .folio > span:nth-child(2) { display: none; }
+  .folio a, .folio .date { white-space: nowrap; }
+  .index a { padding: 9px 9px; letter-spacing: .06em; }
+  .index a .n { margin-right: .35em; }
+}
 @media (max-width: 860px) {
-  .sheet { padding: 14px 16px 44px; }
   .form, .pair, .brief { grid-template-columns: 1fr; }
   .q, .q + .q, .pair > div, .pair > div + div, .brief section { padding: 14px 0; border-left: 0; }
   .q + .q, .pair > div + div, .brief section + section { border-top: 1px solid var(--hair); }
   .pages { grid-template-columns: 1fr 1fr; }
-  .folio span:last-child, .part-head .aside { display: none; }
+  .part-head .aside { display: none; }
   .summary dl { grid-template-columns: 1fr auto; }
   .summary dt { grid-column: 1 / -1; border-bottom: 0; padding-bottom: 0; }
 }
@@ -159,19 +179,18 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
 </head>
 <body>
 <main class="sheet">
-  <div class="folio mono"><span id="today">&nbsp;</span><span>The Observer · Set up</span></div>
+  <div class="folio mono"><span class="date" id="today">&nbsp;</span><span>Set up</span><a href="/observer" id="papers">Your papers →</a></div>
   <div class="fine" aria-hidden="true"></div>
-  <header class="nameplate">
+  <header class="masthead">
     <h1>News and Other Stuff</h1>
-    <p>The observer for your network.</p>
+    <p class="motto">The observer for your network.</p>
+    <span class="cut" id="cut" aria-hidden="true" hidden></span>
   </header>
-  <div class="oxford" aria-hidden="true"></div>
-  <nav class="sections mono" aria-label="Your Observer"><a href="/setup" aria-current="page">Set up</a><a href="/observer" id="papers">Your papers</a></nav>
+  <nav class="index mono" aria-label="Your steps"><a id="p1" href="#part-paper"><span class="n">1</span>Your paper</a><a id="p2" href="#connect"><span class="n">2</span>Connect Claude</a><a id="p3" href="#schedule"><span class="n">3</span>First paper</a></nav>
 
   <p class="kicker mono" id="kicker">The Observer · Getting started</p>
   <h2 class="headline" id="headline">Set up your daily paper</h2>
   <p class="dek" id="dek">Tell us a little about you, connect your Claude, and set the time. After that your own Claude prints this paper every morning, from what the people you trust said, with your weather, your teams and your topics.</p>
-  <ol class="progress mono" id="progress" aria-label="Your progress"><li id="p1">1 Your paper</li><li id="p2">2 Connect Claude</li><li id="p3">3 First paper</li></ol>
   <p class="lens mono" id="lens" role="status" aria-live="polite">Checking your trust network…</p>
   <div class="ask" id="npub-ask" hidden>
     <label class="sr" for="npub">Your Nostr account (npub)</label>
@@ -306,7 +325,7 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
         <div class="first" id="first" hidden><b>Your first paper, now.</b> No need to wait for tomorrow: paste the instructions from step three into a Claude chat. It takes about ten minutes, and you can watch it here.</div>
       </div>
       <div>
-        <div class="part-head"><span class="n" aria-hidden="true">3</span><h2>Schedule the daily print</h2></div>
+        <div class="part-head" id="schedule"><span class="n" aria-hidden="true">3</span><h2>Schedule the daily print</h2></div>
         <p class="lede" id="schedule">Save this as a daily task at seven; today's posts are ready from half past six. Your settings are saved, so this is all it needs.</p>
         <p class="prompt" id="prompt">Print today's Nostr Observer with the Brainstorm connector. If my trust network isn't ready, stop and tell me why.</p>
         <div class="buttons"><button class="btn solid" type="button" data-copy="prompt">Copy the instructions</button></div>
@@ -412,6 +431,10 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
     { url: 'https://pitchfork.com/rss/news/', section: 'Culture' },
   ]
   const mark = (id, done) => $(id).classList.toggle('done', !!done)
+  // The house's engraving beside the name, when the house has one.
+  const stamp = new Image()
+  stamp.onload = () => { $('cut').style.setProperty('--ratio', String(stamp.naturalWidth / stamp.naturalHeight)); $('cut').hidden = false }
+  stamp.src = '/assets/stamp.webp'
   let placeLabel = null
   let place = null
   let units = null

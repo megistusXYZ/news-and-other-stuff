@@ -39,6 +39,7 @@ function mcpServer (reader, deps) {
 
 const PAGES = new URL('./pages/', import.meta.url)
 const STAMPS = new URL('../.claude/skills/nostr-observer/reference/stamps/', import.meta.url)
+const BRAND = new URL('../.claude/skills/nostr-observer/reference/brands/brainstorm/', import.meta.url)
 const FONTS = new URL('../.claude/skills/nostr-observer/reference/fonts/', import.meta.url)
 
 const send = (res, status, type, body) => { res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body) }
@@ -99,6 +100,9 @@ async function page (req, res, url, deps, readers) {
     if (!file || !existsSync(file)) return send(res, 404, 'text/plain', 'not found')
     return send(res, 200, 'image/webp', readFileSync(file))
   }
+  // Brainstorm's two marks, for the pages' Brainstorm notes; nothing else from the brand.
+  const brand = /^\/assets\/brainstorm\/(mark|wordmark)\.svg$/.exec(path)
+  if (brand) return send(res, 200, 'image/svg+xml', readFileSync(new URL(`${brand[1]}.svg`, BRAND)))
   // The two pages' tested decisions, and nothing else from pages/.
   if (path === '/assets/observer.js' || path === '/assets/setup.js') return send(res, 200, 'text/javascript; charset=utf-8', readFileSync(new URL('.' + path.slice('/assets'.length), PAGES)))
   if (path.startsWith('/assets/fonts/')) {

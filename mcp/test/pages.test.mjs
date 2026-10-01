@@ -67,6 +67,18 @@ test('the setup page says only the basics; the specifics are one "learn more" aw
   assert.match(await script.text(), /export function openStep/)
 })
 
+test('the trust-network note is Brainstorm\'s, wearing its mark; only the two Brainstorm marks are served', async () => {
+  const html = await (await get('/setup')).text()
+  assert.match(html, /<div class="gate brainstorm"[^>]*>[\s\S]*role="img" aria-label="Brainstorm"[\s\S]*First, Brainstorm needs to find you on Nostr\./, 'the note carries the Brainstorm wordmark')
+  for (const name of ['mark', 'wordmark']) {
+    const res = await get(`/assets/brainstorm/${name}.svg`)
+    assert.equal(res.status, 200, name)
+    assert.equal(res.headers.get('content-type'), 'image/svg+xml')
+  }
+  assert.equal((await get('/assets/brainstorm/brand.css')).status, 404, 'the marks, nothing else from the brand folder')
+  assert.equal((await get('/assets/brainstorm/..%2Fbrainstorm%2Fmark.svg')).status, 404)
+})
+
 test('the house stamp is served for the nameplate when the house has one, and only that one file', async () => {
   assert.equal((await get('/assets/stamp.webp')).status, 404, 'no house stamp: none served, and the page leaves the cut out')
   const house = createConnector({ authenticate: tokenAuth(new Map()), deps: { ...deps, paperDefaults: { stamp: 'ostrich-profile' } }, readers: new Set() })

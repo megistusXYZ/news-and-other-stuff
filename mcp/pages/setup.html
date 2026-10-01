@@ -311,14 +311,14 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
         <p class="prompt" id="prompt">Print today's Nostr Observer with the Brainstorm connector. If my trust network isn't ready, stop and tell me why.</p>
         <div class="buttons">
           <button class="btn solid" type="button" data-copy="prompt">Copy the instructions</button>
+          <span class="remind-at"><label for="remind-time" class="mono" style="color:var(--ink-2)">Your paper's time</label><input class="field" type="time" id="remind-time" value="07:00"></span>
           <a class="btn" id="remind" href="/reminder.ics?time=07:00">Add a daily reminder</a>
-          <span class="remind-at"><label for="remind-time" class="mono" style="color:var(--ink-2)">At</label><input class="field" type="time" id="remind-time" value="07:00"></span>
         </div>
         <details class="learn"><summary>Where can I schedule it?</summary>
           <ul>
-            <li>Claude Code, the desktop app: a scheduled task, every day. Around 6 a.m. has the paper waiting when you wake (the computer needs to be on).</li>
-            <li>Claude Code on the web: a daily routine, around 6 a.m.</li>
-            <li>The Claude app can't schedule yet: the daily reminder puts the instructions in your calendar each morning.</li>
+            <li>Claude Code, the desktop app: a scheduled task, every day at <span class="at-time">7:00 AM</span> (the computer needs to be on).</li>
+            <li>Claude Code on the web: a daily routine, every day at <span class="at-time">7:00 AM</span>.</li>
+            <li>The Claude app can't schedule yet: the daily reminder puts the instructions in your calendar every day at <span class="at-time">7:00 AM</span>.</li>
           </ul>
           <p>It reads the 24 hours up to when it runs, so any time works. Your settings are saved, so these instructions are all it needs.</p>
         </details>
@@ -373,9 +373,17 @@ $('add-to-claude').href = 'https://claude.ai/settings/connectors?modal=add-custo
 
 // A daily reminder for the calendar, at the reader's time, in their zone.
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+// One time for everything: the reminder, and the schedule the tips suggest.
+const atTime = () => {
+  const [h, m] = ($('remind-time').value || '07:00').split(':').map(Number)
+  const label = new Date(Date.UTC(2000, 0, 1, h, m)).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' })
+  document.querySelectorAll('.at-time').forEach((s) => { s.textContent = label })
+}
+$('remind-time').addEventListener('input', atTime)
 const remindLink = () => { $('remind').href = '/reminder.ics?time=' + encodeURIComponent($('remind-time').value || '07:00') + '&tz=' + encodeURIComponent(tz) + (npub ? '&npub=' + encodeURIComponent(npub) : '') }
 $('remind-time').addEventListener('input', remindLink)
 remindLink()
+atTime()
 if (npub) { $('papers').href = q('/observer'); $('read').href = q('/observer') }
 
 // Everything kept for this reader, gone, after one plain question.

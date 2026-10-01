@@ -61,7 +61,9 @@ test('the setup page says only the basics; the specifics are one "learn more" aw
   const when = (fold('Where can I schedule it\\?') || [])[1] || ''
   assert.match(when, /scheduled task/, 'where to schedule, behind its question')
   assert.match(when, /24 hours up to when it runs, so any time works/, 'no ready time is claimed: the paper reads the day up to when it runs')
-  assert.match(when, /around 6 a\.m\./, 'an automatic schedule, early, so the paper is waiting')
+  assert.doesNotMatch(when, /around 6|6 a\.m\./, 'one time on the page, not two')
+  assert.match(when, /every day at <span class="at-time">7:00 AM<\/span>/, 'the schedule tip names the time picked above')
+  assert.match(html, /<label for="remind-time"[^>]*>Your paper's time<\/label>/, 'one time, named for what it is')
   assert.doesNotMatch(html, /half past six/, 'nothing unfounded about when posts are ready')
   assert.match(html, /id="remind-time" value="07:00"/, 'a reminder needs someone awake: seven')
   assert.match((fold('How it works') || [])[1] || '', /Brainstorm never sees your Claude login/, 'how it works and the promises, at the foot')

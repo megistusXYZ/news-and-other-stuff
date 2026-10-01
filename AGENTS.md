@@ -884,9 +884,12 @@ paper lands on the reader's Observer page in brainstorm.world.
     name and never a path; left out when the house has none), a double rule,
     and a section bar of the three steps, each ticked once done.
   - `/setup`: the basics only, the specifics one "learn more" away (a
-    `<details class="learn">`). One line says what you get; a not-ready trust
-    network is one line and a button, its relay-list detail behind "Why?",
-    and it locks nothing. The three steps (Your paper, Connect your Claude,
+    `<details class="learn">`). One line says what you get. A not-ready trust
+    network is one quiet line in everyday words, with Brainstorm's small
+    wordmark and a "Finish on Brainstorm" link ("One more thing: finish
+    setting up on Brainstorm, so your paper knows who you follow."); "trust
+    network", Nostr and the relay list are only behind "Why?", and it locks
+    nothing. Once it is done the page says nothing about it. The three steps (Your paper, Connect your Claude,
     Daily print) open one at a time (`pages/setup.js`, tested): the first not
     done, or the one the reader chose. A finished step folds to one ticked
     line with Edit; with all three done the page is "Your daily paper" and

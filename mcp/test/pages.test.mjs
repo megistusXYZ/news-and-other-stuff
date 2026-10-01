@@ -53,7 +53,7 @@ test('the setup page says only the basics; the specifics are one "learn more" aw
   const html = await (await get('/setup')).text()
   assert.match(html, /Three steps, about five minutes\. Then your Claude prints your paper every morning\./, 'what you get, in one line')
   assert.doesNotMatch(html, /Getting started|About two minutes|Three questions\. Change any of it later/, 'no framing that repeats the title')
-  assert.match(html, /First, Brainstorm needs to find you on Nostr\./, 'the trust network in one line')
+  assert.match(html, /One more thing: finish setting up on Brainstorm, so your paper knows who you follow\./, 'the one thing to do, in everyday words')
   const fold = (summary) => new RegExp(`<details class="learn"[^>]*>\\s*<summary>${summary}</summary>([\\s\\S]*?)</details>`).exec(html)
   assert.match((fold('Why\\?') || [])[1] || '', /relay list/, 'the relay-list detail is behind "Why?"')
   assert.match((fold('More options') || [])[1] || '', /data-page="recipe"[\s\S]*Rather talk than type/, 'which pages, and telling your Claude, behind "More options"')
@@ -69,7 +69,9 @@ test('the setup page says only the basics; the specifics are one "learn more" aw
 
 test('the trust-network note is Brainstorm\'s, wearing its mark; only the two Brainstorm marks are served', async () => {
   const html = await (await get('/setup')).text()
-  assert.match(html, /<div class="gate brainstorm"[^>]*>[\s\S]*role="img" aria-label="Brainstorm"[\s\S]*First, Brainstorm needs to find you on Nostr\./, 'the note carries the Brainstorm wordmark')
+  assert.match(html, /<div class="gate brainstorm"[^>]*>[\s\S]*role="img" aria-label="Brainstorm"[\s\S]*finish setting up on Brainstorm/, 'the note carries the Brainstorm wordmark')
+  const note = /<div class="gate brainstorm"[\s\S]*?<details/.exec(html)[0]
+  assert.doesNotMatch(note, /Nostr|trust network/i, 'no jargon up front: that is what "Why?" is for')
   for (const name of ['mark', 'wordmark']) {
     const res = await get(`/assets/brainstorm/${name}.svg`)
     assert.equal(res.status, 200, name)

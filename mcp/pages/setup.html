@@ -60,25 +60,23 @@ a:hover { text-decoration-color: currentColor; }
 .lens { margin: 12px 0 0; color: var(--teal); }
 .lens:empty { display: none; }
 .ask { display: flex; gap: 8px; margin-top: 10px; }
-/* The trust network, when it is not ready: Brainstorm's note, in Brainstorm's
- * colours (its purple, its purple-to-cyan aurora), with one line and the way
- * to fix it. The wordmark is a mask, so it takes the page's ink, light or dark. */
-.gate { --bs-purple: #7237FF; --bs-purple-hover: #612FD9; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center; gap: 12px 24px; margin: 18px 0 0; padding: 18px 20px 16px; border: 1px solid var(--hair); background: var(--paper-2); }
-.gate::before { content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 3px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
-.gate .bs-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; }
-.gate .bs-word { flex: none; display: block; width: 104px; height: 23px; background: var(--ink);
+/* One thing to finish on Brainstorm, when it is not done yet: a quiet line
+ * with Brainstorm's small wordmark (a mask in the page's ink, light or dark),
+ * a hairline of its aurora above, and a link in its purple. The whys are
+ * behind "Why?". */
+.gate { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 16px 0 0; padding: 11px 0 10px;
+  border-bottom: 1px solid var(--hair); }
+.gate::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
+.gate .bs-word { flex: none; display: block; width: 78px; height: 17px; background: var(--ink-2);
   -webkit-mask: url("/assets/brainstorm/wordmark.svg") left center / contain no-repeat; mask: url("/assets/brainstorm/wordmark.svg") left center / contain no-repeat; }
-.gate .bs-label { padding-left: 12px; border-left: 1px solid var(--hair); color: var(--ink-3); }
-.gate > p { margin: 0; font: 600 1.12rem/1.35 var(--serif); }
-.gate .bs-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 18px; border-radius: 999px; background: var(--bs-purple);
-  color: #fff; text-decoration: none; font: 500 .74rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
-.gate .bs-btn:hover { background: var(--bs-purple-hover); }
-.gate .bs-btn:focus-visible { outline: 2px solid var(--bs-purple); outline-offset: 3px; }
-.gate .learn { grid-column: 1 / -1; margin: 0; }
+.gate > p { margin: 0; padding-left: 14px; border-left: 1px solid var(--hair); color: var(--ink-2); font-size: .98rem; }
+.gate .bs-link { color: #7237FF; font-weight: 600; text-decoration: underline; text-decoration-color: rgba(114, 55, 255, .35); text-underline-offset: 3px; white-space: nowrap; }
+.gate .bs-link:hover { text-decoration-color: currentColor; }
+.gate .learn { flex-basis: 100%; margin: 0; }
+.gate .learn > summary { padding: 0; }
+@media (prefers-color-scheme: dark) { .gate .bs-link { color: #A88BFF; } }
 @media (max-width: 720px) {
-  .gate { grid-template-columns: 1fr; padding: 16px 15px 14px; }
-  .gate .bs-btn { justify-content: center; width: 100%; }
+  .gate > p { flex-basis: 100%; padding-left: 0; border-left: 0; }
 }
 
 /* --- the three steps: one open at a time; a finished step is one ticked line ----- */
@@ -194,20 +192,20 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
 
   <h2 class="headline" id="headline">Set up your daily paper</h2>
   <p class="dek" id="dek">Three steps, about five minutes. Then your Claude prints your paper every morning.</p>
-  <p class="lens mono" id="lens" role="status" aria-live="polite">Checking your trust network…</p>
+  <p class="lens mono" id="lens" role="status" aria-live="polite"></p>
   <div class="ask" id="npub-ask" hidden>
     <label class="sr" for="npub">Your Nostr account (npub)</label>
     <input class="field code" id="npub" placeholder="npub1…" autocomplete="off" spellcheck="false" style="max-width:360px">
     <button class="btn" id="npub-go" type="button">Check</button>
   </div>
   <div class="gate brainstorm" id="gate" role="note" hidden>
-    <div class="bs-head"><span class="bs-word" role="img" aria-label="Brainstorm"></span><span class="bs-label mono">Trust network</span></div>
-    <p>First, Brainstorm needs to find you on Nostr.</p>
-    <a class="bs-btn" href="https://brainstorm.world/" target="_blank" rel="noopener noreferrer">Set up your trust network ↗</a>
+    <span class="bs-word" role="img" aria-label="Brainstorm"></span>
+    <p>One more thing: finish setting up on Brainstorm, so your paper knows who you follow. <a class="bs-link" href="https://brainstorm.world/" target="_blank" rel="noopener noreferrer">Finish on Brainstorm ↗</a></p>
     <details class="learn"><summary>Why?</summary>
+      <p>Your paper is made from what the people you follow and trust have posted. Brainstorm works that out from your Nostr account, and it can't yet find where your account posts.</p>
       <p id="gate-say"></p>
-      <p id="gate-do">Your Nostr app publishes a relay list (NIP-65, kind 10002) that says where your posts live.</p>
-      <p>Until then the paper can't find the people you trust. You can still do the steps below; this updates by itself once it's ready.</p>
+      <p id="gate-do">Your Nostr app fixes it by publishing a relay list (NIP-65, kind 10002), the list of places your posts live.</p>
+      <p>You can do the steps below meanwhile; this note goes away by itself once it's sorted.</p>
     </details>
   </div>
 
@@ -552,23 +550,23 @@ if (!npub) {
 } else {
   fetch(q('/api/paper')).then((r) => r.ok ? r.json() : null).then(fillForm).catch(() => {})
 
-  // The trust network: a quiet tick when ready; one line and the fix when not.
+  // Brainstorm's side (the reader's trust network): nothing said when it is done; one plain line and the fix when not.
   // Nothing waits on it: the steps can be done meanwhile.
   const lens = () => fetch(q('/api/readiness')).then((r) => r.json()).then((v) => {
     $('gate').hidden = !!v.ready
-    $('lens').textContent = v.ready ? 'Your trust network · ready ✓' : ''
+    $('lens').textContent = ''
     if (!v.ready && v.say) $('gate-say').textContent = v.say
     return !!v.ready
-  }).catch(() => { $('lens').textContent = 'Could not check your trust network'; return true })
+  }).catch(() => { $('lens').textContent = ''; return true })
   lens().then((ready) => { if (!ready) { const again = setInterval(() => lens().then((ok) => { if (ok) clearInterval(again) }), 30000) } })
 
   // The status follows the reader's Claude step by step, ending on the paper.
   const words = (step) => {
     if (!step) return 'Connected ✓'
-    if (step.tool === 'get_readiness') return 'Connected ✓ · checking your trust network'
+    if (step.tool === 'get_readiness') return 'Connected ✓ · checking you\'re all set'
     if (step.tool === 'get_paper' || step.tool === 'set_paper') return 'Connected ✓ · reading your settings'
     if (step.tool === 'get_brief') return 'Reading the brief'
-    if (step.tool === 'get_digest') return step.parts ? `Reading today's posts · part ${step.part} of ${step.parts}` : 'Stopped: your trust network isn\'t ready'
+    if (step.tool === 'get_digest') return step.parts ? `Reading today's posts · part ${step.part} of ${step.parts}` : 'Stopped: finish setting up on Brainstorm first'
     if (step.tool === 'submit_edition' && step.outcome === 'refused') return `Handed in · fixing ${step.problems} problem${step.problems === 1 ? '' : 's'}`
     if (step.tool === 'submit_edition') return 'Accepted ✓ · '
     return 'Connected ✓'

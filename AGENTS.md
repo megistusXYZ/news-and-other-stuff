@@ -863,6 +863,16 @@ paper lands on the reader's Observer page in brainstorm.world.
   run on their own machine. Pictures still load from their own hosts, which
   see the reader's address: a "don't load pictures" reading setting is the
   next privacy step, parked.
+- **QA, 2026-10-01.** A start-to-finish pass found that another site could
+  change or delete a reader's paper (a cross-site POST went through) and that
+  the pages answered under any host name. Now the pages answer only their own
+  host names (`421` otherwise), and saves and deletes must be JSON from the
+  pages' own origin (`415`/`403` otherwise). Also fixed: a reader with no
+  paper yet got a broken-looking Your papers (a cut-off date, the message
+  twice, Issues and Full screen with nothing behind them); they now get a
+  welcome in the paper's look with "Finish setting up" and "Print one now".
+  Setup looks a place up once per value and asks for papers only when the
+  reader's Claude has done something, slowing to once a minute when done.
 - **Each reader's own Claude, each reader's own paper.** Every reader prints
   with their own Claude account, on their own plan; the connector holds no
   model key and never runs a model for anyone. A reader's paper is built only

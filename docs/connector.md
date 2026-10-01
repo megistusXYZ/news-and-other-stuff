@@ -113,6 +113,14 @@ title, or its opening lines, never a word inside a link or in passing. search-st
 | `GET /observer/<npub>/<date>-<code>` | the reader | One paper's living copy. |
 | `GET /reminder.ics?time=HH:MM&tz=Area/City&npub=` | anyone | A daily calendar reminder (RFC 5545) at the reader's time in their zone. |
 
+**Guarding the pages.** The pages and their JSON answer only requests
+addressed to the connector by its own name (127.0.0.1, localhost, or the
+configured public URL), so another site cannot reach them under a borrowed
+name (DNS rebinding): anything else gets `421`. Saves and deletes must be
+JSON (`415` otherwise) and from this site's own pages: a different `Origin`,
+or `Sec-Fetch-Site: cross-site`, gets `403`. Behind Brainstorm's sign-in that
+keeps any other site the reader visits from changing or deleting their paper.
+
 **Locally**, "the reader" is an npub in the token map; `?npub=` stands in for a
 session. **On Brainstorm**, every reader route must come from the signed-in
 session, never a query parameter. `POST /api/paper` in particular must not be

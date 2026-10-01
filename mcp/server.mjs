@@ -174,11 +174,35 @@ async function page (req, res, url, deps, readers) {
   return send(res, 404, 'text/plain', 'not found')
 }
 
+// Who may reach the pages and their JSON: requests addressed to this server
+// by its own name, not under a name some other site borrowed for it (DNS
+// rebinding); and changes (a save, a delete) only as JSON from this site's
+// own pages, which a browser will not send from another site unasked.
+const ownHost = (req, deps) => {
+  const host = String(req.headers.host || '').toLowerCase()
+  const port = req.socket.localPort
+  const names = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`])
+  if (deps.publicUrl) { try { names.add(new URL(deps.publicUrl).host.toLowerCase()) } catch {} }
+  return names.has(host) ? host : null
+}
+const fromHere = (req, host) => {
+  const origin = req.headers.origin
+  if (origin && origin !== `http://${host}` && origin !== `https://${host}`) return false
+  return req.headers['sec-fetch-site'] !== 'cross-site'
+}
+const isJson = (req) => /^application\/json\b/i.test(String(req.headers['content-type'] || ''))
+
 export function createConnector ({ authenticate, deps, readers = new Set() }) {
   return createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost')
     if (url.pathname !== '/mcp') {
+      const host = ownHost(req, deps)
+      if (!host) return send(res, 421, 'text/plain', 'not this server')
       if (req.method !== 'GET' && !(req.method === 'POST' && (url.pathname === '/api/paper' || url.pathname === '/api/forget'))) return send(res, 405, 'text/plain', 'method not allowed')
+      if (req.method === 'POST') {
+        if (!fromHere(req, host)) return send(res, 403, 'text/plain', 'only from this site\'s own pages')
+        if (!isJson(req)) return send(res, 415, 'text/plain', 'send JSON')
+      }
       try { return await page(req, res, url, deps, readers) } catch (error) { console.error(error); return send(res, 500, 'text/plain', 'error') }
     }
     const reader = authenticate(req)

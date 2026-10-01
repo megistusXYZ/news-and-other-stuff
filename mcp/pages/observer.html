@@ -93,6 +93,20 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 .reader { flex: 1; min-height: 0; position: relative; }
 .reader iframe { display: block; width: 100%; height: 100%; border: 0; background: #F2F3F0; }
 .empty { max-width: 1240px; margin: 0 auto; padding: 40px 22px; font-style: italic; color: var(--ink-2); }
+/* No paper yet: a welcome in the paper's own look, and the two ways forward. */
+.none { height: 100%; overflow-y: auto; }
+.none[hidden] { display: none; }
+.none-in { max-width: 1240px; margin: 0 auto; padding: 20px 22px 48px; }
+.none-in .fine { height: 2px; margin-bottom: 14px; background: linear-gradient(90deg, #7237FF, #13D2E5); }
+.none-name { margin: 0; padding-bottom: 12px; border-bottom: 3px solid var(--rule); font: 900 clamp(2rem, 5.4vw, 3.6rem)/.95 var(--display); letter-spacing: -.018em; }
+.none-in h2 { margin: 34px 0 8px; font: 700 clamp(1.5rem, 3.4vw, 2.2rem)/1.1 var(--display); }
+.none-in p { margin: 0; max-width: 40rem; color: var(--ink-2); }
+.none-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.none-btn { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; border: 1px solid var(--ink); background: transparent; color: var(--ink);
+  font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; cursor: pointer; }
+.none-btn.solid, .none-btn:hover { background: var(--ink); color: var(--paper); }
+.none-btn.solid:hover { background: transparent; color: var(--ink); }
+@media (max-width: 720px) { .none-in { padding: 14px 15px 40px; } }
 
 /* --- full screen: the paper alone; a quiet way back --------------------------- */
 /* A small mark in the corner; its words only when pointed at or focused. */
@@ -212,7 +226,18 @@ body[data-head="slim"]:not(.full) .fold { grid-template-rows: 1fr; }
 </header>
 
 <main class="reader" aria-label="The paper">
-  <p class="empty" id="empty" hidden></p>
+  <section class="none" id="none" aria-labelledby="none-title" hidden>
+    <div class="none-in">
+      <div class="fine" aria-hidden="true"></div>
+      <p class="none-name">News and Other Stuff</p>
+      <h2 id="none-title">Your first paper will appear here</h2>
+      <p id="none-say">Once your Claude prints it, each morning's paper lands on this page, with every issue before it.</p>
+      <div class="none-actions" id="none-actions">
+        <a class="none-btn solid" id="none-setup" href="/setup">Finish setting up →</a>
+        <button class="none-btn" type="button" id="none-print">Print one now</button>
+      </div>
+    </div>
+  </section>
   <iframe id="frame" title="Your paper" hidden></iframe>
 </main>
 
@@ -506,10 +531,19 @@ const clock = (ts) => ts ? new Date(ts * 1000).toLocaleTimeString('en-US', { hou
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e }
 
 // With no paper to lend its header, the bar is the header.
-const noPaper = (text) => { head('slim'); $('facts').textContent = text; $('empty').hidden = false; $('empty').textContent = text }
+// No paper to show: the welcome instead, and none of the controls that need a paper.
+const noPaper = ({ title, say, actions = true }) => {
+  head('top')
+  $('none').hidden = false
+  if (title) $('none-title').textContent = title
+  if (say) $('none-say').textContent = say
+  $('none-actions').hidden = !actions
+}
+$('none-print').addEventListener('click', () => fresh(true))
+if (npub) $('none-setup').href = '/setup?npub=' + encodeURIComponent(npub)
 
 async function main () {
-  if (!npub) return noPaper('No reader named. On Brainstorm this page knows you from your sign-in.')
+  if (!npub) return noPaper({ title: 'Sign in to see your papers', say: 'On Brainstorm this page knows you from your sign-in.', actions: false })
 
   // Today's paper not in yet: a dot on More, and its sentence inside.
   fetch('/api/today?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : null).then(async (t) => {
@@ -526,7 +560,7 @@ async function main () {
   }).catch(() => {})
 
   const editions = await fetch('/api/editions?npub=' + encodeURIComponent(npub)).then((r) => r.ok ? r.json() : [])
-  if (!editions.length) return noPaper('Nothing handed in yet. Set up your daily print, or print a fresh edition now.')
+  if (!editions.length) return noPaper({})
   const byDate = papersByDay(editions)
   const newest = byDate.values().next().value
 
@@ -598,7 +632,7 @@ async function main () {
   }
   show(issueFromAddress(location.search, editions) || newest, 'replace')
 }
-main().catch(() => noPaper('Could not load your papers'))
+main().catch(() => noPaper({ title: 'Your papers could not load', say: 'Check your connection and reload the page.', actions: false }))
 </script>
 </body>
 </html>

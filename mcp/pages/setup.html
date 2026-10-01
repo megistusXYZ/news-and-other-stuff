@@ -391,7 +391,7 @@ $('forget').addEventListener('click', async () => {
   if (!npub) return
   if (!confirm('Delete your paper settings and every paper kept for you? This cannot be undone. You can set it up again any time.')) return
   try {
-    const r = await fetch(q('/api/forget'), { method: 'POST' })
+    const r = await fetch(q('/api/forget'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
     if (!r.ok) throw new Error()
     $('forgot').textContent = 'Deleted ✓'
     setTimeout(() => location.reload(), 900)
@@ -464,8 +464,11 @@ const teams = []
 const paperDone = (s) => { done.paper = !!(s && s.founded); lines.paper = paperLine({ place: placeLabel || (s && s.place) || null, teams: [...teams], topics: (s && s.topics) || [] }); render() }
 let lastSettings = null
 
+let lookedUp = null // the text last looked up, so Enter then leaving the box asks once
 const findPlace = async () => {
   const text = $('place').value.trim()
+  if (text && text === lookedUp && place) return
+  lookedUp = text
   const out = $('place-found')
   place = null
   if (text.length < 2) { out.className = 'found'; out.textContent = ''; return }
@@ -600,10 +603,16 @@ if (!npub) {
   }
   let seenChange = 0
   const when = (ts) => new Date(ts * 1000).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })
-  const poll = () => Promise.all([
-    fetch(q('/api/status')).then((r) => r.json()),
-    fetch(q('/api/editions')).then((r) => r.ok ? r.json() : []).catch(() => []),
-  ]).then(([s, editions]) => {
+  // Asks every few seconds while there is something to wait for, and once a
+  // minute when all three steps are done. The papers list is asked again only
+  // when the reader's Claude has done something new.
+  let papersAt = undefined
+  let editions = []
+  const poll = () => fetch(q('/api/status')).then((r) => r.json()).then(async (s) => {
+    if (s.lastCall !== papersAt) {
+      papersAt = s.lastCall
+      editions = await fetch(q('/api/editions')).then((r) => r.ok ? r.json() : []).catch(() => [])
+    }
     const print = editions.length > 0
     if (print !== done.print || (print && lines.print !== 'Last paper ' + when(editions[0].printedAt))) {
       done.print = print; lines.print = print ? 'Last paper ' + when(editions[0].printedAt) : ''; render()
@@ -621,8 +630,8 @@ if (!npub) {
       fetch(q('/api/paper')).then((r) => r.json()).then((p) => { fillForm(p); $('saved').className = 'saved mono'; $('saved').textContent = 'Updated by your Claude ✓' }).catch(() => {})
     }
   }).catch(() => {})
-  poll()
-  setInterval(poll, 5000)
+  const again = () => poll().finally(() => setTimeout(again, done.paper && done.connect && done.print ? 60000 : 5000))
+  again()
 }
 </script>
 </body>

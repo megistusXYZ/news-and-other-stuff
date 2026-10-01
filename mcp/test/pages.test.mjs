@@ -6,6 +6,7 @@
 
 import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
+import { request } from 'node:http'
 import { createConnector, tokenAuth } from '../server.mjs'
 import { memoryStore } from '../store.mjs'
 import { callTool } from '../observer.mjs'
@@ -115,14 +116,41 @@ test('a reader can delete everything kept for them: settings, papers and history
   try {
     const at = (path, init) => fetch(`http://127.0.0.1:${mine.address().port}${path}`, init)
     assert.equal((await at(`/api/forget?npub=${toNpub(ME)}`)).status, 405, 'never by just visiting an address')
-    assert.equal((await at(`/api/forget?npub=${toNpub(STRANGER)}`, { method: 'POST' })).status, 404, 'only for a reader this connector serves')
-    const gone = await at(`/api/forget?npub=${toNpub(ME)}`, { method: 'POST' })
+    const asked = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }
+    assert.equal((await at(`/api/forget?npub=${toNpub(STRANGER)}`, asked)).status, 404, 'only for a reader this connector serves')
+    const gone = await at(`/api/forget?npub=${toNpub(ME)}`, asked)
     assert.equal(gone.status, 200)
     assert.deepEqual(await (await at(`/api/paper?npub=${toNpub(ME)}`)).json(), {}, 'settings gone')
     assert.deepEqual(await (await at(`/api/editions?npub=${toNpub(ME)}`)).json(), [], 'papers gone')
     assert.equal((await (await at(`/api/status?npub=${toNpub(ME)}`)).json()).connected, false, 'history gone')
     assert.equal((await (await at(`/api/editions?npub=${toNpub(OTHER)}`)).json()).length, 1, 'another reader keeps theirs')
     assert.equal((await (await at(`/api/paper?npub=${toNpub(OTHER)}`)).json()).place, 'Chicago, Illinois')
+  } finally { mine.close() }
+})
+
+test('another site cannot change or delete a reader\'s paper, nor reach this connector by a borrowed name', async () => {
+  const ME = 'ee'.repeat(32)
+  const kept = memoryStore()
+  kept.savePaper(ME, { place: 'Chicago, Illinois', founded: '2026-09-25' })
+  const mine = createConnector({ authenticate: tokenAuth(new Map()), deps: { ...deps, store: kept }, readers: new Set([ME]) })
+  await new Promise((resolve) => mine.listen(0, '127.0.0.1', resolve))
+  const port = mine.address().port
+  const raw = (path, { method = 'GET', headers = {}, body } = {}) => new Promise((resolve, reject) => {
+    const r = request({ host: '127.0.0.1', port, path, method, headers }, (res) => { res.resume(); res.on('end', () => resolve(res.statusCode)) })
+    r.on('error', reject); if (body) r.write(body); r.end()
+  })
+  const json = { 'Content-Type': 'application/json' }
+  const here = `http://127.0.0.1:${port}`
+  try {
+    const paper = `/api/paper?npub=${toNpub(ME)}`; const forget = `/api/forget?npub=${toNpub(ME)}`
+    assert.equal(await raw(paper, { method: 'POST', headers: { ...json, Origin: 'https://evil.example' }, body: '{"name":"Taken"}' }), 403, 'a save from another site')
+    assert.equal(await raw(forget, { method: 'POST', headers: { ...json, Origin: 'https://evil.example' }, body: '{}' }), 403, 'a delete from another site')
+    assert.equal(await raw(paper, { method: 'POST', headers: { 'Content-Type': 'text/plain', Origin: here }, body: '{"name":"Taken"}' }), 415, 'a save that is not JSON, as a plain form could send')
+    assert.equal(await raw(forget, { method: 'POST', headers: { Origin: here } }), 415, 'a delete that is not JSON')
+    assert.equal(await raw(paper, { headers: { Host: 'evil.example' } }), 421, 'a request under a borrowed name (DNS rebinding) is turned away')
+    assert.equal(kept.paperOf(ME).place, 'Chicago, Illinois', 'nothing above changed the paper')
+    assert.equal(await raw(paper, { method: 'POST', headers: { ...json, Origin: here }, body: '{"name":"Mine"}' }), 200, 'the page\'s own save still works')
+    assert.equal(await raw(forget, { method: 'POST', headers: { ...json, Origin: here }, body: '{}' }), 200, 'and its own delete')
   } finally { mine.close() }
 })
 
@@ -181,6 +209,8 @@ test('a local reader\'s papers are listed for the Observer page and each opens; 
   assert.match(html, /id="more-menu"[\s\S]*Set up your paper/, 'set-up lives under More')
   assert.match(html, /id="more-dot"[^>]*hidden/, '"not in yet" is a dot on More, shown only when true')
   assert.match(html, /id="more-menu"[^>]*>\s*<button[^>]*id="fresh-item"/, 'and printing is the first thing inside, so a missing paper is one step from being printed')
+  assert.match(html, /<section class="none" id="none"[^>]*hidden>[\s\S]*Your first paper will appear here[\s\S]*Finish setting up →[\s\S]*Print one now/,
+    'a reader with no paper yet gets a proper welcome and the two ways forward, not a blank page')
   assert.match(html, /<script type="module">[\s\S]*from '\/assets\/observer\.js'/, 'the page runs on its tested decisions')
   const script = await get('/assets/observer.js')
   assert.equal(script.status, 200)

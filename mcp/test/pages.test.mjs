@@ -58,7 +58,12 @@ test('the setup page says only the basics; the specifics are one "learn more" aw
   assert.match((fold('Why\\?') || [])[1] || '', /relay list/, 'the relay-list detail is behind "Why?"')
   assert.match((fold('More options') || [])[1] || '', /data-page="recipe"[\s\S]*Rather talk than type/, 'which pages, and telling your Claude, behind "More options"')
   assert.match((fold('Other ways to connect') || [])[1] || '', /id="mcp"[\s\S]*id="cmd"/, 'the address by hand and Claude Code, behind "Other ways to connect"')
-  assert.match((fold('Where can I schedule it\\?') || [])[1] || '', /scheduled task/, 'where to schedule, behind its question')
+  const when = (fold('Where can I schedule it\\?') || [])[1] || ''
+  assert.match(when, /scheduled task/, 'where to schedule, behind its question')
+  assert.match(when, /24 hours up to when it runs, so any time works/, 'no ready time is claimed: the paper reads the day up to when it runs')
+  assert.match(when, /around 6 a\.m\./, 'an automatic schedule, early, so the paper is waiting')
+  assert.doesNotMatch(html, /half past six/, 'nothing unfounded about when posts are ready')
+  assert.match(html, /id="remind-time" value="07:00"/, 'a reminder needs someone awake: seven')
   assert.match((fold('How it works') || [])[1] || '', /Brainstorm never sees your Claude login/, 'how it works and the promises, at the foot')
   assert.match(html, /id="p3"[^>]*>[\s\S]*?Daily print<\/a>/, 'step three is the daily print')
   assert.match(html, /<script type="module">[\s\S]*from '\/assets\/setup\.js'/, 'the page runs on its tested decisions')

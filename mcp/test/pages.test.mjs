@@ -35,7 +35,7 @@ test('the setup page walks the three steps, with this connector\'s address and a
   assert.equal(res.status, 200)
   assert.match(res.headers.get('content-type'), /text\/html/)
   const html = await res.text()
-  for (const words of ['Set up your daily paper', 'Connect your Claude', 'Sign in with Nostr', 'Schedule the daily print', 'What your Claude does each morning']) assert.ok(html.includes(words), words)
+  for (const words of ['Set up your daily paper', 'Connect your Claude', 'Nostr sign-in', 'Daily print', 'What your Claude does each morning']) assert.ok(html.includes(words), words)
   assert.match(html, /\/mcp/, 'the address to paste into Claude')
   assert.match(html, /Print today's Nostr Observer with the Brainstorm connector\./, 'the prompt the topics box completes')
   assert.doesNotMatch(html, /<script\b[^>]*src=/, 'self-contained: nothing loaded from elsewhere')
@@ -47,6 +47,24 @@ test('the setup page wears the paper\'s own header: its date line, nameplate and
   assert.match(html, /<header class="masthead">[\s\S]*<h1>News and Other Stuff<\/h1>[\s\S]*class="motto"/, 'the paper\'s nameplate and motto')
   assert.match(html, /<nav class="index mono"[^>]*>[\s\S]*id="p1"[^>]*href="#part-paper"[\s\S]*id="p2"[^>]*href="#connect"[\s\S]*id="p3"[^>]*href="#schedule"/, 'the steps as the paper\'s section bar, each a way to its part')
   assert.doesNotMatch(html, /class="sections|class="oxford"|id="progress"/, 'no tab row, no separate progress line')
+})
+
+test('the setup page says only the basics; the specifics are one "learn more" away', async () => {
+  const html = await (await get('/setup')).text()
+  assert.match(html, /Three steps, about five minutes\. Then your Claude prints your paper every morning\./, 'what you get, in one line')
+  assert.doesNotMatch(html, /Getting started|About two minutes|Three questions\. Change any of it later/, 'no framing that repeats the title')
+  assert.match(html, /First, Brainstorm needs to find you on Nostr\./, 'the trust network in one line')
+  const fold = (summary) => new RegExp(`<details class="learn"[^>]*>\\s*<summary>${summary}</summary>([\\s\\S]*?)</details>`).exec(html)
+  assert.match((fold('Why\\?') || [])[1] || '', /relay list/, 'the relay-list detail is behind "Why?"')
+  assert.match((fold('More options') || [])[1] || '', /data-page="recipe"[\s\S]*Rather talk than type/, 'which pages, and telling your Claude, behind "More options"')
+  assert.match((fold('Other ways to connect') || [])[1] || '', /id="mcp"[\s\S]*id="cmd"/, 'the address by hand and Claude Code, behind "Other ways to connect"')
+  assert.match((fold('Where can I schedule it\\?') || [])[1] || '', /scheduled task/, 'where to schedule, behind its question')
+  assert.match((fold('How it works') || [])[1] || '', /Brainstorm never sees your Claude login/, 'how it works and the promises, at the foot')
+  assert.match(html, /id="p3"[^>]*>[\s\S]*?Daily print<\/a>/, 'step three is the daily print')
+  assert.match(html, /<script type="module">[\s\S]*from '\/assets\/setup\.js'/, 'the page runs on its tested decisions')
+  const script = await get('/assets/setup.js')
+  assert.equal(script.status, 200)
+  assert.match(await script.text(), /export function openStep/)
 })
 
 test('the house stamp is served for the nameplate when the house has one, and only that one file', async () => {

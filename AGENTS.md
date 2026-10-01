@@ -883,9 +883,17 @@ paper lands on the reader's Observer page in brainstorm.world.
     house's engraved head (`/assets/stamp.webp`, the config's `stamp`, a
     name and never a path; left out when the house has none), a double rule,
     and a section bar of the three steps, each ticked once done.
-  - `/setup`: Vitor's three steps, a live lens badge, the connector address,
-    a "connected" line that lights on the reader's first tool call, and a
-    topics box that composes the daily prompt. Nothing is stored.
+  - `/setup`: the basics only, the specifics one "learn more" away (a
+    `<details class="learn">`). One line says what you get; a not-ready trust
+    network is one line and a button, its relay-list detail behind "Why?",
+    and it locks nothing. The three steps (Your paper, Connect your Claude,
+    Daily print) open one at a time (`pages/setup.js`, tested): the first not
+    done, or the one the reader chose. A finished step folds to one ticked
+    line with Edit; with all three done the page is "Your daily paper" and
+    "Read today's paper →". Pages, a name and "tell your Claude" sit under
+    "More options"; the address by hand and Claude Code under "Other ways to
+    connect"; where to schedule under its own question; how it works and the
+    promises at the foot. About 120 words show, down from about 600.
   - `/observer`: the paper fills the window and is the only thing that
     scrolls. At the top the paper's own folio and masthead are the header:
     the page adds nothing above them, and lends the folio line its controls

@@ -99,8 +99,8 @@ async function page (req, res, url, deps, readers) {
     if (!file || !existsSync(file)) return send(res, 404, 'text/plain', 'not found')
     return send(res, 200, 'image/webp', readFileSync(file))
   }
-  // The Your papers page's tested decisions, and nothing else from pages/.
-  if (path === '/assets/observer.js') return send(res, 200, 'text/javascript; charset=utf-8', readFileSync(new URL('./observer.js', PAGES)))
+  // The two pages' tested decisions, and nothing else from pages/.
+  if (path === '/assets/observer.js' || path === '/assets/setup.js') return send(res, 200, 'text/javascript; charset=utf-8', readFileSync(new URL('.' + path.slice('/assets'.length), PAGES)))
   if (path.startsWith('/assets/fonts/')) {
     const name = path.slice('/assets/fonts/'.length)
     if (!/^[a-z0-9-]+\.woff2$/.test(name)) return send(res, 404, 'text/plain', 'not found')

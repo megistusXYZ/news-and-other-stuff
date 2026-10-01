@@ -48,6 +48,9 @@ test('the setup page wears the paper\'s own header: its date line, nameplate and
   assert.match(html, /<header class="masthead">[\s\S]*<h1>News and Other Stuff<\/h1>[\s\S]*class="motto"/, 'the paper\'s nameplate and motto')
   assert.match(html, /<nav class="index mono"[^>]*>[\s\S]*id="p1"[^>]*href="#part-paper"[\s\S]*id="p2"[^>]*href="#connect"[\s\S]*id="p3"[^>]*href="#schedule"/, 'the steps as the paper\'s section bar, each a way to its part')
   assert.doesNotMatch(html, /class="sections|class="oxford"|id="progress"/, 'no tab row, no separate progress line')
+  assert.match(html, /<span class="cut"[^>]*role="button"[^>]*tabindex="0"[^>]*aria-label="Switch to the dark edition"/, 'the engraving is the light switch, as on the paper')
+  assert.match(html, /:root\[data-theme="dark"\]/, 'a dark edition the switch can choose, whatever the device prefers')
+  assert.match(html, /'lv-theme'/, 'the same remembered choice as the paper')
 })
 
 test('the setup page says only the basics; the specifics are one "learn more" away', async () => {

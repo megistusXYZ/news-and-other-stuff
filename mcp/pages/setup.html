@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Set up your paper · News and Other Stuff</title>
+<script>
+// The reader's light or dark choice, the one the paper keeps, before the page paints.
+try { const t = JSON.parse(localStorage.getItem('lv-theme')); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t } catch {}
+</script>
 <style>
 @font-face { font-family: "Playfair Display"; font-weight: 700; font-display: swap; src: url("/assets/fonts/playfair-display-latin-700-normal.woff2") format("woff2"); }
 @font-face { font-family: "Playfair Display"; font-weight: 900; font-display: swap; src: url("/assets/fonts/playfair-display-latin-900-normal.woff2") format("woff2"); }
@@ -18,10 +22,14 @@
   --serif: "Source Serif 4", Georgia, serif; --display: "Playfair Display", Georgia, serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   color-scheme: light;
 }
+/* Dark with the device, unless the reader chose with the engraving: then
+ * their choice (data-theme, the same one the paper keeps) wins. */
 @media (prefers-color-scheme: dark) {
-  :root { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441;
+  :root:not([data-theme="light"]) { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441;
     --teal: #13D2E5; --no: #F87171; color-scheme: dark; }
 }
+:root[data-theme="dark"] { --paper: #0A0E18; --paper-2: #111827; --ink: #F3F3F1; --ink-2: #CFD1D5; --ink-3: #A1A1AA; --rule: #F3F3F1; --hair: #2A3441;
+  --teal: #13D2E5; --no: #F87171; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 400 17px/1.55 var(--serif); }
 a { color: inherit; text-decoration-color: var(--hair); text-underline-offset: 3px; }
@@ -47,7 +55,14 @@ a:hover { text-decoration-color: currentColor; }
 .cut { grid-column: 2; grid-row: 1 / span 2; align-self: end; height: 104px; aspect-ratio: var(--ratio, 1);
   background: #675C4F; -webkit-mask: url("/assets/stamp.webp") left bottom / contain no-repeat; mask: url("/assets/stamp.webp") left bottom / contain no-repeat;
   opacity: .86; transform: scaleX(-1); }
-@media (prefers-color-scheme: dark) { .cut { background: #B3A592; } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cut { background: #B3A592; } }
+:root[data-theme="dark"] .cut { background: #B3A592; }
+/* The engraving is the light switch, as on the paper: a quiet lift on hover,
+ * a ring for the keyboard. */
+.cut[role="button"] { cursor: pointer; transition: opacity .2s ease, translate .2s ease; }
+.cut[role="button"]:hover { opacity: 1; translate: 0 -2px; }
+.cut[role="button"]:focus-visible { outline: 2px solid var(--teal); outline-offset: 6px; }
+@media (prefers-reduced-motion: reduce) { .cut[role="button"] { transition: none; } }
 .index { display: flex; flex-wrap: nowrap; margin-top: 3px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); overflow-x: auto; scrollbar-width: none; }
 .index a { flex: none; padding: 9px 16px; border-left: 1px solid var(--rule); color: var(--ink); font-weight: 600; font-size: .66rem; text-decoration: none; white-space: nowrap; }
 .index a:first-child { padding-left: 0; border-left: 0; }
@@ -185,7 +200,7 @@ pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; }
   <header class="masthead">
     <h1>News and Other Stuff</h1>
     <p class="motto">The observer for your network.</p>
-    <span class="cut" id="cut" aria-hidden="true" hidden></span>
+    <span class="cut" id="cut" role="button" tabindex="0" aria-label="Switch to the dark edition" title="Switch to the dark edition" hidden></span>
   </header>
   <nav class="index mono" aria-label="Your steps"><a id="p1" href="#part-paper"><span class="n">1</span>Your paper</a><a id="p2" href="#connect"><span class="n">2</span>Connect Claude</a><a id="p3" href="#schedule"><span class="n">3</span>Daily print</a></nav>
 
@@ -409,6 +424,21 @@ document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('clic
 const stamp = new Image()
 stamp.onload = () => { $('cut').style.setProperty('--ratio', String(stamp.naturalWidth / stamp.naturalHeight)); $('cut').hidden = false }
 stamp.src = '/assets/stamp.webp'
+
+// The engraving switches the light and dark editions, and the choice is the
+// paper's own ('lv-theme'), so the paper opens the way the reader left it here.
+const THEME_KEY = 'lv-theme'
+const themeNow = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+const labelCut = () => { const next = themeNow() === 'dark' ? 'light' : 'dark'; $('cut').setAttribute('aria-label', `Switch to the ${next} edition`); $('cut').title = `Switch to the ${next} edition` }
+const flip = () => {
+  const next = themeNow() === 'dark' ? 'light' : 'dark'
+  document.documentElement.dataset.theme = next
+  try { localStorage.setItem(THEME_KEY, JSON.stringify(next)) } catch {}
+  labelCut()
+}
+$('cut').addEventListener('click', flip)
+$('cut').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip() } })
+labelCut()
 
 // --- the three steps: one open at a time; a finished one is a ticked line ---------
 const STEP = { paper: 'part-paper', connect: 'connect', print: 'schedule' }
